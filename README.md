@@ -1,1 +1,1 @@
-# wcet-gpu
+# GPU for WCET
