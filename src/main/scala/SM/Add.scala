@@ -5,7 +5,7 @@
  * 
  */
 
-package empty
+package SM
 
 import chisel3._
 import chisel3.util._
@@ -25,5 +25,5 @@ class Add extends Module {
 
 object AddMain extends App {
   println("Generating the adder hardware")
-  emitVerilog(new Add(), Array("--target-dir", "generated"))
+  emitVerilog(new VectorRegisterFile(), Array("--target-dir", "generated"))
 }
