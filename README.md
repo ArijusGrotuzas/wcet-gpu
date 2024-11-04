@@ -1,1 +1,1 @@
-# GPU for WCET
+# Time-predictable GPU
