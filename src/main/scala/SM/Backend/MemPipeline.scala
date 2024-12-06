@@ -8,8 +8,3 @@ class MemPipeline extends Module {
   })
   // TODO: Implement hardware
 }
-
-object MemPipelineMain extends App {
-  println("Generating the memory pipeline hardware")
-  emitVerilog(new MemPipeline(), Array("--target-dir", "generated"))
-}

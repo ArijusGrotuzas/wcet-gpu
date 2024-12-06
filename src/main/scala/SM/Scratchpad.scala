@@ -9,8 +9,3 @@ class Scratchpad extends Module {
   })
   // TODO: Implement hardware
 }
-
-object ScratchpadMain extends App {
-  println("Generating the scratchpad hardware")
-  emitVerilog(new Scratchpad(), Array("--target-dir", "generated"))
-}

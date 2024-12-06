@@ -9,8 +9,3 @@ class FrontEnd extends Module {
   })
   // TODO: Implement hardware
 }
-
-object FrontEndMain extends App {
-  println("Generating the front end hardware")
-  emitVerilog(new VectorRegisterFile(), Array("--target-dir", "generated"))
-}

@@ -9,8 +9,3 @@ class AluPipeline extends Module {
   })
   // TODO: Implement hardware
 }
-
-object AluPipelineMain extends App {
-  println("Generating the ALU pipeline hardware")
-  emitVerilog(new Scratchpad(), Array("--target-dir", "generated"))
-}
