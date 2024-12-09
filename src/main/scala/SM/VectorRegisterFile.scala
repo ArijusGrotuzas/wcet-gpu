@@ -3,17 +3,16 @@ package SM
 import chisel3._
 import chisel3.util._
 
-class VectorRegisterFile(bankDepth: Int, bankWidth: Int) extends Module {
+class VectorRegisterFile(bankDepth: Int, bankWidth: Int, addrLen: Int) extends Module {
   val io = IO(new Bundle {
     // Inputs
     val we = Input(Bool())
-    val writeAddr = Input(UInt(10.W))
+    val writeAddr = Input(UInt(addrLen.W))
     val writeMask = Input(UInt(4.W))
     val writeData = Input(UInt(bankWidth.W))
-
-    val readAddr1 = Input(UInt(10.W))
-    val readAddr2 = Input(UInt(10.W))
-    val readAddr3 = Input(UInt(10.W))
+    val readAddr1 = Input(UInt(addrLen.W))
+    val readAddr2 = Input(UInt(addrLen.W))
+    val readAddr3 = Input(UInt(addrLen.W))
     // Outputs
     val readData1 = Output(UInt(bankWidth.W))
     val readData2 = Output(UInt(bankWidth.W))
@@ -22,47 +21,68 @@ class VectorRegisterFile(bankDepth: Int, bankWidth: Int) extends Module {
 
   private def bankAddrSel(bankIdx: UInt, addr1: UInt, addr2: UInt, addr3: UInt) = {
     val oneHotSel = WireDefault(0.U(4.W))
-    oneHotSel := Cat(addr1(9, 8) === bankIdx, addr2(9, 8) === bankIdx, addr3(9, 8) === bankIdx)
+    oneHotSel := Cat(addr1(addrLen - 1, addrLen - 2) === bankIdx, addr2(addrLen - 1, addrLen - 2) === bankIdx, addr3(addrLen - 1, addrLen - 2) === bankIdx)
 
-    val bankAddr = WireDefault(0.U(10.W))
+    val bankAddr = WireDefault(0.U((addrLen - 2).W))
     switch (oneHotSel) {
-      is ("b100".U) { bankAddr := io.readAddr1}
-      is ("b010".U) { bankAddr := io.readAddr2}
-      is ("b001".U) { bankAddr := io.readAddr3}
+      is ("b100".U) { bankAddr := io.readAddr1(addrLen - 3, 0)}
+      is ("b010".U) { bankAddr := io.readAddr2(addrLen - 3, 0)}
+      is ("b001".U) { bankAddr := io.readAddr3(addrLen - 3, 0)}
     }
 
     bankAddr
   }
-  val writeBank = WireDefault(0.U(10.W))
 
-  // Creates ram banks
-  val bank1 = Module(new DualPortedRam(bankDepth, bankWidth))
-  val bank2 = Module(new DualPortedRam(bankDepth, bankWidth))
-  val bank3 = Module(new DualPortedRam(bankDepth, bankWidth))
-  val bank4 = Module(new DualPortedRam(bankDepth, bankWidth))
+  // Create ram banks
+  val bank1 = Module(new DualPortedRam(bankDepth, bankWidth, addrLen - 2))
+  val bank2 = Module(new DualPortedRam(bankDepth, bankWidth, addrLen - 2))
+  val bank3 = Module(new DualPortedRam(bankDepth, bankWidth, addrLen - 2))
+  val bank4 = Module(new DualPortedRam(bankDepth, bankWidth, addrLen - 2))
 
-  // First bank read
-  bank1.io.readAddr := bankAddrSel(0.U, io.readAddr1, io.readAddr2, io.readAddr3)
+  val readData1 = WireDefault(0.U(bankWidth.W))
+  val readData2 = WireDefault(0.U(bankWidth.W))
+  val readData3 = WireDefault(0.U(bankWidth.W))
 
-  // Second bank read
-  bank2.io.readAddr := bankAddrSel(1.U, io.readAddr1, io.readAddr2, io.readAddr3)
+  val writeBankSel = WireDefault(0.U(2.W))
 
-  // Third bank read
-  bank3.io.readAddr := bankAddrSel(2.U, io.readAddr1, io.readAddr2, io.readAddr3)
-
-  // Fourth bank read
-  bank4.io.readAddr := bankAddrSel(3.U, io.readAddr1, io.readAddr2, io.readAddr3)
-
-  // Write data
+  // Write enable signals
   val b1We = WireDefault(false.B)
   val b2We = WireDefault(false.B)
   val b3We = WireDefault(false.B)
   val b4We = WireDefault(false.B)
 
+  // Bank read multiplexers
+  bank1.io.readAddr := bankAddrSel(0.U, io.readAddr1, io.readAddr2, io.readAddr3)
+  bank2.io.readAddr := bankAddrSel(1.U, io.readAddr1, io.readAddr2, io.readAddr3)
+  bank3.io.readAddr := bankAddrSel(2.U, io.readAddr1, io.readAddr2, io.readAddr3)
+  bank4.io.readAddr := bankAddrSel(3.U, io.readAddr1, io.readAddr2, io.readAddr3)
+
+  // Output data multiplexers
+  switch(io.readAddr1(addrLen - 1, addrLen - 2)) {
+    is(0.U) { readData1 := bank1.io.readData }
+    is(1.U) { readData1 := bank2.io.readData }
+    is(2.U) { readData1 := bank3.io.readData }
+    is(3.U) { readData1 := bank4.io.readData }
+  }
+
+  switch(io.readAddr2(addrLen - 1, addrLen - 2)) {
+    is(0.U) { readData2 := bank1.io.readData }
+    is(1.U) { readData2 := bank2.io.readData }
+    is(2.U) { readData2 := bank3.io.readData }
+    is(3.U) { readData2 := bank4.io.readData }
+  }
+
+  switch(io.readAddr3(addrLen - 1, addrLen - 2)) {
+    is(0.U) { readData3 := bank1.io.readData }
+    is(1.U) { readData3 := bank2.io.readData }
+    is(2.U) { readData3 := bank3.io.readData }
+    is(3.U) { readData3 := bank4.io.readData }
+  }
+
+  // Bank write enable selector
+  writeBankSel := io.writeAddr(addrLen - 1, addrLen - 2)
   when (io.we) {
-    writeBank := io.writeAddr(9, 8)
-//    printf(cf"writeBank = $writeBank")
-    switch(io.writeAddr(9, 8)) {
+    switch(writeBankSel) {
       is(0.U) { b1We := true.B }
       is(1.U) { b2We := true.B }
       is(2.U) { b3We := true.B }
@@ -90,7 +110,7 @@ class VectorRegisterFile(bankDepth: Int, bankWidth: Int) extends Module {
   bank3.io.writeData := io.writeData
   bank4.io.writeData := io.writeData
 
-  io.readData1 := bank1.io.readData
-  io.readData2 := bank2.io.readData
-  io.readData3 := bank3.io.readData
+  io.readData1 := readData1
+  io.readData2 := readData2
+  io.readData3 := readData3
 }

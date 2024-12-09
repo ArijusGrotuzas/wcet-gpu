@@ -2,12 +2,12 @@ package SM
 
 import chisel3._
 
-class DualPortedRam(depth: Int, width: Int) extends Module {
+class DualPortedRam(depth: Int, width: Int, addrLen: Int) extends Module {
   val io = IO(new Bundle {
     // Inputs
     val we = Input(Bool())
-    val readAddr = Input(UInt(5.W))
-    val writeAddr = Input(UInt(5.W))
+    val readAddr = Input(UInt(addrLen.W))
+    val writeAddr = Input(UInt(addrLen.W))
     val writeData = Input(UInt(width.W))
     // Outputs
     val readData = Output(UInt(width.W))
