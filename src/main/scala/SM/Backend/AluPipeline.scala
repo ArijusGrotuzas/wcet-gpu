@@ -2,7 +2,7 @@ package SM.Backend
 
 import chisel3._
 
-class AluPipeline(operandWidth: Int) extends Module {
+class AluPipeline(operandWidth: Int, lanesCount: Int) extends Module {
   val io = IO(new Bundle {
     // TODO: Add port declarations
   })
