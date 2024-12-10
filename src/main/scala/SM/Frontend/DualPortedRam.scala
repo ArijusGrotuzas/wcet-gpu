@@ -1,4 +1,4 @@
-package SM
+package SM.Frontend
 
 import chisel3._
 
