@@ -1,4 +1,4 @@
-package SM
+package SM.Frontend
 
 import chisel3._
 import chisel3.util._
@@ -51,28 +51,36 @@ class VectorRegisterFile(bankDepth: Int, bankWidth: Int, addrLen: Int) extends M
   val b3We = WireDefault(false.B)
   val b4We = WireDefault(false.B)
 
+  val outOpSel1 = RegInit(0.U(2.W))
+  val outOpSel2 = RegInit(0.U(2.W))
+  val outOpSel3 = RegInit(0.U(2.W))
+
   // Bank read multiplexers
   bank1.io.readAddr := bankAddrSel(0.U, io.readAddr1, io.readAddr2, io.readAddr3)
   bank2.io.readAddr := bankAddrSel(1.U, io.readAddr1, io.readAddr2, io.readAddr3)
   bank3.io.readAddr := bankAddrSel(2.U, io.readAddr1, io.readAddr2, io.readAddr3)
   bank4.io.readAddr := bankAddrSel(3.U, io.readAddr1, io.readAddr2, io.readAddr3)
 
+  outOpSel1 := io.readAddr1(addrLen - 1, addrLen - 2)
+  outOpSel2 := io.readAddr2(addrLen - 1, addrLen - 2)
+  outOpSel3 := io.readAddr3(addrLen - 1, addrLen - 2)
+
   // Output data multiplexers
-  switch(io.readAddr1(addrLen - 1, addrLen - 2)) {
+  switch(outOpSel1) {
     is(0.U) { readData1 := bank1.io.readData }
     is(1.U) { readData1 := bank2.io.readData }
     is(2.U) { readData1 := bank3.io.readData }
     is(3.U) { readData1 := bank4.io.readData }
   }
 
-  switch(io.readAddr2(addrLen - 1, addrLen - 2)) {
+  switch(outOpSel2) {
     is(0.U) { readData2 := bank1.io.readData }
     is(1.U) { readData2 := bank2.io.readData }
     is(2.U) { readData2 := bank3.io.readData }
     is(3.U) { readData2 := bank4.io.readData }
   }
 
-  switch(io.readAddr3(addrLen - 1, addrLen - 2)) {
+  switch(outOpSel3) {
     is(0.U) { readData3 := bank1.io.readData }
     is(1.U) { readData3 := bank2.io.readData }
     is(2.U) { readData3 := bank3.io.readData }
@@ -95,10 +103,10 @@ class VectorRegisterFile(bankDepth: Int, bankWidth: Int, addrLen: Int) extends M
   bank3.io.we := b3We
   bank4.io.we := b4We
 
-  bank1.io.writeAddr := io.writeAddr
-  bank2.io.writeAddr := io.writeAddr
-  bank3.io.writeAddr := io.writeAddr
-  bank4.io.writeAddr := io.writeAddr
+  bank1.io.writeAddr := io.writeAddr(addrLen - 3, 0)
+  bank2.io.writeAddr := io.writeAddr(addrLen - 3, 0)
+  bank3.io.writeAddr := io.writeAddr(addrLen - 3, 0)
+  bank4.io.writeAddr := io.writeAddr(addrLen - 3, 0)
 
 //  bank1.io.writeMask := io.writeMask
 //  bank2.io.writeMask := io.writeMask
