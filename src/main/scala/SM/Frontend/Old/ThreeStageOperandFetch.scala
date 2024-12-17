@@ -1,8 +1,9 @@
-package SM.Frontend
+package SM.Frontend.Old
 
+import SM.Frontend.VectorRegisterFile
 import chisel3._
 
-class OperandFetch extends Module {
+class ThreeStageOperandFetch extends Module {
   val io = IO(new Bundle{
     val reg1Addr = Input(UInt(7.W))
     val reg2Addr = Input(UInt(7.W))

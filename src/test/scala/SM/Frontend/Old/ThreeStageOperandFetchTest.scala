@@ -1,12 +1,12 @@
-package SM.Frontend
+package SM.Frontend.Old
 
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec;
 
-class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
+class ThreeStageOperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
   "OperandFetch" should "read from the correct addresses" in {
-    test(new OperandFetch).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
+    test(new ThreeStageOperandFetch).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
       // ---- Write some data to VRF first ----
       // Write to the first address in the second bank
       dut.io.we.poke(1.B)
