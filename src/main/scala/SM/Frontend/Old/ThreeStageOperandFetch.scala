@@ -1,6 +1,5 @@
 package SM.Frontend.Old
 
-import SM.Frontend.VectorRegisterFile
 import chisel3._
 
 class ThreeStageOperandFetch extends Module {
@@ -17,7 +16,7 @@ class ThreeStageOperandFetch extends Module {
     val op2 = Output(UInt(256.W))
     val op3 = Output(UInt(256.W))
   })
-  val vrf = Module(new VectorRegisterFile(32, 256, 7))
+  val vrf = Module(new VectorRegisterFileOld(32, 256, 7))
 
   val reg1Addr = io.reg1Addr
   val reg2Addr = RegNext(io.reg2Addr)
