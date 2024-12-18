@@ -4,10 +4,14 @@ import chisel3._
 
 class InstructionFetch(warpCount: Int) extends Module {
   val io = IO(new Bundle {
+    val start = Input(Bool())
+    val reset = Input(Bool())
     val setValid = Input(Bool())
     val valid = Input(UInt(warpCount.W))
-    val reset = Input(Bool())
-    val start = Input(Bool())
+
+    val loadInstr = Input(Bool())
+    val loadInstrVal = Input(UInt(32.W))
+    val loadInstrAddr = Input(UInt(32.W))
 
     val memStall = Input(Bool())
     val aluStall = Input(Bool())
@@ -33,12 +37,21 @@ class InstructionFetch(warpCount: Int) extends Module {
   val stall = WireDefault(false.B)
   val newPc = WireDefault(0.U(32.W))
   val done = WireDefault(false.B)
+  val instrAddr = WireDefault(0.U(32.W))
+  val fetch = WireDefault(false.B)
+
+  fetch := warpTable.io.doneOut(warp) === 0.U && !stall && !io.setValid && !io.loadInstr
 
   // ----------------- Instruction Cache Assignments -----------------
-  // TODO: Set signals for loading instruction memory
-  instructionCache.io.wEn := false.B
-  instructionCache.io.addr := warpTable.io.pcOut
-  instructionCache.io.loadInstr := 0.U
+  when(io.loadInstr) {
+    instrAddr := io.loadInstrAddr
+  } .otherwise(
+    instrAddr := warpTable.io.pcOut
+  )
+
+  instructionCache.io.wEn := io.loadInstr
+  instructionCache.io.addr := instrAddr
+  instructionCache.io.loadInstr := io.loadInstrVal
 
   // ----------------- Warp Table Assignments -----------------
   warpTable.io.setValid := io.setValid
@@ -68,7 +81,7 @@ class InstructionFetch(warpCount: Int) extends Module {
   ready := warpScheduler.io.ready
 
   // If the warp is done, we just insert NOPs
-  when(warpTable.io.doneOut(warp) === 0.U || !stall) {
+  when(fetch) {
     instr := instructionCache.io.instr
     newPc := warpTable.io.pcOut + 1.U
   } .otherwise{
@@ -77,7 +90,7 @@ class InstructionFetch(warpCount: Int) extends Module {
   }
 
   // If the instruction opcode is RET, set the warp as done
-  when(io.instr(4, 0) === "b1111".U) {
+  when(io.instr(4, 0) === "b11111".U) {
     done := true.B
   }
 
