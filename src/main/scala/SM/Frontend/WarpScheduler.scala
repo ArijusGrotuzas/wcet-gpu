@@ -7,7 +7,7 @@ import SM.Frontend.SchedulerState._
 class WarpScheduler extends Module {
   val io = IO(new Bundle {
     val valid = Input(UInt(4.W))
-    val done = Input(UInt(4.W))
+    val active = Input(UInt(4.W))
     val pending = Input(UInt(4.W))
     val headInstrType = Input(UInt(4.W))
     val memStall = Input(Bool())
@@ -29,9 +29,9 @@ class WarpScheduler extends Module {
   // Calculate which warps can be scheduled
   when(io.memStall) {
     // If the memory pipeline is stalled, remove warps that have memory instructions in the head of their instruction queue
-    availableWarps := ((~(io.done | io.pending)).asUInt & io.valid) & (~io.headInstrType).asUInt
+    availableWarps := ((io.active & (~io.pending).asUInt) & io.valid) & (~io.headInstrType).asUInt
   } .otherwise(
-    availableWarps := (~(io.done | io.pending)).asUInt & io.valid
+    availableWarps := (io.active & (~io.pending).asUInt) & io.valid
   )
 
   // If there are no available warps, stall the pipeline
