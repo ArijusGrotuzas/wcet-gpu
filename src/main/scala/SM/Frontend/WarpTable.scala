@@ -6,21 +6,21 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
   val io = IO(new Bundle {
     val setValid = Input(Bool())
     val valid = Input(UInt(warpCount.W))
-    val clear = Input(Bool())
+    val reset = Input(Bool())
 
-    val update = Input(Bool())
     val warp = Input(UInt(addrLen.W))
     val newPc = Input(UInt(32.W))
-    val toggleDone = Input(Bool())
-    val togglePending = Input(Bool())
-    val toggleActive = Input(Bool())
-    val togglePendingWb = Input(Bool())
+
+    val setDone = Input(Bool())
+    val setPending = Input(Bool())
+    val setInactive = Input(Bool())
+    val setNotPending = Input(Bool())
     val warpWb = Input(UInt(addrLen.W))
 
-    val doneOut = Output(Vec(warpCount, Bool()))
-    val activeOut = Output(Vec(warpCount, Bool()))
-    val pendingOut = Output(Vec(warpCount, Bool()))
-    val validOut = Output(Vec(warpCount, Bool()))
+    val doneOut = Output(UInt(warpCount.W))
+    val activeOut = Output(UInt(warpCount.W))
+    val pendingOut = Output(UInt(warpCount.W))
+    val validOut = Output(UInt(warpCount.W))
     val pcOut = Output(UInt(32.W))
   })
 
@@ -36,28 +36,28 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     }
   }
 
-  when(io.update) {
-    when (io.toggleDone) {
-      doneReg(io.warp) := ~doneReg(io.warp)
-    }
-
-    when (io.togglePending) {
-      pendingReg(io.warp) := ~pendingReg(io.warp)
-    }
-
-    when (io.togglePendingWb) {
-      pendingReg(io.warpWb) := ~pendingReg(io.warpWb)
-    }
-
-    when (io.toggleActive) {
-      activeReg(io.warp) := ~activeReg(io.warp)
-    }
-
-    pcReg(io.warp) := io.newPc
+  when (io.setDone) {
+    doneReg(io.warp) := true.B
   }
 
-  // Clear the table entries
-  when(io.clear) {
+  when((io.warp =/= io.warpWb) && !(io.setPending && io.setNotPending)) {
+    when (io.setPending) {
+      pendingReg(io.warp) := true.B
+    }
+
+    when (io.setNotPending) {
+      pendingReg(io.warpWb) := ~pendingReg(io.warpWb)
+    }
+  }
+
+  when (io.setInactive) {
+    activeReg(io.warp) := ~activeReg(io.warp)
+  }
+
+  pcReg(io.warp) := io.newPc
+
+  // Rest the table entries
+  when(io.reset) {
     pcReg := VecInit(Seq.fill(warpCount)(0.U))
     doneReg := VecInit(Seq.fill(warpCount)(false.B))
     activeReg := VecInit(Seq.fill(warpCount)(true.B))
@@ -65,9 +65,9 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     validReg := VecInit(Seq.fill(warpCount)(false.B))
   }
 
-  io.doneOut := doneReg
-  io.activeOut := activeReg
-  io.pendingOut := pendingReg
-  io.validOut := validReg
+  io.doneOut := doneReg.asUInt
+  io.activeOut := activeReg.asUInt
+  io.pendingOut := pendingReg.asUInt
+  io.validOut := validReg.asUInt
   io.pcOut := pcReg(io.warp)
 }

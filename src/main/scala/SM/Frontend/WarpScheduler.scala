@@ -42,6 +42,8 @@ class WarpScheduler extends Module {
   // Scheduler FSM
   switch(stateReg) {
     is(idle) {
+      stall := true.B
+
       when(io.start === true.B) {
         stateReg := s0
         readyReg := false.B
