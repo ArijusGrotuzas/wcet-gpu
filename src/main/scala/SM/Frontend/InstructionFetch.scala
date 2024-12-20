@@ -4,98 +4,91 @@ import chisel3._
 
 class InstructionFetch(warpCount: Int) extends Module {
   val io = IO(new Bundle {
-    val start = Input(Bool())
     val reset = Input(Bool())
     val setValid = Input(Bool())
-    val valid = Input(UInt(warpCount.W))
-
+    val stall = Input(Bool())
     val loadInstr = Input(Bool())
-    val loadInstrVal = Input(UInt(32.W))
+
+    val setValidData = Input(UInt(warpCount.W))
+    val loadInstrData = Input(UInt(32.W))
     val loadInstrAddr = Input(UInt(32.W))
 
-    val memStall = Input(Bool())
-    val aluStall = Input(Bool())
-    val headInstrType = Input(UInt(warpCount.W))
+    val fetchWarp = Input(UInt(2.W))
     val issueSetPending = Input(Bool())
     val issueSetInactive = Input(Bool())
     val wbSetNotPending = Input(Bool())
     val wbWarp = Input(UInt(2.W))
 
-    val warp = Output(UInt(2.W))
-    val instr = Output(UInt(32.W))
-    val ready = Output(Bool())
-    val stall = Output(Bool())
+    val warpDec = Output(UInt(2.W))
+    val instrDec = Output(UInt(32.W))
+    val valid = Output(UInt(4.W))
+    val active = Output(UInt(4.W))
+    val pending = Output(UInt(4.W))
   })
 
   val warpTable = Module(new WarpTable(4, 2))
-  val warpScheduler = Module(new WarpScheduler()) // TODO: Configure the scheduler to support any number of warps
   val instructionCache = Module(new InstructionCache(32, 1024, 5))
 
+  val pcNext = WireDefault(0.U(32.W))
+  val warp = RegInit(0.U(2.W))
+  val setDone = WireDefault(false.B)
+  val fetch = RegInit(false.B)
+  val fetchNext = WireDefault(false.B)
   val instr = WireDefault(0.U(32.W))
-  val warp = WireDefault(0.U(2.W))
-  val ready = WireDefault(false.B)
-  val stall = WireDefault(false.B)
-  val newPc = WireDefault(0.U(32.W))
-  val done = WireDefault(false.B)
   val instrAddr = WireDefault(0.U(32.W))
-  val fetch = WireDefault(false.B)
+  val fetchInstr = WireDefault(0.U(32.W))
+  val opcode = WireDefault(0.U(5.W))
 
-  fetch := warpTable.io.doneOut(warp) === 0.U && !stall && !io.setValid && !io.loadInstr
+  // ------------ First half of the pipeline ------------
+  fetchNext := warpTable.io.done(io.fetchWarp) === 0.U && !io.reset && !io.stall && !io.setValid && !io.loadInstr && (opcode =/= "b11111".U)
+  fetch := fetchNext
 
-  // ----------------- Instruction Cache Assignments -----------------
+  pcNext := warpTable.io.pc(io.fetchWarp) + 1.U
+  warp := io.fetchWarp
+
+  warpTable.io.reset := io.reset
+  warpTable.io.validCtrl.set := io.setValid
+  warpTable.io.validCtrl.data := io.setValidData
+  warpTable.io.pcCtrl.update := fetchNext
+  warpTable.io.pcCtrl.idx := io.fetchWarp
+  warpTable.io.pcCtrl.data := pcNext
+  warpTable.io.doneCtrl.set := setDone
+  warpTable.io.doneCtrl.idx := warp
+  warpTable.io.pendingCtrlIssue.set := io.issueSetPending
+  warpTable.io.pendingCtrlIssue.idx := io.fetchWarp
+  warpTable.io.activeCtrl.set := io.issueSetInactive
+  warpTable.io.activeCtrl.idx := io.fetchWarp
+  warpTable.io.pendingCtrlWb.set := io.wbSetNotPending
+  warpTable.io.pendingCtrlWb.idx := io.wbWarp
+
   when(io.loadInstr) {
     instrAddr := io.loadInstrAddr
   } .otherwise(
-    instrAddr := warpTable.io.pcOut
+    instrAddr := warpTable.io.pc(io.fetchWarp)
   )
 
-  instructionCache.io.wEn := io.loadInstr
-  instructionCache.io.addr := instrAddr
-  instructionCache.io.loadInstr := io.loadInstrVal
+  // ------------ Second half of the pipeline ------------
+  instructionCache.io.loadInstr := io.loadInstr
+  instructionCache.io.instrAddr := instrAddr
+  instructionCache.io.loadInstrData := io.loadInstrData
+  instr := instructionCache.io.instr
 
-  // ----------------- Warp Table Assignments -----------------
-  warpTable.io.setValid := io.setValid
-  warpTable.io.valid := io.valid
-  warpTable.io.reset := io.reset
-
-  warpTable.io.warp := warp
-  warpTable.io.newPc := newPc
-
-  warpTable.io.setDone := done
-  warpTable.io.setPending := io.issueSetPending
-  warpTable.io.setInactive := io.issueSetInactive
-  warpTable.io.setNotPending := io.wbSetNotPending
-  warpTable.io.warpWb := io.wbWarp
-
-  // ----------------- Warp Scheduler Assignments -----------------
-  warpScheduler.io.valid := warpTable.io.validOut
-  warpScheduler.io.active := warpTable.io.activeOut
-  warpScheduler.io.pending := warpTable.io.pendingOut
-  warpScheduler.io.headInstrType := io.headInstrType
-  warpScheduler.io.memStall := io.memStall
-  warpScheduler.io.aluStall := io.aluStall
-  warpScheduler.io.start := io.start
-
-  warp := warpScheduler.io.warpId
-  stall := warpScheduler.io.stall
-  ready := warpScheduler.io.ready
-
-  // If the warp is done, we just insert NOPs
   when(fetch) {
-    instr := instructionCache.io.instr
-    newPc := warpTable.io.pcOut + 1.U
-  } .otherwise{
-    instr := 0.U
-    newPc := warpTable.io.pcOut
+    fetchInstr := instr
+  } .otherwise {
+    fetchInstr := 0.U
   }
+
+  opcode := instr(4, 0)
 
   // If the instruction opcode is RET, set the warp as done
-  when(io.instr(4, 0) === "b11111".U) {
-    done := true.B
+  when(opcode === "b11111".U) {
+    setDone := true.B
   }
 
-  io.warp := warp
-  io.instr := instr
-  io.ready := ready
-  io.stall := stall
+  io.warpDec := warp
+  io.instrDec := fetchInstr
+  io.valid := warpTable.io.valid
+  io.active := warpTable.io.active
+  io.pending := warpTable.io.pending
 }

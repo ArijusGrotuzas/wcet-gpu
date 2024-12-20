@@ -39,6 +39,7 @@ class WarpScheduler extends Module {
     stall := true.B
   }
 
+  // TODO: Add return to idle state
   // Scheduler FSM
   switch(stateReg) {
     is(idle) {
