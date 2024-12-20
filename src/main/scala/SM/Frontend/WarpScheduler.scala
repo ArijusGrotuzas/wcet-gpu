@@ -4,27 +4,28 @@ import chisel3._
 import chisel3.util._
 import SM.Frontend.SchedulerState._
 
+// TODO: Use the read/valid interface
 class WarpScheduler extends Module {
   val io = IO(new Bundle {
+    val start = Input(Bool())
     val valid = Input(UInt(4.W))
     val active = Input(UInt(4.W))
     val pending = Input(UInt(4.W))
     val headInstrType = Input(UInt(4.W))
     val memStall = Input(Bool())
     val aluStall = Input(Bool())
-    val start = Input(Bool())
 
-    val warpId = Output(UInt(2.W))
+    val warp = Output(UInt(2.W))
     val stall = Output(Bool())
     val ready = Output(Bool())
   })
 
   val availableWarps = WireDefault(0.U(4.W))
-  val warpId = WireDefault(0.U(2.W))
+  val warp = WireDefault(0.U(2.W))
+  val ready = WireDefault(false.B)
   val stall = WireDefault(false.B)
-
   val stateReg = RegInit(idle)
-  val readyReg = RegInit(true.B)
+  val allDone = WireDefault(false.B)
 
   // Calculate which warps can be scheduled
   when(io.memStall) {
@@ -39,86 +40,89 @@ class WarpScheduler extends Module {
     stall := true.B
   }
 
-  // TODO: Add return to idle state
+  allDone := io.active.orR
+
   // Scheduler FSM
   switch(stateReg) {
     is(idle) {
       stall := true.B
+      ready := true.B
 
       when(io.start === true.B) {
         stateReg := s0
-        readyReg := false.B
-      } .otherwise(
-        readyReg := true.B
-      )
-    }
-    is(done) {
-      readyReg := true.B
-      stateReg := idle
+      }
     }
     is(s0) {
       when(availableWarps(0) === 1.U) {
-        warpId := 0.U
+        warp := 0.U
         stateReg := s0
       }.elsewhen(availableWarps(1) === 1.U) {
-        warpId := 1.U
+        warp := 1.U
         stateReg := s1
       }.elsewhen(availableWarps(2) === 1.U) {
-        warpId := 2.U
+        warp := 2.U
         stateReg := s2
       }.elsewhen(availableWarps(3) === 1.U) {
-        warpId := 3.U
+        warp := 3.U
         stateReg := s3
+      }.elsewhen(allDone) {
+        stateReg := idle
       }
     }
     is(s1) {
       when(availableWarps(1) === 1.U) {
-        warpId := 1.U
+        warp := 1.U
         stateReg := s1
       }.elsewhen(availableWarps(2) === 1.U) {
-        warpId := 2.U
+        warp := 2.U
         stateReg := s2
       }.elsewhen(availableWarps(3) === 1.U) {
-        warpId := 3.U
+        warp := 3.U
         stateReg := s3
       }.elsewhen(availableWarps(0) === 1.U) {
-        warpId := 0.U
+        warp := 0.U
         stateReg := s0
+      }.elsewhen(allDone) {
+        stateReg := idle
       }
     }
     is(s2) {
       when(availableWarps(2) === 1.U) {
-        warpId := 2.U
+        warp := 2.U
         stateReg := s2
       }.elsewhen(availableWarps(3) === 1.U) {
-        warpId := 3.U
+        warp := 3.U
         stateReg := s3
       }.elsewhen(availableWarps(0) === 1.U) {
-        warpId := 0.U
+        warp := 0.U
         stateReg := s0
       }.elsewhen(availableWarps(1) === 1.U) {
-        warpId := 1.U
+        warp := 1.U
         stateReg := s1
+      }.elsewhen(allDone) {
+        stateReg := idle
       }
     }
     is(s3) {
       when(availableWarps(3) === 1.U) {
-        warpId := 3.U
+        warp := 3.U
         stateReg := s3
       }.elsewhen(availableWarps(0) === 1.U) {
-        warpId := 0.U
+        warp := 0.U
         stateReg := s0
       }.elsewhen(availableWarps(1) === 1.U) {
-        warpId := 1.U
+        warp := 1.U
         stateReg := s1
       }.elsewhen(availableWarps(2) === 1.U) {
-        warpId := 2.U
+        warp := 2.U
         stateReg := s2
+      }.elsewhen(allDone) {
+        stateReg := idle
       }
     }
   }
 
-  io.warpId := warpId
+  io.warp := warp
   io.stall := stall
-  io.ready := readyReg
+  io.ready := ready
 }

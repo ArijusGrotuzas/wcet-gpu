@@ -21,6 +21,7 @@ class InstructionFetch(warpCount: Int) extends Module {
 
     val warpDec = Output(UInt(2.W))
     val instrDec = Output(UInt(32.W))
+    val pcDec = Output(UInt(32.W))
     val valid = Output(UInt(4.W))
     val active = Output(UInt(4.W))
     val pending = Output(UInt(4.W))
@@ -38,12 +39,14 @@ class InstructionFetch(warpCount: Int) extends Module {
   val instrAddr = WireDefault(0.U(32.W))
   val fetchInstr = WireDefault(0.U(32.W))
   val opcode = WireDefault(0.U(5.W))
+  val pc = RegInit(0.U(32.W))
 
   // ------------ First half of the pipeline ------------
   fetchNext := warpTable.io.done(io.fetchWarp) === 0.U && !io.reset && !io.stall && !io.setValid && !io.loadInstr && (opcode =/= "b11111".U)
   fetch := fetchNext
 
   pcNext := warpTable.io.pc(io.fetchWarp) + 1.U
+  pc := pcNext
   warp := io.fetchWarp
 
   warpTable.io.reset := io.reset
@@ -88,6 +91,7 @@ class InstructionFetch(warpCount: Int) extends Module {
 
   io.warpDec := warp
   io.instrDec := fetchInstr
+  io.pcDec := pc
   io.valid := warpTable.io.valid
   io.active := warpTable.io.active
   io.pending := warpTable.io.pending
