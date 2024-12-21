@@ -1,6 +1,5 @@
-package SM.Frontend
+package SM.Frontend.VRF
 
-import SM.Frontend.VRF.VectorRegisterFile
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec

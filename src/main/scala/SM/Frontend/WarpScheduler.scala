@@ -2,37 +2,56 @@ package SM.Frontend
 
 import chisel3._
 import chisel3.util._
-import SM.Frontend.SchedulerState._
 
-// TODO: Use the read/valid interface
-class WarpScheduler extends Module {
+object SchedulerState extends ChiselEnum {
+  val idle, done, s0, s1, s2, s3 = Value
+}
+
+class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    val start = Input(Bool())
-    val valid = Input(UInt(4.W))
-    val active = Input(UInt(4.W))
-    val pending = Input(UInt(4.W))
-    val headInstrType = Input(UInt(4.W))
+    val start = new Bundle{
+      val ready = Output(Bool())
+      val valid = Input(Bool())
+      val data = Input(UInt(warpCount.W))
+    }
+
+    val warpTable = new Bundle{
+      val valid = Input(UInt(warpCount.W))
+      val active = Input(UInt(warpCount.W))
+      val pending = Input(UInt(warpCount.W))
+    }
+
+    val headInstrType = Input(UInt(warpCount.W))
     val memStall = Input(Bool())
     val aluStall = Input(Bool())
 
-    val warp = Output(UInt(2.W))
-    val stall = Output(Bool())
-    val ready = Output(Bool())
+    val scheduler = new Bundle{
+      val warp = Output(UInt(warpAddrLen.W))
+      val stall = Output(Bool())
+      val reset = Output(Bool())
+      val setValid = Output(Bool())
+      val validWarps = Output(UInt(warpCount.W))
+    }
   })
+  import SchedulerState._
 
-  val availableWarps = WireDefault(0.U(4.W))
-  val warp = WireDefault(0.U(2.W))
+  val availableWarps = WireDefault(0.U(warpCount.W))
+  val warp = WireDefault(0.U(warpAddrLen.W))
   val ready = WireDefault(false.B)
   val stall = WireDefault(false.B)
-  val stateReg = RegInit(idle)
   val allDone = WireDefault(false.B)
+  val rst = WireDefault(false.B)
+  val setValid = WireDefault(false.B)
+  val validWarps = WireDefault(0.U(warpCount.W))
+
+  val stateReg = RegInit(idle)
 
   // Calculate which warps can be scheduled
   when(io.memStall) {
     // If the memory pipeline is stalled, remove warps that have memory instructions in the head of their instruction queue
-    availableWarps := ((io.active & (~io.pending).asUInt) & io.valid) & (~io.headInstrType).asUInt
+    availableWarps := ((io.warpTable.active & (~io.warpTable.pending).asUInt) & io.warpTable.valid) & (~io.headInstrType).asUInt
   } .otherwise(
-    availableWarps := (io.active & (~io.pending).asUInt) & io.valid
+    availableWarps := (io.warpTable.active & (~io.warpTable.pending).asUInt) & io.warpTable.valid
   )
 
   // If there are no available warps, stall the pipeline
@@ -40,7 +59,7 @@ class WarpScheduler extends Module {
     stall := true.B
   }
 
-  allDone := io.active.orR
+  allDone := io.warpTable.active.orR
 
   // Scheduler FSM
   switch(stateReg) {
@@ -48,7 +67,9 @@ class WarpScheduler extends Module {
       stall := true.B
       ready := true.B
 
-      when(io.start === true.B) {
+      when(io.start.valid === true.B) {
+        setValid := true.B
+        validWarps := io.start.data
         stateReg := s0
       }
     }
@@ -66,7 +87,7 @@ class WarpScheduler extends Module {
         warp := 3.U
         stateReg := s3
       }.elsewhen(allDone) {
-        stateReg := idle
+        stateReg := done
       }
     }
     is(s1) {
@@ -83,7 +104,7 @@ class WarpScheduler extends Module {
         warp := 0.U
         stateReg := s0
       }.elsewhen(allDone) {
-        stateReg := idle
+        stateReg := done
       }
     }
     is(s2) {
@@ -100,7 +121,7 @@ class WarpScheduler extends Module {
         warp := 1.U
         stateReg := s1
       }.elsewhen(allDone) {
-        stateReg := idle
+        stateReg := done
       }
     }
     is(s3) {
@@ -117,12 +138,20 @@ class WarpScheduler extends Module {
         warp := 2.U
         stateReg := s2
       }.elsewhen(allDone) {
-        stateReg := idle
+        stateReg := done
       }
+    }
+    is(done) {
+      stall := true.B
+      rst := true.B
+      stateReg := idle
     }
   }
 
-  io.warp := warp
-  io.stall := stall
-  io.ready := ready
+  io.scheduler.warp := warp
+  io.scheduler.stall := stall
+  io.scheduler.reset := rst
+  io.scheduler.setValid := setValid
+  io.scheduler.validWarps := validWarps
+  io.start.ready := ready
 }

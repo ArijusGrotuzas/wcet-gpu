@@ -5,7 +5,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class WarpTableTest extends AnyFlatSpec with ChiselScalatestTester {
-  "WarpTable" should "should hold and update entries" in {
+  "WarpTable" should "hold and update entries" in {
     test(new WarpTable(8, 32)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
       // Set valid bits
       val validBits = "b00001111"
