@@ -11,7 +11,7 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.id.pc.poke(0.U)
       dut.io.id.valid.poke(false.B)
       dut.io.id.warp.poke(0.U)
-      dut.io.warpIf.poke(0.U)
+      dut.io.scheduler.warp.poke(0.U)
       dut.io.id.opcode.poke(0.U)
       dut.io.id.dest.poke(0.U)
       dut.io.id.rs1.poke(0.U)
@@ -30,7 +30,7 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.id.rs2.poke(8.U)
       dut.io.id.rs3.poke(9.U)
       dut.io.id.imm.poke(32.U)
-      dut.io.warpIf.poke(3.U)
+      dut.io.scheduler.warp.poke(3.U)
 
       dut.clock.step(1)
 
@@ -42,7 +42,7 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.id.rs2.poke(13.U)
       dut.io.id.rs3.poke(14.U)
       dut.io.id.imm.poke(255.U)
-      dut.io.warpIf.poke(3.U)
+      dut.io.scheduler.warp.poke(3.U)
 
       dut.clock.step(1)
 
@@ -54,7 +54,7 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.id.rs2.poke(21.U)
       dut.io.id.rs3.poke(22.U)
       dut.io.id.imm.poke(112.U)
-      dut.io.warpIf.poke(3.U)
+      dut.io.scheduler.warp.poke(3.U)
 
       dut.clock.step(1)
 
@@ -66,7 +66,7 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.id.rs2.poke(25.U)
       dut.io.id.rs3.poke(25.U)
       dut.io.id.imm.poke(16.U)
-      dut.io.warpIf.poke(3.U)
+      dut.io.scheduler.warp.poke(3.U)
 
       dut.clock.step(1)
 
@@ -75,17 +75,17 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.id.valid.poke(false.B)
       dut.io.id.warp.poke(0.U)
       dut.io.id.opcode.poke(0.U)
-      dut.io.warpIf.poke(0.U)
+      dut.io.scheduler.warp.poke(0.U)
       dut.io.iss.opcode.expect(1.U)
 
       dut.clock.step(1)
 
-      dut.io.warpIf.poke(0.U)
+      dut.io.scheduler.warp.poke(0.U)
       dut.io.iss.opcode.expect(2.U)
 
       dut.clock.step(1)
 
-      dut.io.warpIf.poke(0.U)
+      dut.io.scheduler.warp.poke(0.U)
       dut.io.iss.opcode.expect(3.U)
 
       dut.clock.step(10)

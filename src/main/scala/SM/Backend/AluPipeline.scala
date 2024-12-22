@@ -1,6 +1,5 @@
 package SM.Backend
 
-import SM.Scratchpad
 import chisel3._
 
 class AluPipeline extends Module {
