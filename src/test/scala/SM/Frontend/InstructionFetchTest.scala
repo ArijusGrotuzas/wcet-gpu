@@ -18,7 +18,7 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   "InstructionFetch" should "work" in {
-    test(new InstructionFetch(4)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
+    test(new InstructionFetch(4, 2)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
       // Set valid warps and load instructions
       dut.io.scheduler.setValid.poke(true.B)
       dut.io.scheduler.validWarps.poke("b0011".U)
@@ -65,26 +65,26 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Set first warp as inactive
-      dut.io.issCtrl.setInactive.poke(true.B)
+      dut.io.wb.setInactive.poke(true.B)
 
       dut.clock.step(1)
 
       // Expect that the correct warp entry was updated in the warp table
-      dut.io.issCtrl.setInactive.poke(false.B)
+      dut.io.wb.setInactive.poke(false.B)
       dut.io.warpTable.active.expect("b1110".U)
       dut.io.scheduler.warp.poke(1.U)
 
       dut.clock.step(1)
 
       // Expect second warp and first instruction
-      dut.io.issCtrl.setPending.poke(true.B)
+      dut.io.setPending.poke(true.B)
       dut.io.instrF.warp.expect(1.U)
       dut.io.instrF.instr.expect("hdeadbeef".U)
 
       dut.clock.step(1)
 
       // Expect second warp and second instruction, and expect that the warp has been set as pending
-      dut.io.issCtrl.setPending.poke(false.B)
+      dut.io.setPending.poke(false.B)
       dut.io.warpTable.pending.expect("b0010".U)
       dut.io.scheduler.warp.poke(2.U)
 

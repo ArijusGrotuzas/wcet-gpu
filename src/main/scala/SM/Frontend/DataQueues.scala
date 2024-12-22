@@ -15,7 +15,7 @@ class DataQueues(queueCount: Int, queueDepth: Int, dataLen: Int) extends Module 
 
   val queues = Array.fill(queueCount)(Module(new DoubleBufferFifo(UInt(dataLen.W), queueDepth)))
   val outBits = VecInit(queues.toSeq.map(_.io.deq.bits))
-  val empty = VecInit(queues.toSeq.map(_.io.deq.valid))
+  val notEmpty = VecInit(queues.toSeq.map(_.io.deq.valid))
   val dataOut = WireDefault(0.U(dataLen.W))
 
   // Opcode queues
@@ -26,7 +26,7 @@ class DataQueues(queueCount: Int, queueDepth: Int, dataLen: Int) extends Module 
   }
 
   // If the selected queue is empty, then return 0
-  when(empty(io.outDataSel)) {
+  when(notEmpty(io.outDataSel)) {
     dataOut := outBits(io.outDataSel)
   }.otherwise {
     dataOut := 0.U

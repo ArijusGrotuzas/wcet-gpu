@@ -18,13 +18,14 @@ class Frontend(warpCount: Int) extends Module {
 
     val wb = new Bundle{
       val setNotPending = Input(Bool())
+      val setInactive = Input(Bool())
       val warp = Input(UInt(2.W))
     }
 
     val memStall = Input(Bool())
     val aluStall = Input(Bool())
 
-    val iss = new Bundle{
+    val front = new Bundle{
       // val pc = Output(UInt(32.W))
       val warp = Output(UInt(warpCount.W))
       val opcode = Output(UInt(5.W))
@@ -36,9 +37,9 @@ class Frontend(warpCount: Int) extends Module {
     }
   })
 
-  val instrF = Module(new InstructionFetch(4))
-  val instrD = Module(new InstructionDecode)
-  val instrIss = Module(new InstructionIssue(4))
+  val instrF = Module(new InstructionFetch(4, 2))
+  val instrD = Module(new InstructionDecode(2))
+  val instrIss = Module(new InstructionIssue(4, 2))
   val warpScheduler = Module(new WarpScheduler(4, 2))
 
   warpScheduler.io.start <> io.start
@@ -49,14 +50,14 @@ class Frontend(warpCount: Int) extends Module {
   warpScheduler.io.scheduler <> instrF.io.scheduler
 
   instrF.io.loadInstr <> io.loadInstr
-  instrF.io.issCtrl.setPending := false.B
-  instrF.io.issCtrl.setInactive := false.B
+  instrF.io.setPending := instrIss.io.setPending
+  instrF.io.wb.setInactive := io.wb.setInactive
   instrF.io.wb <> io.wb
 
   instrD.io.instrF.valid := RegNext(instrF.io.instrF.valid, false.B)
   instrD.io.instrF.pc := RegNext(instrF.io.instrF.pc, 0.U)
-  instrD.io.instrF.instr := RegNext(instrF.io.instrF.valid, 0.U)
-  instrD.io.instrF.warp := RegNext(instrF.io.instrF.valid, 0.U)
+  instrD.io.instrF.instr := RegNext(instrF.io.instrF.instr, 0.U)
+  instrD.io.instrF.warp := RegNext(instrF.io.instrF.warp, 0.U)
 
   instrIss.io.id.valid := RegNext(instrD.io.id.valid, false.B)
   instrIss.io.id.pc := RegNext(instrD.io.id.pc, 0.U)
@@ -69,11 +70,11 @@ class Frontend(warpCount: Int) extends Module {
   instrIss.io.id.imm := RegNext(instrD.io.id.imm, 0.U)
   instrIss.io.warpIf := warpScheduler.io.scheduler.warp
 
-  io.iss.warp := RegNext(instrIss.io.iss.warp, 0.U)
-  io.iss.opcode := RegNext(instrIss.io.iss.opcode, 0.U)
-  io.iss.dest := RegNext(instrIss.io.iss.dest, 0.U)
-  io.iss.rs1 := RegNext(instrIss.io.iss.rs1, 0.U)
-  io.iss.rs2 := RegNext(instrIss.io.iss.rs2, 0.U)
-  io.iss.rs3 := RegNext(instrIss.io.iss.rs3, 0.U)
-  io.iss.imm := RegNext(instrIss.io.iss.imm, 0.U)
+  io.front.warp := RegNext(instrIss.io.iss.warp, 0.U)
+  io.front.opcode := RegNext(instrIss.io.iss.opcode, 0.U)
+  io.front.dest := RegNext(instrIss.io.iss.dest, 0.U)
+  io.front.rs1 := RegNext(instrIss.io.iss.rs1, 0.U)
+  io.front.rs2 := RegNext(instrIss.io.iss.rs2, 0.U)
+  io.front.rs3 := RegNext(instrIss.io.iss.rs3, 0.U)
+  io.front.imm := RegNext(instrIss.io.iss.imm, 0.U)
 }

@@ -2,7 +2,7 @@ package SM.Frontend
 
 import chisel3._
 
-class InstructionFetch(warpCount: Int) extends Module {
+class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val loadInstr = new Bundle{
       val en = Input(Bool())
@@ -12,27 +12,25 @@ class InstructionFetch(warpCount: Int) extends Module {
 
     val scheduler = new Bundle {
       val stall = Input(Bool())
-      val warp = Input(UInt(2.W))
+      val warp = Input(UInt(warpAddrLen.W))
       val reset = Input(Bool())
       val setValid = Input(Bool())
       val validWarps = Input(UInt(warpCount.W))
     }
 
-    val issCtrl = new Bundle {
-      val setPending = Input(Bool())
-      val setInactive = Input(Bool())
-    }
+    val setPending = Input(Bool())
 
     val wb = new Bundle {
       val setNotPending = Input(Bool())
-      val warp = Input(UInt(2.W))
+      val setInactive = Input(Bool())
+      val warp = Input(UInt(warpAddrLen.W))
     }
 
     val instrF = new Bundle {
       val valid = Output(Bool())
       val pc = Output(UInt(32.W))
       val instr = Output(UInt(32.W))
-      val warp = Output(UInt(2.W))
+      val warp = Output(UInt(warpAddrLen.W))
     }
 
     val warpTable = new Bundle {
@@ -64,7 +62,7 @@ class InstructionFetch(warpCount: Int) extends Module {
   pcNext := warpTable.io.pc(io.scheduler.warp) + 1.U
   pc := pcNext
   warp := io.scheduler.warp
-  valid := io.scheduler.stall
+  valid := !io.scheduler.stall
 
   warpTable.io.reset := io.scheduler.reset
   warpTable.io.validCtrl.set := io.scheduler.setValid
@@ -74,10 +72,10 @@ class InstructionFetch(warpCount: Int) extends Module {
   warpTable.io.pcCtrl.data := pcNext
   warpTable.io.doneCtrl.set := setDone
   warpTable.io.doneCtrl.idx := warp
-  warpTable.io.pendingCtrlIssue.set := io.issCtrl.setPending
+  warpTable.io.pendingCtrlIssue.set := io.setPending
   warpTable.io.pendingCtrlIssue.idx := io.scheduler.warp
-  warpTable.io.activeCtrl.set := io.issCtrl.setInactive
-  warpTable.io.activeCtrl.idx := io.scheduler.warp
+  warpTable.io.activeCtrl.set := io.wb.setInactive
+  warpTable.io.activeCtrl.idx := io.wb.warp
   warpTable.io.pendingCtrlWb.set := io.wb.setNotPending
   warpTable.io.pendingCtrlWb.idx := io.wb.warp
 

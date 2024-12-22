@@ -3,12 +3,12 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
-class InstructionIssue(warpCount: Int) extends Module {
+class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val id = new Bundle {
       val valid = Input(Bool())
       val pc = Input(UInt(32.W))
-      val warp = Input(UInt(warpCount.W))
+      val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
       val rs1 = Input(UInt(5.W))
@@ -17,11 +17,11 @@ class InstructionIssue(warpCount: Int) extends Module {
       val imm = Input(UInt(22.W))
     }
 
-    val warpIf = Input(UInt(warpCount.W))
+    val warpIf = Input(UInt(2.W))
 
     val iss = new Bundle {
 //      val pc = Output(UInt(32.W))
-      val warp = Output(UInt(warpCount.W))
+      val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
       val rs1 = Output(UInt(5.W))
@@ -30,16 +30,13 @@ class InstructionIssue(warpCount: Int) extends Module {
       val imm = Output(UInt(22.W))
     }
 
-    val issCtrl = new Bundle {
-      val setPending = Output(Bool())
-      val setInactive = Output(Bool())
-    }
-
+    val setPending = Output(Bool())
     val headInstrType = Output(UInt(warpCount.W))
   })
 
   // TODO: Add logic for setting warp as pending
   // TODO: Add logic for accepting stall signal from scheduler
+  // TODO: Add logic for inspecting if instructions are memory operations
 
   val setInactive = WireDefault(false.B)
   val inQueueSel = WireDefault(0.U(warpCount.W))
@@ -106,11 +103,20 @@ class InstructionIssue(warpCount: Int) extends Module {
   immQueues.io.outDataSel := io.warpIf
   imm := immQueues.io.dataOut
 
+  val warpQueues = Module(new DataQueues(warpCount, 4, warpAddrLen))
+  val warp = WireDefault(0.U(22.W))
+
+  warpQueues.io.dataIn := io.id.warp
+  warpQueues.io.inQueueSel := inQueueSel
+  warpQueues.io.outQueueSel := outQueueSel
+  warpQueues.io.outDataSel := io.warpIf
+  warp := warpQueues.io.dataOut
+
   when(opcode === "b11111".U) {
     setInactive := true.B
   }
 
-  io.iss.warp := io.warpIf
+  io.iss.warp := warp
   io.iss.opcode := opcode
   io.iss.dest := dest
   io.iss.rs1 := rs1
@@ -118,8 +124,7 @@ class InstructionIssue(warpCount: Int) extends Module {
   io.iss.rs3 := rs3
   io.iss.imm := imm
 
-  io.issCtrl.setInactive := setInactive
-  io.issCtrl.setPending := false.B
+  io.setPending := false.B
 
   io.headInstrType := headInstrType
 }

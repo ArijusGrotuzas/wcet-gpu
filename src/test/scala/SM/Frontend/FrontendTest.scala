@@ -33,7 +33,12 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Load the instructions
-      loadMem(dut, Array("hdeadbeef".U, "hcafebabe".U, "hdeadbaff".U))
+      loadMem(dut, Array(
+          "b00000000000010111101010110001111".U, // 0000000 00000 10111 10101 01100 01111
+          "b00000000000111011001100110111110".U, // 0000000 00001 11011 00110 01101 11110
+          "b00000000001000011001010111011111".U  // 0000000 00010 00011 00101 01110 11111
+        )
+      )
 
       dut.clock.step(1)
 
@@ -48,7 +53,53 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.start.ready.expect(false.B)
       dut.io.start.valid.poke(false.B)
 
-      dut.clock.step(20)
+      dut.clock.step(6)
+
+      dut.io.front.warp.expect(0.U)
+      dut.io.front.opcode.expect("b01111".U)
+      dut.io.front.dest.expect("b01100".U)
+      dut.io.front.rs1.expect("b10101".U)
+      dut.io.front.rs2.expect("b10111".U)
+      dut.io.front.rs3.expect("b00000".U)
+      dut.io.front.imm.expect(0.U)
+
+      dut.clock.step(1)
+
+      dut.io.front.warp.expect(0.U)
+      dut.io.front.opcode.expect("b11110".U)
+      dut.io.front.dest.expect("b01101".U)
+      dut.io.front.rs1.expect("b00110".U)
+      dut.io.front.rs2.expect("b11011".U)
+      dut.io.front.rs3.expect("b00001".U)
+      dut.io.front.imm.expect(0.U)
+
+      dut.clock.step(1)
+
+      // Expect a RET instruction
+      dut.io.front.warp.expect(0.U)
+      dut.io.front.opcode.expect("b11111".U)
+      dut.io.front.dest.expect("b01110".U)
+      dut.io.front.rs1.expect("b00101".U)
+      dut.io.front.rs2.expect("b00011".U)
+      dut.io.front.rs3.expect("b00010".U)
+      dut.io.front.imm.expect(0.U)
+
+      dut.clock.step(1)
+
+      // Expect an NOP after issuing the RET instruction
+      dut.io.front.warp.expect(0.U)
+      dut.io.front.opcode.expect(0.U)
+
+      dut.clock.step(3)
+
+      // Set the warp as inactive
+      dut.io.wb.setInactive.poke(true.B)
+      dut.io.wb.warp.poke(0.U)
+
+      dut.clock.step(1)
+
+      dut.io.wb.setInactive.poke(false.B)
+      dut.io.wb.warp.poke(0.U)
       }
     }
   }
