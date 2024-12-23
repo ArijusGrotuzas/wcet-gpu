@@ -36,7 +36,7 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.front.imm.expect(program(instr)(31, 25))
   }
 
-  "Frontend" should "work" in {
+  "Frontend" should "correctly schedule instructions for warps" in {
     test(new Frontend(4)).withAnnotations(Seq(WriteVcdAnnotation)) { dut => {
       val kernel = Array(
         "b00000000000010111101010110001111".U, // 0000000 00000 10111 10101 01100 01111
@@ -74,7 +74,7 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.start.valid.poke(false.B)
       dut.io.start.data.poke(0.U)
 
-      dut.clock.step(6)
+      dut.clock.step(5)
 
       expectInstr(dut, 0, 0, kernel)
 
@@ -96,7 +96,7 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       // Set the warp as inactive
       setWarpInactive(dut, 0)
 
-      dut.clock.step(6)
+      dut.clock.step(5)
 
       expectInstr(dut, 1, 0, kernel)
 

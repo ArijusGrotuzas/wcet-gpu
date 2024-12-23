@@ -5,7 +5,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
-  "InstructionIssue" should "work" in {
+  "InstructionIssue" should "push and pop correct instructions from queues" in {
     test(new InstructionIssue(4, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.id.pc.poke(0.U)

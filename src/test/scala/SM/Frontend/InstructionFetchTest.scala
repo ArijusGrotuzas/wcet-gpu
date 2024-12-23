@@ -17,7 +17,7 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.loadInstr.en.poke(false.B)
   }
 
-  "InstructionFetch" should "work" in {
+  "InstructionFetch" should "fetch the instructions in correct order" in {
     test(new InstructionFetch(4, 2)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
       // Set valid warps and load instructions
       dut.io.scheduler.setValid.poke(true.B)

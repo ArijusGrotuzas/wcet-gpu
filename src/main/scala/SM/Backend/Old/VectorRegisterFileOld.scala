@@ -1,4 +1,4 @@
-package SM.Frontend.Old
+package SM.Backend.Old
 
 import SM.Frontend.DualPortedRam
 import chisel3._

@@ -1,11 +1,11 @@
-package SM.Frontend.VRF
+package SM.Backend.VRF
 
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class VectorRegisterFileTest extends AnyFlatSpec with ChiselScalatestTester {
-  "VectorRegisterFile" should "should write and read register contents" in {
+  "VectorRegisterFile" should "write and read register contents" in {
     test(new VectorRegisterFile(32, 32, 7)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Perform first write operation
       dut.io.we.poke(1.B)

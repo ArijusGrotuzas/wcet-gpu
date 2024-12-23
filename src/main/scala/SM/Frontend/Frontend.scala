@@ -71,11 +71,11 @@ class Frontend(warpCount: Int) extends Module {
   instrIss.io.scheduler.warp := warpScheduler.io.scheduler.warp
   instrIss.io.scheduler.stall := warpScheduler.io.scheduler.stall
 
-  io.front.warp := RegNext(instrIss.io.iss.warp, 0.U)
-  io.front.opcode := RegNext(instrIss.io.iss.opcode, 0.U)
-  io.front.dest := RegNext(instrIss.io.iss.dest, 0.U)
-  io.front.rs1 := RegNext(instrIss.io.iss.rs1, 0.U)
-  io.front.rs2 := RegNext(instrIss.io.iss.rs2, 0.U)
-  io.front.rs3 := RegNext(instrIss.io.iss.rs3, 0.U)
-  io.front.imm := RegNext(instrIss.io.iss.imm, 0.U)
+  io.front.warp := instrIss.io.iss.warp
+  io.front.opcode := instrIss.io.iss.opcode
+  io.front.dest := instrIss.io.iss.dest
+  io.front.rs1 := instrIss.io.iss.rs1
+  io.front.rs2 := instrIss.io.iss.rs2
+  io.front.rs3 := instrIss.io.iss.rs3
+  io.front.imm := instrIss.io.iss.imm
 }

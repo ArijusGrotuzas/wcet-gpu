@@ -1,4 +1,4 @@
-package SM.Frontend.Old
+package SM.Backend.Old
 
 import chisel3._
 import chiseltest._
