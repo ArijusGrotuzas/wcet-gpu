@@ -90,13 +90,13 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Expect an NOP after issuing the RET instruction
-      dut.io.front.warp.expect(0.U)
+      dut.io.front.warp.expect(1.U)
       dut.io.front.opcode.expect(0.U)
 
       // Set the warp as inactive
       setWarpInactive(dut, 0)
 
-      dut.clock.step(5)
+      dut.clock.step(4)
 
       expectInstr(dut, 1, 0, kernel)
 
@@ -112,7 +112,7 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Expect an NOP after issuing the RET instruction
-      dut.io.front.warp.expect(1.U)
+      dut.io.front.warp.expect(0.U)
       dut.io.front.opcode.expect(0.U)
 
       // Set the warp as inactive

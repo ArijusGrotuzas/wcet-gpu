@@ -60,7 +60,7 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     doneReg(io.doneCtrl.idx) := true.B
   }
 
-  when((io.pendingCtrlWb.idx =/= io.pendingCtrlIssue.idx) && !(io.pendingCtrlWb.set && io.pendingCtrlIssue.set)) {
+  when((io.pendingCtrlWb.idx =/= io.pendingCtrlIssue.idx) || !(io.pendingCtrlWb.set && io.pendingCtrlIssue.set)) {
     when (io.pendingCtrlIssue.set) {
       pendingReg(io.pendingCtrlIssue.idx) := true.B
     }

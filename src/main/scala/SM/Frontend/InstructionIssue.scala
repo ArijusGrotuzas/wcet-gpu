@@ -38,6 +38,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   })
 
   // TODO: Add output if each warp's head instruction is a mem-instr
+  // TODO: Pass some control value if the warp has been set as pending so that at wb we can unset it as pending
 
   val setInactive = WireDefault(false.B)
   val inQueueSel = WireDefault(0.U(warpCount.W))
@@ -111,8 +112,8 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
     setInactive := true.B
   }
 
-  // If variable latency instruction set the warp as pending
-  when(opcode === "b00001".U || opcode === "b00010".U) {
+  // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
+  when(opcode === "b00001".U || opcode === "b00010".U || opcode === "b11111".U) {
     setPending := true.B
   }
 

@@ -59,7 +59,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
     stall := true.B
   }
 
-  allDone := io.warpTable.active.orR
+  allDone := !(io.warpTable.valid & io.warpTable.active).orR
 
   // Scheduler FSM
   switch(stateReg) {
