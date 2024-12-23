@@ -5,7 +5,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class AluPipelineTest extends AnyFlatSpec with ChiselScalatestTester {
   "AluPipeline" should "add two numbers" in {
-    test(new AluPipeline(32)) { dut =>
+    test(new AluPipeline(32, 8)) { dut =>
     }
   }
 }
