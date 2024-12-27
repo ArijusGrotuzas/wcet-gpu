@@ -1,7 +1,6 @@
 package SM.Backend
 
 import chisel3._
-import chisel3.util.Enum
 
 /** The write-back stage forwards the result of the ALU pipeline if there are no
  * memory results ready. In other words, the write-back stage prioritizes storing
@@ -12,10 +11,10 @@ import chisel3.util.Enum
  * contains any entries and if so, it will store the results from the queue to the register file, otherwise
  * it will store the results coming directly from the alu pipeline.
  */
-class WriteBack(warpSize: Int) extends Module {
+class WriteBack(warpSize: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val alu = new Bundle {
-      val warp = Input(UInt(2.W))
+      val warp = Input(UInt(warpAddrLen.W))
       val valid = Input(Bool())
       val done = Input(Bool())
       val dest = Input(UInt(5.W))
@@ -23,7 +22,7 @@ class WriteBack(warpSize: Int) extends Module {
     }
 
     val mem = new Bundle {
-      val warp = Input(UInt(2.W))
+      val warp = Input(UInt(warpAddrLen.W))
       val valid = Input(Bool())
       val pending = Input(Bool())
       val dest = Input(UInt(5.W))
@@ -38,7 +37,7 @@ class WriteBack(warpSize: Int) extends Module {
     }
 
     val wbIf = new Bundle {
-      val warp = Output(UInt(2.W))
+      val warp = Output(UInt(warpAddrLen.W))
       val setInactive = Output(Bool())
       val setNotPending = Output(Bool())
     }
