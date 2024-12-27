@@ -24,6 +24,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
 
     val iss = new Bundle {
 //      val pc = Output(UInt(32.W))
+      val pending = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
@@ -38,7 +39,6 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   })
 
   // TODO: Add output if each warp's head instruction is a mem-instr
-  // TODO: Pass some control value if the warp has been set as pending so that at wb we can unset it as pending
 
   val setInactive = WireDefault(false.B)
   val inQueueSel = WireDefault(0.U(warpCount.W))
@@ -117,6 +117,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
     setPending := true.B
   }
 
+  io.iss.pending := setPending
   io.iss.warp := io.scheduler.warp
   io.iss.opcode := opcode
   io.iss.dest := dest

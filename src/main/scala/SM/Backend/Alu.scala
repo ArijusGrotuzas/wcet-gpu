@@ -4,11 +4,10 @@ import chisel3._
 import chisel3.util._
 
 object AluOps{
-  val ADD = "b0000".U
-  val SUB = "b0001".U
-  val AND = "b0010".U
-  val OR = "b0011".U
-  val XOR = "b0100".U
+  val ADD = "b00011".U
+  val SUB = "b00111".U
+  val AND = "b01011".U
+  val OR = "b01111".U
 }
 
 class Alu(operandWidth: Int) extends Module {
@@ -31,7 +30,6 @@ class Alu(operandWidth: Int) extends Module {
     is(AluOps.SUB) {out := io.a - io.b}
     is(AluOps.AND) {out := io.a & io.b}
     is(AluOps.OR) {out := io.a | io.b}
-    is(AluOps.XOR) {out := io.a ^ io.b}
   }
 
   io.zero := !out.asUInt.orR

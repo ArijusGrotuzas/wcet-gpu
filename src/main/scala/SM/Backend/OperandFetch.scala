@@ -3,7 +3,7 @@ package SM.Backend
 import SM.Backend.VRF.VectorRegisterFile
 import chisel3._
 
-class OperandFetch(warpCount: Int, warpAddrLen: Int) extends Module {
+class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val wb = new Bundle {
       val we = Input(Bool())
@@ -14,7 +14,7 @@ class OperandFetch(warpCount: Int, warpAddrLen: Int) extends Module {
 
     val iss = new Bundle {
 //      val pc = Input(UInt(32.W))
-      val warp = Input(UInt(2.W))
+      val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
       val rs1 = Input(UInt(5.W))
@@ -24,27 +24,27 @@ class OperandFetch(warpCount: Int, warpAddrLen: Int) extends Module {
     }
 
     val aluOf = IO(new Bundle{
-      val warp = Output(UInt(2.W))
+      val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
-      val rs1 = Output(UInt((32 * warpCount).W))
-      val rs2 = Output(UInt((32 * warpCount).W))
-      val rs3 = Output(UInt((32 * warpCount).W))
+      val rs1 = Output(UInt((32 * warpSize).W))
+      val rs2 = Output(UInt((32 * warpSize).W))
+      val rs3 = Output(UInt((32 * warpSize).W))
       val imm = Output(UInt(22.W))
     })
 
     val memOf = IO(new Bundle{
-      val warp = Output(UInt(2.W))
+      val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
-      val rs1 = Output(UInt((32 * warpCount).W))
-      val rs2 = Output(UInt((32 * warpCount).W))
-      val rs3 = Output(UInt((32 * warpCount).W))
+      val rs1 = Output(UInt((32 * warpSize).W))
+      val rs2 = Output(UInt((32 * warpSize).W))
+      val rs3 = Output(UInt((32 * warpSize).W))
       val imm = Output(UInt(22.W))
     })
   })
 
-  val vrf = Module(new VectorRegisterFile(warpCount * 8, 32 * warpCount, 5))
+  val vrf = Module(new VectorRegisterFile(warpCount * 8, 32 * warpSize, 5))
   val warp = RegInit(0.U(warpAddrLen.W))
   val opcode = RegInit(0.U(5.W))
   val dest = RegInit(0.U(5.W))
@@ -53,6 +53,14 @@ class OperandFetch(warpCount: Int, warpAddrLen: Int) extends Module {
   val rs3 = RegInit(0.U(5.W))
   val imm = RegInit(0.U(22.W))
   val pipeSel = WireDefault(true.B)
+
+  warp := io.iss.warp
+  opcode := io.iss.opcode
+  dest := io.iss.dest
+  rs1 := io.iss.rs1
+  rs2 := io.iss.rs2
+  rs3 := io.iss.rs3
+  imm := io.iss.imm
 
   when(io.iss.opcode === "b00001".U || io.iss.opcode === "b00010".U) {
     pipeSel := false.B

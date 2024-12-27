@@ -2,21 +2,21 @@ package SM.Frontend
 
 import chisel3._
 
-class Frontend(warpCount: Int) extends Module {
-  val io = IO(new Bundle{
-    val loadInstr = new Bundle{
+class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
+  val io = IO(new Bundle {
+    val loadInstr = new Bundle {
       val en = Input(Bool())
       val instr = Input(UInt(32.W))
       val addr = Input(UInt(32.W))
     }
 
-    val start = new Bundle{
+    val start = new Bundle {
       val ready = Output(Bool())
       val valid = Input(Bool())
       val data = Input(UInt(warpCount.W))
     }
 
-    val wb = new Bundle{
+    val wb = new Bundle {
       val setNotPending = Input(Bool())
       val setInactive = Input(Bool())
       val warp = Input(UInt(2.W))
@@ -25,7 +25,7 @@ class Frontend(warpCount: Int) extends Module {
     val memStall = Input(Bool())
     val aluStall = Input(Bool())
 
-    val front = new Bundle{
+    val front = new Bundle {
       // val pc = Output(UInt(32.W))
       val warp = Output(UInt(warpCount.W))
       val opcode = Output(UInt(5.W))
@@ -37,10 +37,10 @@ class Frontend(warpCount: Int) extends Module {
     }
   })
 
-  val instrF = Module(new InstructionFetch(4, 2))
-  val instrD = Module(new InstructionDecode(2))
-  val instrIss = Module(new InstructionIssue(4, 2))
-  val warpScheduler = Module(new WarpScheduler(4, 2))
+  val instrF = Module(new InstructionFetch(4, warpAddrLen))
+  val instrD = Module(new InstructionDecode(warpAddrLen))
+  val instrIss = Module(new InstructionIssue(4, warpAddrLen))
+  val warpScheduler = Module(new WarpScheduler(4, warpAddrLen))
 
   warpScheduler.io.start <> io.start
   warpScheduler.io.warpTable <> instrF.io.warpTable

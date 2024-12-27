@@ -49,25 +49,25 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  "Alu" should "perform bitwise XOR operation" in {
-    test(new Alu(32)) { dut =>
-      dut.io.a.poke(10.S)
-      dut.io.b.poke(5.S)
-      dut.io.op.poke(AluOps.XOR)
+//  "Alu" should "perform bitwise XOR operation" in {
+//    test(new Alu(32)) { dut =>
+//      dut.io.a.poke(10.S)
+//      dut.io.b.poke(5.S)
+//      dut.io.op.poke(AluOps.XOR)
+//
+//      dut.io.out.expect(15.S)
+//      dut.io.zero.expect(false.B)
+//    }
+//  }
 
-      dut.io.out.expect(15.S)
-      dut.io.zero.expect(false.B)
-    }
-  }
-
-  "Alu" should "zero output should go high" in {
-    test(new Alu(32)) { dut =>
-      dut.io.a.poke(10.S)
-      dut.io.b.poke(10.S)
-      dut.io.op.poke(AluOps.XOR)
-
-      dut.io.out.expect(0.S)
-      dut.io.zero.expect(true.B)
-    }
-  }
+//  "Alu" should "zero output should go high" in {
+//    test(new Alu(32)) { dut =>
+//      dut.io.a.poke(10.S)
+//      dut.io.b.poke(10.S)
+//      dut.io.op.poke(AluOps.XOR)
+//
+//      dut.io.out.expect(0.S)
+//      dut.io.zero.expect(true.B)
+//    }
+//  }
 }

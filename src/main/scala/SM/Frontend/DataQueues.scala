@@ -1,7 +1,7 @@
 package SM.Frontend
 
 import chisel3._
-import chisel.lib.fifo.DoubleBufferFifo
+import chisel.lib.fifo._
 
 class DataQueues(queueCount: Int, queueDepth: Int, dataLen: Int) extends Module {
   val io = IO(new Bundle{
@@ -13,7 +13,7 @@ class DataQueues(queueCount: Int, queueDepth: Int, dataLen: Int) extends Module 
     val dataOut = Output(UInt(dataLen.W))
   })
 
-  val queues = Array.fill(queueCount)(Module(new DoubleBufferFifo(UInt(dataLen.W), queueDepth)))
+  val queues = Array.fill(queueCount)(Module(new RegFifo(UInt(dataLen.W), queueDepth)))
   val outBits = VecInit(queues.toSeq.map(_.io.deq.bits))
   val notEmpty = VecInit(queues.toSeq.map(_.io.deq.valid))
   val dataOut = WireDefault(0.U(dataLen.W))
