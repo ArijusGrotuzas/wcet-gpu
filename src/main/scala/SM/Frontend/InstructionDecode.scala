@@ -5,7 +5,7 @@ import chisel3.util._
 
 class InstructionDecode(warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    val instrF = new Bundle() {
+    val instrF = new Bundle {
       val valid = Input(Bool())
       val pc = Input(UInt(32.W))
       val instr = Input(UInt(32.W))

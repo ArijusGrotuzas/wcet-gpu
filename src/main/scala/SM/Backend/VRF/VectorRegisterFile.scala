@@ -1,8 +1,8 @@
 package SM.Backend.VRF
 
-import SM.Frontend.DualPortedRam
 import chisel3._
 import chisel3.util._
+import SM.Frontend.DualPortedRam
 
 class VectorRegisterFile(bankDepth: Int, bankWidth: Int, addrLen: Int) extends Module {
   val io = IO(new Bundle {

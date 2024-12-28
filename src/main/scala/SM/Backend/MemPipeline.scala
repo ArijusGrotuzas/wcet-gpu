@@ -2,10 +2,29 @@ package SM.Backend
 
 import chisel3._
 
-// TODO: For now just forward the input to the output
-class MemPipeline extends Module {
+class MemPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    // TODO: Add port declarations
+    val of = new Bundle{
+      val warp = Input(UInt(warpAddrLen.W))
+      val opcode = Input(UInt(5.W))
+      val dest = Input(UInt(5.W))
+      val rs1 = Input(UInt((32 * warpSize).W))
+      val rs2 = Input(UInt((32 * warpSize).W))
+      val imm = Input(UInt(22.W))
+    }
+
+    val mem = new Bundle{
+      val warp = Output(UInt(warpAddrLen.W))
+      val valid = Output(Bool())
+      val pending = Output(Bool())
+      val dest = Output(UInt(5.W))
+      val out = Output(UInt((32 * warpSize).W))
+    }
   })
-  // TODO: Implement hardware
+
+  io.mem.warp := io.of.warp
+  io.mem.valid := false.B
+  io.mem.pending := false.B
+  io.mem.dest := io.of.dest
+  io.mem.out := 0.U
 }

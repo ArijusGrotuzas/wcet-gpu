@@ -19,7 +19,7 @@ class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
     val wb = new Bundle {
       val setNotPending = Input(Bool())
       val setInactive = Input(Bool())
-      val warp = Input(UInt(2.W))
+      val warp = Input(UInt(warpAddrLen.W))
     }
 
     val memStall = Input(Bool())
@@ -27,7 +27,7 @@ class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
 
     val front = new Bundle {
       // val pc = Output(UInt(32.W))
-      val warp = Output(UInt(warpCount.W))
+      val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
       val rs1 = Output(UInt(5.W))
