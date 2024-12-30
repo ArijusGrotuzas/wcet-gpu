@@ -22,6 +22,8 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
       val setInactive = Output(Bool())
       val setNotPending = Output(Bool())
     }
+
+    val wbOutTest = Output(UInt((warpSize * 32).W))
   })
 
   val of = Module(new OperandFetch(warpCount, warpSize, warpAddrLen))
@@ -63,4 +65,5 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
 
   io.memStall := false.B
   io.aluStall := false.B
+  io.wbOutTest := wb.io.outTest
 }

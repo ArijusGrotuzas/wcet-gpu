@@ -42,6 +42,8 @@ class WriteBack(warpSize: Int, warpAddrLen: Int) extends Module {
       val setInactive = Output(Bool())
       val setNotPending = Output(Bool())
     }
+
+    val outTest = Output(UInt((warpSize * 32).W))
   })
   // Alu delay state register
   val aluDelay = RegInit(false.B)
@@ -102,4 +104,5 @@ class WriteBack(warpSize: Int, warpAddrLen: Int) extends Module {
   io.wbIf.warp := outWarp
   io.wbIf.setNotPending := setNotPending
   io.wbIf.setInactive := outInactive
+  io.outTest := outData
 }

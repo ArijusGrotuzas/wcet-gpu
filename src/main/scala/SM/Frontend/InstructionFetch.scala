@@ -1,6 +1,6 @@
 package SM.Frontend
 
-import SM.Isa
+import SM.Opcodes
 import chisel3._
 
 class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
@@ -101,7 +101,7 @@ class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
   opcode := instr(4, 0)
 
   // If the instruction opcode is RET, set the warp as done
-  when(opcode === Isa.RET) {
+  when(opcode === Opcodes.RET) {
     setDone := true.B
   }
 

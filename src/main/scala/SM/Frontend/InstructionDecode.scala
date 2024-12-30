@@ -1,5 +1,6 @@
 package SM.Frontend
 
+import SM.Opcodes
 import chisel3._
 import chisel3.util._
 
@@ -27,7 +28,11 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
 
   val imm = WireDefault(0.U(22.W))
 
-  // TODO: Extract the correct Immediate value based on instruction type
+  when(io.id.opcode === Opcodes.LUI) {
+    imm := io.instrF.instr(31, 10)
+  } .otherwise(
+    imm := io.instrF.instr(31, 15)
+  )
 
   io.id.valid := io.instrF.valid
   io.id.pc := io.instrF.pc

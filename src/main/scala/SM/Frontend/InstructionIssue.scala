@@ -1,6 +1,6 @@
 package SM.Frontend
 
-import SM.Isa
+import SM.Opcodes
 import chisel3._
 
 class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
@@ -108,7 +108,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   imm := immQueues.io.dataOut
 
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
-  when(opcode === Isa.LD || opcode === Isa.ST || opcode === Isa.RET) {
+  when(opcode === Opcodes.LD || opcode === Opcodes.ST || opcode === Opcodes.RET) {
     setPending := true.B
   }
 

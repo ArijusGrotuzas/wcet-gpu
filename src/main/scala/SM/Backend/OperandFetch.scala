@@ -1,7 +1,7 @@
 package SM.Backend
 
 import SM.Backend.VRF.VectorRegisterFile
-import SM.Isa
+import SM.Opcodes
 import chisel3._
 import chisel3.util._
 
@@ -65,7 +65,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
   rs3 := io.iss.rs3
   imm := io.iss.imm
 
-  when(io.iss.opcode === Isa.LD || io.iss.opcode === Isa.ST) {
+  when(io.iss.opcode === Opcodes.LD || io.iss.opcode === Opcodes.ST) {
     pipeSel := false.B
   }
 
