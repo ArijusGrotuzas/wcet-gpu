@@ -1,14 +1,15 @@
 package SM.Backend
 
+import SM.Isa
 import chisel3._
 import chisel3.util._
-
-object AluOps{
-  val ADD = "b00011".U
-  val SUB = "b00111".U
-  val AND = "b01011".U
-  val OR = "b01111".U
-}
+//
+//object AluOps{
+//  val ADD = "b00011".U
+//  val SUB = "b00111".U
+//  val AND = "b01011".U
+//  val OR = "b01111".U
+//}
 
 class Alu(operandWidth: Int) extends Module {
   val io = IO(new Bundle{
@@ -26,10 +27,10 @@ class Alu(operandWidth: Int) extends Module {
   val out = WireDefault(0.S(operandWidth.W))
 
   switch (io.op) {
-    is(AluOps.ADD) {out := io.a + io.b}
-    is(AluOps.SUB) {out := io.a - io.b}
-    is(AluOps.AND) {out := io.a & io.b}
-    is(AluOps.OR) {out := io.a | io.b}
+    is(Isa.ADD) {out := io.a + io.b}
+    is(Isa.SUB) {out := io.a - io.b}
+    is(Isa.AND) {out := io.a & io.b}
+    is(Isa.OR) {out := io.a | io.b}
   }
 
   io.zero := !out.asUInt.orR

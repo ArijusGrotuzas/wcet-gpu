@@ -4,7 +4,7 @@ import chisel3._
 
 class MemPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    val of = new Bundle{
+    val of = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
@@ -13,7 +13,7 @@ class MemPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
       val imm = Input(UInt(22.W))
     }
 
-    val mem = new Bundle{
+    val mem = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
       val valid = Output(Bool())
       val pending = Output(Bool())

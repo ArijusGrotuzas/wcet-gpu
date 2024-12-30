@@ -1,7 +1,7 @@
 package SM.Frontend
 
+import SM.Isa
 import chisel3._
-import chisel3.util._
 
 class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
@@ -17,13 +17,13 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
       val imm = Input(UInt(22.W))
     }
 
-    val scheduler = new Bundle{
+    val scheduler = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
       val stall = Input(Bool())
     }
 
     val iss = new Bundle {
-//      val pc = Output(UInt(32.W))
+      //      val pc = Output(UInt(32.W))
       val pending = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
@@ -40,7 +40,6 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
 
   // TODO: Add output if each warp's head instruction is a mem-instr
 
-  val setInactive = WireDefault(false.B)
   val inQueueSel = WireDefault(0.U(warpCount.W))
   val outQueueSel = WireDefault(0.U(warpCount.W))
   val headInstrType = WireDefault(0.U(warpCount.W))
@@ -50,7 +49,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
     inQueueSel := 1.U << io.id.warp
   }
 
-  when(! io.scheduler.stall) {
+  when(!io.scheduler.stall) {
     outQueueSel := 1.U << io.scheduler.warp
   }
 
@@ -108,12 +107,8 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   immQueues.io.outDataSel := io.scheduler.warp
   imm := immQueues.io.dataOut
 
-  when(opcode === "b11111".U) {
-    setInactive := true.B
-  }
-
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
-  when(opcode === "b00001".U || opcode === "b00010".U || opcode === "b11111".U) {
+  when(opcode === Isa.LD || opcode === Isa.ST || opcode === Isa.RET) {
     setPending := true.B
   }
 

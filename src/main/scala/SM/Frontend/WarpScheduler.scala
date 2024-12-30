@@ -9,13 +9,13 @@ object SchedulerState extends ChiselEnum {
 
 class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    val start = new Bundle{
+    val start = new Bundle {
       val ready = Output(Bool())
       val valid = Input(Bool())
       val data = Input(UInt(warpCount.W))
     }
 
-    val warpTable = new Bundle{
+    val warpTable = new Bundle {
       val valid = Input(UInt(warpCount.W))
       val active = Input(UInt(warpCount.W))
       val pending = Input(UInt(warpCount.W))
@@ -25,7 +25,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
     val memStall = Input(Bool())
     val aluStall = Input(Bool())
 
-    val scheduler = new Bundle{
+    val scheduler = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
       val stall = Output(Bool())
       val reset = Output(Bool())
@@ -33,6 +33,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
       val validWarps = Output(UInt(warpCount.W))
     }
   })
+
   import SchedulerState._
 
   val availableWarps = WireDefault(0.U(warpCount.W))
@@ -50,7 +51,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
   when(io.memStall) {
     // If the memory pipeline is stalled, remove warps that have memory instructions in the head of their instruction queue
     availableWarps := ((io.warpTable.active & (~io.warpTable.pending).asUInt) & io.warpTable.valid) & (~io.headInstrType).asUInt
-  } .otherwise(
+  }.otherwise(
     availableWarps := (io.warpTable.active & (~io.warpTable.pending).asUInt) & io.warpTable.valid
   )
 

@@ -1,10 +1,11 @@
 package SM.Frontend
 
+import SM.Isa
 import chisel3._
 
 class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    val loadInstr = new Bundle{
+    val loadInstr = new Bundle {
       val en = Input(Bool())
       val instr = Input(UInt(32.W))
       val addr = Input(UInt(32.W))
@@ -81,7 +82,7 @@ class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
 
   when(io.loadInstr.en) {
     instrAddr := io.loadInstr.addr
-  } .otherwise(
+  }.otherwise(
     instrAddr := warpTable.io.pc(io.scheduler.warp)
   )
 
@@ -93,14 +94,14 @@ class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
 
   when(fetch) {
     fetchInstr := instr
-  } .otherwise {
+  }.otherwise {
     fetchInstr := 0.U
   }
 
   opcode := instr(4, 0)
 
   // If the instruction opcode is RET, set the warp as done
-  when(opcode === "b11111".U) {
+  when(opcode === Isa.RET) {
     setDone := true.B
   }
 
