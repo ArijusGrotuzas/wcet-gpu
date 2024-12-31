@@ -1,4 +1,4 @@
-package SM.Backend.VRF
+package SM.Backend.Vrf
 
 import chisel3._
 

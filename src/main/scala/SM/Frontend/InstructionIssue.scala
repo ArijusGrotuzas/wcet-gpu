@@ -14,7 +14,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
-      val imm = Input(UInt(22.W))
+      val imm = Input(SInt(32.W))
     }
 
     val scheduler = new Bundle {
@@ -31,7 +31,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
-      val imm = Output(UInt(22.W))
+      val imm = Output(SInt(32.W))
     }
 
     val setPending = Output(Bool())
@@ -53,7 +53,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
     outQueueSel := 1.U << io.scheduler.warp
   }
 
-  val opcodeQueues = Module(new DataQueues(warpCount, 4, 5))
+  val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
   val opcode = WireDefault(0.U(5.W))
 
   opcodeQueues.io.dataIn := io.id.opcode
@@ -62,7 +62,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   opcodeQueues.io.outDataSel := io.scheduler.warp
   opcode := opcodeQueues.io.dataOut
 
-  val destQueues = Module(new DataQueues(warpCount, 4, 5))
+  val destQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
   val dest = WireDefault(0.U(5.W))
 
   destQueues.io.dataIn := io.id.dest
@@ -71,7 +71,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   destQueues.io.outDataSel := io.scheduler.warp
   dest := destQueues.io.dataOut
 
-  val rs1Queues = Module(new DataQueues(warpCount, 4, 5))
+  val rs1Queues = Module(new DataQueues(UInt(5.W), warpCount, 3))
   val rs1 = WireDefault(0.U(5.W))
 
   rs1Queues.io.dataIn := io.id.rs1
@@ -80,7 +80,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   rs1Queues.io.outDataSel := io.scheduler.warp
   rs1 := rs1Queues.io.dataOut
 
-  val rs2Queues = Module(new DataQueues(warpCount, 4, 5))
+  val rs2Queues = Module(new DataQueues(UInt(5.W), warpCount, 3))
   val rs2 = WireDefault(0.U(5.W))
 
   rs2Queues.io.dataIn := io.id.rs2
@@ -89,7 +89,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   rs2Queues.io.outDataSel := io.scheduler.warp
   rs2 := rs2Queues.io.dataOut
 
-  val rs3Queues = Module(new DataQueues(warpCount, 4, 5))
+  val rs3Queues = Module(new DataQueues(UInt(5.W), warpCount, 3))
   val rs3 = WireDefault(0.U(5.W))
 
   rs3Queues.io.dataIn := io.id.rs3
@@ -98,8 +98,8 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   rs3Queues.io.outDataSel := io.scheduler.warp
   rs3 := rs3Queues.io.dataOut
 
-  val immQueues = Module(new DataQueues(warpCount, 4, 22))
-  val imm = WireDefault(0.U(22.W))
+  val immQueues = Module(new DataQueues(SInt(32.W), warpCount, 3))
+  val imm = WireDefault(0.S(32.W))
 
   immQueues.io.dataIn := io.id.imm
   immQueues.io.inQueueSel := inQueueSel

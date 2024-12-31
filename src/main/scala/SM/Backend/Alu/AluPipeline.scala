@@ -1,21 +1,21 @@
-package SM.Backend
+package SM.Backend.Alu
 
 import chisel3._
 
-class AluPipeline(warpSize: Int) extends Module {
+class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val of = new Bundle {
-      val warp = Input(UInt(2.W))
+      val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
       val rs1 = Input(UInt((32 * warpSize).W))
       val rs2 = Input(UInt((32 * warpSize).W))
       val rs3 = Input(UInt((32 * warpSize).W))
-      val imm = Input(UInt(22.W))
+      val imm = Input(UInt(32.W))
     }
 
     val alu = new Bundle {
-      val warp = Output(UInt(2.W))
+      val warp = Output(UInt(warpAddrLen.W))
       val done = Output(Bool())
       val valid = Output(Bool())
       val dest = Output(UInt(5.W))

@@ -17,13 +17,15 @@ class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
     }
 
     val wb = new Bundle {
-      val setNotPending = Input(Bool())
-      val setInactive = Input(Bool())
       val warp = Input(UInt(warpAddrLen.W))
+      val setInactive = Input(Bool())
+      val setNotPending = Input(Bool())
     }
 
-    val memStall = Input(Bool())
-    val aluStall = Input(Bool())
+    val funcUnits = new Bundle {
+      val memStall = Input(Bool())
+      val aluStall = Input(Bool())
+    }
 
     val front = new Bundle {
       // val pc = Output(UInt(32.W))
@@ -33,19 +35,19 @@ class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
-      val imm = Output(UInt(22.W))
+      val imm = Output(SInt(32.W))
     }
   })
 
-  val instrF = Module(new InstructionFetch(4, warpAddrLen))
+  val instrF = Module(new InstructionFetch(warpCount, warpAddrLen))
   val instrD = Module(new InstructionDecode(warpAddrLen))
-  val instrIss = Module(new InstructionIssue(4, warpAddrLen))
-  val warpScheduler = Module(new WarpScheduler(4, warpAddrLen))
+  val instrIss = Module(new InstructionIssue(warpCount, warpAddrLen))
+  val warpScheduler = Module(new WarpScheduler(warpCount, warpAddrLen))
 
   warpScheduler.io.start <> io.start
   warpScheduler.io.warpTable <> instrF.io.warpTable
-  warpScheduler.io.memStall := io.memStall
-  warpScheduler.io.aluStall := io.aluStall
+  warpScheduler.io.memStall := io.funcUnits.memStall
+  warpScheduler.io.aluStall := io.funcUnits.aluStall
   warpScheduler.io.headInstrType := 0.U //instrIss.io.headInstrType
   warpScheduler.io.scheduler <> instrF.io.scheduler
 
@@ -67,7 +69,7 @@ class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
   instrIss.io.id.rs1 := RegNext(instrD.io.id.rs1, 0.U)
   instrIss.io.id.rs2 := RegNext(instrD.io.id.rs2, 0.U)
   instrIss.io.id.rs3 := RegNext(instrD.io.id.rs3, 0.U)
-  instrIss.io.id.imm := RegNext(instrD.io.id.imm, 0.U)
+  instrIss.io.id.imm := RegNext(instrD.io.id.imm, 0.S)
   instrIss.io.scheduler.warp := warpScheduler.io.scheduler.warp
   instrIss.io.scheduler.stall := warpScheduler.io.scheduler.stall
 

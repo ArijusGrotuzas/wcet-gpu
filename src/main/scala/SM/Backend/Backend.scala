@@ -1,5 +1,7 @@
 package SM.Backend
 
+import SM.Backend.Alu.AluPipeline
+import SM.Backend.Mem.MemPipeline
 import chisel3._
 
 class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
@@ -11,11 +13,13 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
-      val imm = Input(UInt(22.W))
+      val imm = Input(UInt(32.W))
     }
 
-    val aluStall = Output(Bool())
-    val memStall = Output(Bool())
+    val funcUnits = new Bundle {
+      val memStall = Output(Bool())
+      val aluStall = Output(Bool())
+    }
 
     val wb = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
@@ -27,7 +31,7 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   })
 
   val of = Module(new OperandFetch(warpCount, warpSize, warpAddrLen))
-  val alu = Module(new AluPipeline(warpSize))
+  val alu = Module(new AluPipeline(warpSize, warpAddrLen))
   val mem = Module(new MemPipeline(warpSize, warpAddrLen))
   val wb = Module(new WriteBack(warpSize, warpAddrLen))
 
@@ -63,7 +67,7 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   of.io.wb <> wb.io.wbOf
   io.wb <> wb.io.wbIf
 
-  io.memStall := false.B
-  io.aluStall := false.B
+  io.funcUnits.memStall := false.B
+  io.funcUnits.aluStall := false.B
   io.wbOutTest := wb.io.outTest
 }

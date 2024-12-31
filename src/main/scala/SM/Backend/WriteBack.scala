@@ -59,7 +59,7 @@ class WriteBack(warpSize: Int, warpAddrLen: Int) extends Module {
 
   val outWe = WireDefault(false.B)
   val outAddr = WireDefault(0.U(5.W))
-  val outWarp = WireDefault(0.U(2.W))
+  val outWarp = WireDefault(0.U(warpAddrLen.W))
   val outData = WireDefault(0.U((warpSize * 32).W))
   val outInactive = WireDefault(false.B)
 

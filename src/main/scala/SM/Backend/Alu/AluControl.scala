@@ -1,8 +1,8 @@
-package SM.Backend
+package SM.Backend.Alu
 
+import SM.Opcodes
 import chisel3._
 import chisel3.util._
-import SM.Opcodes
 
 class AluControl extends Module {
   val io = IO(new Bundle {

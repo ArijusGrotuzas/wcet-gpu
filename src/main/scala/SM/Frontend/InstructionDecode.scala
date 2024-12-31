@@ -21,16 +21,16 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
-      val imm = Output(UInt(32.W))
+      val imm = Output(SInt(32.W))
     }
   })
 
-  val imm = WireDefault(0.U(22.W))
+  val imm = WireDefault(0.S(32.W))
 
   when(io.id.opcode === Opcodes.LUI) {
-    imm := io.instrF.instr(31, 10) << 10
+    imm := (io.instrF.instr(31, 10) << 10).asSInt
   }.otherwise(
-    imm := io.instrF.instr(31, 15)
+    imm := io.instrF.instr(31, 15).asSInt
   )
 
   io.id.valid := io.instrF.valid

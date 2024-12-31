@@ -43,17 +43,21 @@ class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
 
   val warpTable = Module(new WarpTable(4, 2))
   val instructionCache = Module(new InstructionCache(32, 1024, 5))
-
-  val pcNext = WireDefault(0.U(32.W))
-  val warp = RegInit(0.U(2.W))
-  val valid = RegInit(false.B)
   val setDone = WireDefault(false.B)
-  val fetch = RegInit(false.B)
-  val fetchNext = WireDefault(false.B)
+
   val instr = WireDefault(0.U(32.W))
   val instrAddr = WireDefault(0.U(32.W))
   val fetchInstr = WireDefault(0.U(32.W))
   val opcode = WireDefault(0.U(5.W))
+
+  // Register update signals
+  val pcNext = WireDefault(0.U(32.W))
+  val fetchNext = WireDefault(false.B)
+
+  // Registers
+  val warp = RegInit(0.U(warpAddrLen.W))
+  val fetch = RegInit(false.B)
+  val valid = RegInit(false.B)
   val pc = RegInit(0.U(32.W))
 
   // ------------ First half of the pipeline ------------

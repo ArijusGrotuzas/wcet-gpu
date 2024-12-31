@@ -5,12 +5,12 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
-  def loadMem(dut: Frontend, program: Array[UInt]): Unit = {
+  def loadMem(dut: Frontend, program: Array[String]): Unit = {
     dut.io.loadInstr.en.poke(true.B)
 
     for (i <- program.indices) {
       dut.io.loadInstr.addr.poke(i)
-      dut.io.loadInstr.instr.poke(program(i))
+      dut.io.loadInstr.instr.poke(("b" + program(i)).U)
       dut.clock.step()
     }
 
@@ -26,22 +26,27 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.wb.setInactive.poke(false.B)
   }
 
-  def expectInstr(dut: Frontend, warp: Int, instr: Int, program: Array[UInt]): Unit = {
+  def expectInstr(dut: Frontend, warp: Int, instr: Int, program: Array[String], longImm: Boolean = false): Unit = {
     dut.io.front.warp.expect(warp.U)
-    dut.io.front.opcode.expect(program(instr)(4, 0))
-    dut.io.front.dest.expect(program(instr)(9, 5))
-    dut.io.front.rs1.expect(program(instr)(14, 10))
-    dut.io.front.rs2.expect(program(instr)(19, 15))
-    dut.io.front.rs3.expect(program(instr)(24, 20))
-    dut.io.front.imm.expect(program(instr)(31, 25))
+    dut.io.front.opcode.expect(("b" + program(instr).slice(27, 32)).U)
+    dut.io.front.dest.expect(("b" + program(instr).slice(22, 27)).U)
+    dut.io.front.rs1.expect(("b" + program(instr).slice(17, 22)).U)
+    dut.io.front.rs2.expect(("b" + program(instr).slice(12, 17)).U)
+    dut.io.front.rs3.expect(("b" + program(instr).slice(7, 12)).U)
+
+    if (longImm) {
+      dut.io.front.imm.expect(Integer.parseUnsignedInt(program(instr).slice(0, 22) + "0000000000", 2).S)
+    } else {
+      dut.io.front.imm.expect(Integer.parseInt(program(instr).slice(0, 17), 2).S)
+    }
   }
 
   "Frontend" should "correctly schedule instructions for warps" in {
     test(new Frontend(4, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       val kernel = Array(
-        "b00000000000010111101010110001111".U, // 0000000 00000 10111 10101 01100 01111
-        "b00000000000111011001100110111110".U, // 0000000 00001 11011 00110 01101 11110
-        "b00000000001000011001010111011111".U  // 0000000 00010 00011 00101 01110 11111
+        "11000000000010111101010110001101", // 1110000 00000 10111 10101 01100 01101 (LUI, 12, 21, 23, X)
+        "00000000000111011001100110101001", // 0100000 00001 11011 00110 01101 11110 (ADDI, 13, 6, 27, 1)
+        "00000000001000011001010111011111"  // 0000000 00010 00011 00101 01110 11111 (RET, 14, 5, 3, 2)
       )
 
       // Default assignments
@@ -52,8 +57,8 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.wb.warp.poke(0.U)
       dut.io.start.valid.poke(false.B)
       dut.io.start.data.poke(0.U)
-      dut.io.memStall.poke(false.B)
-      dut.io.aluStall.poke(false.B)
+      dut.io.funcUnits.memStall.poke(false.B)
+      dut.io.funcUnits.aluStall.poke(false.B)
 
       dut.clock.step(1)
 
@@ -76,7 +81,7 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
 
       dut.clock.step(4)
 
-      expectInstr(dut, 0, 0, kernel)
+      expectInstr(dut, 0, 0, kernel, longImm = true)
 
       dut.clock.step(1)
 
@@ -98,7 +103,7 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
 
       dut.clock.step(3)
 
-      expectInstr(dut, 1, 0, kernel)
+      expectInstr(dut, 1, 0, kernel, longImm = true)
 
       dut.clock.step(1)
 

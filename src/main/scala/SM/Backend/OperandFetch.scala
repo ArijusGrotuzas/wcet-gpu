@@ -1,6 +1,6 @@
 package SM.Backend
 
-import SM.Backend.VRF.VectorRegisterFile
+import SM.Backend.Vrf.VectorRegisterFile
 import SM.Opcodes
 import chisel3._
 import chisel3.util._
@@ -23,7 +23,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
-      val imm = Input(UInt(22.W))
+      val imm = Input(UInt(32.W))
     }
 
     val aluOf = new Bundle {
@@ -33,7 +33,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
       val rs1 = Output(UInt((32 * warpSize).W))
       val rs2 = Output(UInt((32 * warpSize).W))
       val rs3 = Output(UInt((32 * warpSize).W))
-      val imm = Output(UInt(22.W))
+      val imm = Output(UInt(32.W))
     }
 
     val memOf = new Bundle {
@@ -42,12 +42,14 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
       val dest = Output(UInt(5.W))
       val rs1 = Output(UInt((32 * warpSize).W))
       val rs2 = Output(UInt((32 * warpSize).W))
-      val imm = Output(UInt(22.W))
+      val imm = Output(UInt(32.W))
     }
   })
 
   val vrf = Module(new VectorRegisterFile(warpCount * 8, 32 * warpSize, warpAddrLen + 5))
+  val pipeSel = WireDefault(true.B)
 
+  // Registers to hold values while the operands are fetched from VRF
   val warp = RegInit(0.U(warpAddrLen.W))
   val opcode = RegInit(0.U(5.W))
   val dest = RegInit(0.U(5.W))
@@ -55,7 +57,6 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
   val rs2 = RegInit(0.U(5.W))
   val rs3 = RegInit(0.U(5.W))
   val imm = RegInit(0.U(22.W))
-  val pipeSel = WireDefault(true.B)
 
   warp := io.iss.warp
   opcode := io.iss.opcode
@@ -65,6 +66,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
   rs3 := io.iss.rs3
   imm := io.iss.imm
 
+  // Select the one of the functional units based on the opcode
   when(io.iss.opcode === Opcodes.LD || io.iss.opcode === Opcodes.ST) {
     pipeSel := false.B
   }

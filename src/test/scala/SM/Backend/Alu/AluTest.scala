@@ -1,4 +1,4 @@
-package SM.Backend
+package SM.Backend.Alu
 
 import chisel3._
 import chiseltest._

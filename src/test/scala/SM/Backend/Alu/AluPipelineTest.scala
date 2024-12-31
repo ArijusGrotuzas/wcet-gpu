@@ -1,4 +1,4 @@
-package SM.Backend
+package SM.Backend.Alu
 
 import chisel3._
 import chiseltest._
@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class AluPipelineTest extends AnyFlatSpec with ChiselScalatestTester {
   "AluPipeline" should "perform correct subtraction" in {
-    test(new AluPipeline(2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new AluPipeline(2, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.of.warp.poke(0.U)
       dut.io.of.opcode.poke(0.U)
