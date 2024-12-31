@@ -22,7 +22,7 @@ class BackendTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.front.rs1.poke(source1.U)
     dut.io.front.rs2.poke(source2.U)
     dut.io.front.rs3.poke(source3.U)
-    dut.io.front.imm.poke(immediate.U)
+    dut.io.front.imm.poke(immediate.S)
   }
 
   def generateBinaryString(count: Int, value: Int): String = {
@@ -44,7 +44,7 @@ class BackendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.front.rs1.poke(0.U)
       dut.io.front.rs2.poke(0.U)
       dut.io.front.rs3.poke(0.U)
-      dut.io.front.imm.poke(0.U)
+      dut.io.front.imm.poke(0.S)
 
       dut.clock.step(1)
 

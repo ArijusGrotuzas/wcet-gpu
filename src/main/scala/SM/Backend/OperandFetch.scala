@@ -23,7 +23,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
-      val imm = Input(UInt(32.W))
+      val imm = Input(SInt(32.W))
     }
 
     val aluOf = new Bundle {
@@ -33,7 +33,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
       val rs1 = Output(UInt((32 * warpSize).W))
       val rs2 = Output(UInt((32 * warpSize).W))
       val rs3 = Output(UInt((32 * warpSize).W))
-      val imm = Output(UInt(32.W))
+      val imm = Output(SInt(32.W))
     }
 
     val memOf = new Bundle {
@@ -42,7 +42,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
       val dest = Output(UInt(5.W))
       val rs1 = Output(UInt((32 * warpSize).W))
       val rs2 = Output(UInt((32 * warpSize).W))
-      val imm = Output(UInt(32.W))
+      val imm = Output(SInt(32.W))
     }
   })
 
@@ -56,7 +56,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
   val rs1 = RegInit(0.U(5.W))
   val rs2 = RegInit(0.U(5.W))
   val rs3 = RegInit(0.U(5.W))
-  val imm = RegInit(0.U(22.W))
+  val imm = RegInit(0.S(32.W))
 
   warp := io.iss.warp
   opcode := io.iss.opcode
@@ -87,7 +87,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
   io.aluOf.rs1 := Mux(pipeSel, vrf.io.readData1, 0.U)
   io.aluOf.rs2 := Mux(pipeSel, vrf.io.readData2, 0.U)
   io.aluOf.rs3 := Mux(pipeSel, vrf.io.readData3, 0.U)
-  io.aluOf.imm := Mux(pipeSel, imm, 0.U)
+  io.aluOf.imm := Mux(pipeSel, imm, 0.S)
 
   // To mem pipeline
   io.memOf.warp := Mux(!pipeSel, warp, 0.U)
@@ -95,5 +95,5 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
   io.memOf.dest := Mux(!pipeSel, dest, 0.U)
   io.memOf.rs1 := Mux(!pipeSel, vrf.io.readData1, 0.U)
   io.memOf.rs2 := Mux(!pipeSel, vrf.io.readData2, 0.U)
-  io.memOf.imm := Mux(!pipeSel, imm, 0.U)
+  io.memOf.imm := Mux(!pipeSel, imm, 0.S)
 }

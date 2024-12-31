@@ -5,7 +5,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
-  "OperandFetch" should "work" in {
+  "OperandFetch" should "fetch correct operands" in {
     test(new OperandFetch(4, 1, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.wb.we.poke(false.B)
       dut.io.wb.warp.poke(0.U)
@@ -18,7 +18,7 @@ class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.iss.rs1.poke(0.U)
       dut.io.iss.rs2.poke(0.U)
       dut.io.iss.rs3.poke(0.U)
-      dut.io.iss.imm.poke(0.U)
+      dut.io.iss.imm.poke(0.S)
 
       dut.clock.step(1)
 
@@ -56,7 +56,7 @@ class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.iss.rs1.poke(4.U)
       dut.io.iss.rs2.poke(17.U)
       dut.io.iss.rs3.poke(23.U)
-      dut.io.iss.imm.poke(255.U)
+      dut.io.iss.imm.poke(255.S)
 
       dut.clock.step(1)
 
@@ -66,7 +66,7 @@ class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.aluOf.rs1.expect("hdeadbeef".U)
       dut.io.aluOf.rs2.expect("hcafebabe".U)
       dut.io.aluOf.rs3.expect("hdeadbabe".U)
-      dut.io.aluOf.imm.expect(255.U)
+      dut.io.aluOf.imm.expect(255.S)
     }
   }
 }

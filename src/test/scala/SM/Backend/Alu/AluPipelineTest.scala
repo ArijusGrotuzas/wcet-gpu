@@ -14,7 +14,7 @@ class AluPipelineTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.of.rs1.poke(0.U)
       dut.io.of.rs2.poke(0.U)
       dut.io.of.rs3.poke(0.U)
-      dut.io.of.imm.poke(0.U)
+      dut.io.of.imm.poke(0.S)
 
       dut.clock.step(1)
 

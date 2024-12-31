@@ -13,7 +13,7 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
-      val imm = Input(UInt(32.W))
+      val imm = Input(SInt(32.W))
     }
 
     val funcUnits = new Bundle {
@@ -43,14 +43,14 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   alu.io.of.rs1 := RegNext(of.io.aluOf.rs1, 0.U)
   alu.io.of.rs2 := RegNext(of.io.aluOf.rs2, 0.U)
   alu.io.of.rs3 := RegNext(of.io.aluOf.rs3, 0.U)
-  alu.io.of.imm := RegNext(of.io.aluOf.imm, 0.U)
+  alu.io.of.imm := RegNext(of.io.aluOf.imm, 0.S)
 
   mem.io.of.warp := RegNext(of.io.memOf.warp, 0.U)
   mem.io.of.opcode := RegNext(of.io.memOf.opcode, 0.U)
   mem.io.of.dest := RegNext(of.io.memOf.dest, 0.U)
   mem.io.of.rs1 := RegNext(of.io.memOf.rs1, 0.U)
   mem.io.of.rs2 := RegNext(of.io.memOf.rs2, 0.U)
-  mem.io.of.imm := RegNext(of.io.memOf.imm, 0.U)
+  mem.io.of.imm := RegNext(of.io.memOf.imm, 0.S)
 
   wb.io.alu.warp := RegNext(alu.io.alu.warp, 0.U)
   wb.io.alu.done := RegNext(alu.io.alu.done, false.B)

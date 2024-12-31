@@ -10,7 +10,7 @@ class MemPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
       val dest = Input(UInt(5.W))
       val rs1 = Input(UInt((32 * warpSize).W))
       val rs2 = Input(UInt((32 * warpSize).W))
-      val imm = Input(UInt(32.W))
+      val imm = Input(SInt(32.W))
     }
 
     val mem = new Bundle {
