@@ -67,7 +67,7 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   of.io.wb <> wb.io.wbOf
   io.wb <> wb.io.wbIf
 
-  io.funcUnits.memStall := false.B
-  io.funcUnits.aluStall := false.B
+  io.funcUnits.memStall := mem.io.stall
+  io.funcUnits.aluStall := alu.io.stall
   io.wbOutTest := wb.io.outTest
 }

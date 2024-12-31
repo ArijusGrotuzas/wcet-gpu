@@ -14,7 +14,7 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     val pcCtrl = new Bundle {
       val update = Input(Bool())
       val idx = Input(UInt(warpCount.W))
-      val data = Input(UInt(addrLen.W))
+      val data = Input(UInt(32.W))
     }
     
     val activeCtrl = new Bundle {

@@ -21,13 +21,14 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
       val dest = Output(UInt(5.W))
       val out = Output(UInt((32 * warpSize).W))
     }
+
+    val stall = Output(Bool())
   })
 
   // ALU lane control unit
   val aluCtrl = Module(new AluControl)
   aluCtrl.io.instrOpcode := io.of.opcode
 
-  // TODO: Can immediate be negative?
   val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
   val done = WireDefault(false.B)
   val valid = WireDefault(false.B)
@@ -54,4 +55,5 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   io.alu.done := done
   io.alu.valid := valid
   io.alu.out := out.asUInt
+  io.stall := false.B // TODO: Implement the stall signal
 }

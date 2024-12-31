@@ -13,10 +13,12 @@ class Sm(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
     }
 
     val start = new Bundle {
-      val ready = Output(Bool())
       val valid = Input(Bool())
       val data = Input(UInt(warpCount.W))
+      val ready = Output(Bool())
     }
+
+    val wbOutTest = Output(UInt((warpSize * 32).W))
   })
 
   val frontend = Module(new Frontend(warpCount, warpAddrLen))
@@ -27,4 +29,6 @@ class Sm(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   frontend.io.front <> backend.io.front
   frontend.io.wb <> backend.io.wb
   frontend.io.funcUnits <> backend.io.funcUnits
+
+  io.wbOutTest := backend.io.wbOutTest
 }

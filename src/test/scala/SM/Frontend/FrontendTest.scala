@@ -5,7 +5,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
-  def loadMem(dut: Frontend, program: Array[String]): Unit = {
+  def loadInstrMem(dut: Frontend, program: Array[String]): Unit = {
     dut.io.loadInstr.en.poke(true.B)
 
     for (i <- program.indices) {
@@ -63,7 +63,7 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Load the instructions
-      loadMem(dut, kernel)
+      loadInstrMem(dut, kernel)
 
       dut.clock.step(1)
 

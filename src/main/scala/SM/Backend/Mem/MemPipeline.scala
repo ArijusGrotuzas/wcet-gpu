@@ -20,11 +20,16 @@ class MemPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
       val dest = Output(UInt(5.W))
       val out = Output(UInt((32 * warpSize).W))
     }
+
+    val stall = Output(Bool())
   })
+
+  // TODO: Create a data cache/memory interface
 
   io.mem.warp := io.of.warp
   io.mem.valid := false.B
   io.mem.pending := false.B
   io.mem.dest := io.of.dest
   io.mem.out := 0.U
+  io.stall := false.B // TODO: Implement the stall signal
 }
