@@ -25,8 +25,18 @@ class BackendTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.front.imm.poke(immediate.U)
   }
 
+  def generateBinaryString(count: Int, value: Int): String = {
+    val binaryValue = String.format("%32s", Integer.toBinaryString(value)).replace(' ', '0').takeRight(32)
+
+    "b" + (binaryValue * count)
+  }
+
   "Backend" should "process arithmetic instructions" in {
-    test(new Backend(4, 8, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    val warpCount = 4
+    val warpSize = 8
+    val warpAddrLen = 2
+
+    test(new Backend(warpCount, warpSize, warpAddrLen)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.front.warp.poke(0.U)
       dut.io.front.opcode.poke(0.U)
@@ -39,7 +49,7 @@ class BackendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send an ADDI instruction
-      pushInstruction(dut, 0, Opcodes.ADDI, 19, 0, 0, 0, 256)
+      pushInstruction(dut, 0, Opcodes.ADDI, 2, 0, 0, 0, 256)
 
       dut.clock.step(1)
 
@@ -48,25 +58,66 @@ class BackendTest extends AnyFlatSpec with ChiselScalatestTester {
 
       dut.clock.step(1)
 
+      // Send an ADDI instruction
+      pushInstruction(dut, 1, Opcodes.ADDI, 20, 0, 0, 0, 240)
+
+      dut.clock.step(1)
+
+      // Send an ADDI instruction
+      pushInstruction(dut, 1, Opcodes.ADDI, 25, 0, 0, 0, 103)
+
+      // Expect the first Immediate instruction to return the results
+      dut.io.wbOutTest.expect(generateBinaryString(warpSize, 256).U)
+
+      dut.clock.step(1)
+
       // Send ADD instruction
-      pushInstruction(dut, 0, Opcodes.ADD, 3, 11, 19)
+      pushInstruction(dut, 0, Opcodes.ADD, 3, 11, 2)
+
+      // Expect the second Immediate instruction to return the results
+      dut.io.wbOutTest.expect(generateBinaryString(warpSize, 119).U)
 
       dut.clock.step(1)
 
       // Send RET instruction
       pushInstruction(dut, 0, Opcodes.RET)
 
+      // Expect the third Immediate instruction to return the results
+      dut.io.wbOutTest.expect(generateBinaryString(warpSize, 240).U)
+
       dut.clock.step(1)
 
       // Send AND instruction
       pushInstruction(dut, 1, Opcodes.AND, 19, 20, 25)
 
+      // Expect the fourth Immediate instruction to return the results
+      dut.io.wbOutTest.expect(generateBinaryString(warpSize, 103).U)
+
       dut.clock.step(1)
 
-      // Send OR instruction
-      pushInstruction(dut, 2, Opcodes.OR, 7, 28, 31)
+      // Send an NOP instruction
+      pushInstruction(dut, 0, Opcodes.NOP)
 
-      dut.clock.step(20)
+      // Expect the ADD instruction to return the results
+      dut.io.wbOutTest.expect(generateBinaryString(warpSize, 375).U)
+
+      dut.clock.step(1)
+
+      // Send an NOP instruction
+      pushInstruction(dut, 0, Opcodes.NOP)
+
+      // Expect the RET instruction to return the results
+      dut.io.wb.setInactive.expect(true.B)
+
+      dut.clock.step(1)
+
+      // Send AND instruction
+      pushInstruction(dut, 1, Opcodes.AND, 19, 20, 25)
+
+      // Expect the AND instruction to return the results
+      dut.io.wbOutTest.expect(generateBinaryString(warpSize, 96).U)
+
+      dut.clock.step(5)
     }
   }
 }

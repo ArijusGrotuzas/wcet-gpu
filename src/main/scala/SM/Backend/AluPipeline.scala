@@ -1,6 +1,5 @@
 package SM.Backend
 
-import SM.Opcodes
 import chisel3._
 
 class AluPipeline(warpSize: Int) extends Module {
@@ -24,37 +23,29 @@ class AluPipeline(warpSize: Int) extends Module {
     }
   })
 
-  // TODO: Add ALU control unit
+  // ALU lane control unit
+  val aluCtrl = Module(new AluControl)
+  aluCtrl.io.instrOpcode := io.of.opcode
 
-  // TODO: Translate ISA opcodes to alu operations
-  // TODO: Add operand selection for alu
   // TODO: Can immediate be negative?
   val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
   val done = WireDefault(false.B)
   val valid = WireDefault(false.B)
   val rs2Sel = WireDefault(false.B)
 
-  when (io.of.opcode === Opcodes.ADDI) {
-    rs2Sel := true.B
-  }
+  done := aluCtrl.io.done
+  valid := aluCtrl.io.valid
 
-  when(io.of.opcode === Opcodes.RET) {
-    done := true.B
-  }
-
-  when(io.of.opcode =/= Opcodes.NOP) {
-    valid := true.B
-  }
-
+  // Generate different ALU lanes
   for (i <- 0 until warpSize) {
     val alu = Module(new Alu(32))
 
     alu.io.a := io.of.rs1(((i + 1) * 32) - 1, i * 32).asSInt
 
-    val rs2 = Mux(rs2Sel, io.of.imm.asSInt, io.of.rs2(((i + 1) * 32) - 1, i * 32).asSInt)
+    val rs2 = Mux(aluCtrl.io.rs2Sel, io.of.imm.asSInt, io.of.rs2(((i + 1) * 32) - 1, i * 32).asSInt)
     alu.io.b := rs2
 
-    alu.io.op := io.of.opcode
+    alu.io.op := aluCtrl.io.aluOp
     out(i) := alu.io.out
   }
 

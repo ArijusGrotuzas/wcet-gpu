@@ -1,14 +1,17 @@
 package SM.Backend
 
-import SM.Opcodes
 import chisel3._
 import chisel3.util._
 
 object AluOps{
-  val ADD = "b00".U
-  val SUB = "b01".U
-  val AND = "b10".U
-  val OR = "b11".U
+  val ADD = "b000".U
+  val SUB = "b001".U
+  val AND = "b010".U
+  val OR = "b011".U
+  val SRL = "b100".U
+  val SLL = "b101".U
+  val FORA = "b110".U
+  val FORB = "b111".U
 }
 
 class Alu(operandWidth: Int) extends Module {
@@ -31,6 +34,8 @@ class Alu(operandWidth: Int) extends Module {
     is(AluOps.SUB) {out := io.a - io.b}
     is(AluOps.AND) {out := io.a & io.b}
     is(AluOps.OR) {out := io.a | io.b}
+    is(AluOps.FORA) {out := io.a}
+    is(AluOps.FORB) {out := io.b}
   }
 
   io.zero := !out.asUInt.orR

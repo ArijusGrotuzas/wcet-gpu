@@ -80,18 +80,18 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
 
   // To alu pipeline
   io.aluOf.warp := Mux(pipeSel, warp, 0.U)
-  io.aluOf.opcode := Mux(pipeSel, io.iss.opcode, 0.U)
-  io.aluOf.dest := Mux(pipeSel, io.iss.dest, 0.U)
+  io.aluOf.opcode := Mux(pipeSel, opcode, 0.U)
+  io.aluOf.dest := Mux(pipeSel, dest, 0.U)
   io.aluOf.rs1 := Mux(pipeSel, vrf.io.readData1, 0.U)
   io.aluOf.rs2 := Mux(pipeSel, vrf.io.readData2, 0.U)
   io.aluOf.rs3 := Mux(pipeSel, vrf.io.readData3, 0.U)
-  io.aluOf.imm := Mux(pipeSel, io.iss.imm, 0.U)
+  io.aluOf.imm := Mux(pipeSel, imm, 0.U)
 
   // To mem pipeline
   io.memOf.warp := Mux(!pipeSel, warp, 0.U)
-  io.memOf.opcode := Mux(!pipeSel, io.iss.opcode, 0.U)
-  io.memOf.dest := Mux(!pipeSel, io.iss.dest, 0.U)
+  io.memOf.opcode := Mux(!pipeSel, opcode, 0.U)
+  io.memOf.dest := Mux(!pipeSel, dest, 0.U)
   io.memOf.rs1 := Mux(!pipeSel, vrf.io.readData1, 0.U)
   io.memOf.rs2 := Mux(!pipeSel, vrf.io.readData2, 0.U)
-  io.memOf.imm := Mux(!pipeSel, io.iss.imm, 0.U)
+  io.memOf.imm := Mux(!pipeSel, imm, 0.U)
 }

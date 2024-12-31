@@ -2,7 +2,6 @@ package SM.Frontend
 
 import SM.Opcodes
 import chisel3._
-import chisel3.util._
 
 class InstructionDecode(warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
@@ -22,15 +21,15 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
-      val imm = Output(UInt(22.W))
+      val imm = Output(UInt(32.W))
     }
   })
 
   val imm = WireDefault(0.U(22.W))
 
   when(io.id.opcode === Opcodes.LUI) {
-    imm := io.instrF.instr(31, 10)
-  } .otherwise(
+    imm := io.instrF.instr(31, 10) << 10
+  }.otherwise(
     imm := io.instrF.instr(31, 15)
   )
 
