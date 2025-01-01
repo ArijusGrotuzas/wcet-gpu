@@ -59,6 +59,9 @@ class FrontendTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.start.data.poke(0.U)
       dut.io.funcUnits.memStall.poke(false.B)
       dut.io.funcUnits.aluStall.poke(false.B)
+      dut.io.nzpUpdate.en.poke(false.B)
+      dut.io.nzpUpdate.nzp.poke(0.U)
+      dut.io.nzpUpdate.warp.poke(0.U)
 
       dut.clock.step(1)
 

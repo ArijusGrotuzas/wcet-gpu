@@ -21,6 +21,11 @@ class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
 
     val setPending = Input(Bool())
 
+    val issIf = new Bundle {
+      val jump = Input(Bool())
+      val jumpAddr = Input(UInt(32.W))
+    }
+
     val wb = new Bundle {
       val setNotPending = Input(Bool())
       val setInactive = Input(Bool())
@@ -64,7 +69,13 @@ class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
   fetchNext := warpTable.io.done(io.scheduler.warp) === 0.U && !io.scheduler.reset && !io.scheduler.stall && !io.scheduler.setValid && !io.loadInstr.en && (opcode =/= "b11111".U)
   fetch := fetchNext
 
-  pcNext := warpTable.io.pc(io.scheduler.warp) + 1.U
+  // Mux for setting the next PC of a warp
+  when(io.issIf.jump) {
+    pcNext := io.issIf.jumpAddr
+  } .otherwise {
+    pcNext := warpTable.io.pc(io.scheduler.warp) + 1.U
+  }
+
   pc := pcNext
   warp := io.scheduler.warp
   valid := !io.scheduler.stall

@@ -18,6 +18,7 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
+      val nzp = Output(UInt(3.W))
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
@@ -37,6 +38,7 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
   io.id.pc := io.instrF.pc
   io.id.warp := io.instrF.warp
   io.id.dest := io.instrF.instr(9, 5)
+  io.id.nzp := io.instrF.instr(7, 5)
   io.id.rs1 := io.instrF.instr(14, 10)
   io.id.rs2 := io.instrF.instr(19, 15)
   io.id.rs3 := io.instrF.instr(24, 20)

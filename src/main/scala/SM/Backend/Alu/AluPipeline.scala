@@ -22,9 +22,10 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
       val out = Output(UInt((32 * warpSize).W))
     }
 
-    val decAlu = new Bundle {
+    val nzpUpdate = new Bundle {
       val nzp = Output(UInt(3.W))
-      val nzpUpdate = Output(Bool())
+      val en = Output(Bool())
+      val warp = Output(UInt(warpAddrLen.W))
     }
 
     val stall = Output(Bool())
@@ -66,7 +67,10 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   io.alu.done := done
   io.alu.valid := valid
   io.alu.out := out.asUInt
-  io.decAlu.nzp := nzp
-  io.decAlu.nzpUpdate := nzpUpdate
+
+  io.nzpUpdate.nzp := nzp
+  io.nzpUpdate.en := nzpUpdate
+  io.nzpUpdate.warp := io.of.warp
+
   io.stall := false.B // TODO: Implement the stall signal
 }
