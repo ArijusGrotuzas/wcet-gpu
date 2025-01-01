@@ -25,6 +25,9 @@ class MemPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   })
 
   // TODO: Create a data cache/memory interface
+  // TODO: Instantiate an array of LSU modules
+  // TODO: Create a state machine that stalls until all LSUs are done
+  // TODO: Add pending input signals
 
   io.mem.warp := io.of.warp
   io.mem.valid := false.B

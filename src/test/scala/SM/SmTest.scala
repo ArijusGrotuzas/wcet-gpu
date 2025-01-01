@@ -10,34 +10,34 @@ class SmTest extends AnyFlatSpec with ChiselScalatestTester {
 
     for (i <- program.indices) {
       dut.io.loadInstr.addr.poke(i)
-      dut.io.loadInstr.instr.poke(("b" + program(i)).U)
+      dut.io.loadInstr.instr.poke(program(i).U(32.W))
       dut.clock.step()
     }
 
     dut.io.loadInstr.en.poke(false.B)
   }
 
-  // TODO: Extend the test
+  // TODO: Extend the test by adding more test programs
   // TODO: Add a way to assert correct output
 
   "Sm" should "execute program 1" in {
     test(new Sm(4, 8, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      val kernel = Array(
-        "00000000000000000010100000101101", // (LUI, x1, 10)
-        "00000000000000000101000001001101", // (LUI, x2, 20)
-        "00000000000000101000010001101001", // (ADDI, x3, x1, 5)
-        "00000000000001000000100010001001", // (ADDI, x4, x2, 8)
-        "00000000000000000000000000000000", // (NOP)
-        "00000000000000000000000000000000", // (NOP)
-        "00000000000000011001000010100011", // (ADD, x5, x3, x4)
-        "00000000000000000000000000000000", // (NOP)
-        "00000000000000000000000000000000", // (NOP)
-        "00000000000000101001000011000111", // (SUB, x6, x4, x5)
-        "00000000000000100000110011101011", // (AND, x7, x3, x4)
-        "00000000000000101001000100001111", // (OR, x8, x4, x5)
-        "00000000000000000000000000000000", // (NOP)
-        "00000000000000000000000000011111"  // (RET)
-      )
+//      val kernel = Array(
+//        "00000000000000000010100000101101", // (LUI, x1, 10)
+//        "00000000000000000101000001001101", // (LUI, x2, 20)
+//        "00000000000000101000010001101001", // (ADDI, x3, x1, 5)
+//        "00000000000001000000100010001001", // (ADDI, x4, x2, 8)
+//        "00000000000000000000000000000000", // (NOP)
+//        "00000000000000000000000000000000", // (NOP)
+//        "00000000000000011001000010100011", // (ADD, x5, x3, x4)
+//        "00000000000000000000000000000000", // (NOP)
+//        "00000000000000000000000000000000", // (NOP)
+//        "00000000000000101001000011000111", // (SUB, x6, x4, x5)
+//        "00000000000000100000110011101011", // (AND, x7, x3, x4)
+//        "00000000000000101001000100001111", // (OR, x8, x4, x5)
+//        "00000000000000000000000000000000", // (NOP)
+//        "00000000000000000000000000011111"  // (RET)
+//      )
 
       dut.io.loadInstr.en.poke(false.B)
       dut.io.loadInstr.instr.poke(0.U)
@@ -47,7 +47,7 @@ class SmTest extends AnyFlatSpec with ChiselScalatestTester {
 
       dut.clock.step(1)
 
-      loadInstrMem(dut, kernel)
+      loadInstrMem(dut, TestKernels.kernel1)
 
       dut.clock.step(1)
 

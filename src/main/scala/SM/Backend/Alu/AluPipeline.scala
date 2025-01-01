@@ -22,6 +22,11 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
       val out = Output(UInt((32 * warpSize).W))
     }
 
+    val decAlu = new Bundle {
+      val nzp = Output(UInt(3.W))
+      val nzpUpdate = Output(Bool())
+    }
+
     val stall = Output(Bool())
   })
 
@@ -30,12 +35,14 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   aluCtrl.io.instrOpcode := io.of.opcode
 
   val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
+  val nzp = WireDefault(0.U(3.W))
   val done = WireDefault(false.B)
   val valid = WireDefault(false.B)
-  val rs2Sel = WireDefault(false.B)
+  val nzpUpdate = WireDefault(false.B)
 
   done := aluCtrl.io.done
   valid := aluCtrl.io.valid
+  nzpUpdate := aluCtrl.io.nzpUpdate
 
   // Generate different ALU lanes
   for (i <- 0 until warpSize) {
@@ -48,6 +55,10 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
 
     alu.io.op := aluCtrl.io.aluOp
     out(i) := alu.io.out
+
+    if (i == 0) {
+      nzp := alu.io.neg ## alu.io.zero ## !alu.io.neg
+    }
   }
 
   io.alu.warp := io.of.warp
@@ -55,5 +66,7 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   io.alu.done := done
   io.alu.valid := valid
   io.alu.out := out.asUInt
+  io.decAlu.nzp := nzp
+  io.decAlu.nzpUpdate := nzpUpdate
   io.stall := false.B // TODO: Implement the stall signal
 }

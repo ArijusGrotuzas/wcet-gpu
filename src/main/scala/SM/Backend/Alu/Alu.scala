@@ -23,6 +23,7 @@ class Alu(operandWidth: Int) extends Module {
 
     // Outputs
     val zero = Output(Bool())
+    val neg = Output(Bool())
     val out = Output(SInt(operandWidth.W))
   })
 
@@ -39,5 +40,6 @@ class Alu(operandWidth: Int) extends Module {
   }
 
   io.zero := !out.asUInt.orR
+  io.neg := out < 0.S
   io.out := out
 }

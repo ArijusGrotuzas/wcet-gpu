@@ -53,17 +53,11 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
   val warp = RegInit(0.U(warpAddrLen.W))
   val opcode = RegInit(0.U(5.W))
   val dest = RegInit(0.U(5.W))
-  val rs1 = RegInit(0.U(5.W))
-  val rs2 = RegInit(0.U(5.W))
-  val rs3 = RegInit(0.U(5.W))
   val imm = RegInit(0.S(32.W))
 
   warp := io.iss.warp
   opcode := io.iss.opcode
   dest := io.iss.dest
-  rs1 := io.iss.rs1
-  rs2 := io.iss.rs2
-  rs3 := io.iss.rs3
   imm := io.iss.imm
 
   // Select the one of the functional units based on the opcode

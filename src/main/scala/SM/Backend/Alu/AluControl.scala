@@ -12,12 +12,14 @@ class AluControl extends Module {
     val rs2Sel = Output(Bool())
     val done = Output(Bool())
     val valid = Output(Bool())
+    val nzpUpdate = Output(Bool())
   })
 
   val aluOp = WireDefault(0.U(4.W))
   val rs2Sel = WireDefault(false.B)
   val done = WireDefault(false.B)
   val valid = WireDefault(false.B)
+  val nzpUpdate = WireDefault(false.B)
 
   when(io.instrOpcode === Opcodes.RET) {
     done := true.B
@@ -48,10 +50,15 @@ class AluControl extends Module {
     is(Opcodes.OR) {
       aluOp := AluOps.OR
     }
+    is(Opcodes.CMP) {
+      aluOp := AluOps.SUB
+      nzpUpdate := true.B
+    }
   }
 
   io.aluOp := aluOp
   io.rs2Sel := rs2Sel
   io.done := done
   io.valid := valid
+  io.nzpUpdate := nzpUpdate
 }

@@ -3,10 +3,6 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
-object SchedulerState extends ChiselEnum {
-  val idle, done, s0, s1, s2, s3 = Value
-}
-
 class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val start = new Bundle {
@@ -34,7 +30,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
     }
   })
 
-  import SchedulerState._
+  val sIdle :: sDone :: s0 :: s1 :: s2 :: s3 :: Nil = Enum(6)
 
   val availableWarps = WireDefault(0.U(warpCount.W))
   val warp = WireDefault(0.U(warpAddrLen.W))
@@ -45,7 +41,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
   val setValid = WireDefault(false.B)
   val validWarps = WireDefault(0.U(warpCount.W))
 
-  val stateReg = RegInit(idle)
+  val stateReg = RegInit(sIdle)
 
   // Calculate which warps can be scheduled
   when(io.memStall) {
@@ -64,7 +60,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
 
   // Scheduler FSM
   switch(stateReg) {
-    is(idle) {
+    is(sIdle) {
       stall := true.B
       ready := true.B
 
@@ -88,7 +84,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
         warp := 3.U
         stateReg := s3
       }.elsewhen(allDone) {
-        stateReg := done
+        stateReg := sDone
       }
     }
     is(s1) {
@@ -105,7 +101,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
         warp := 0.U
         stateReg := s0
       }.elsewhen(allDone) {
-        stateReg := done
+        stateReg := sDone
       }
     }
     is(s2) {
@@ -122,7 +118,7 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
         warp := 1.U
         stateReg := s1
       }.elsewhen(allDone) {
-        stateReg := done
+        stateReg := sDone
       }
     }
     is(s3) {
@@ -139,13 +135,13 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
         warp := 2.U
         stateReg := s2
       }.elsewhen(allDone) {
-        stateReg := done
+        stateReg := sDone
       }
     }
-    is(done) {
+    is(sDone) {
       stall := true.B
       rst := true.B
-      stateReg := idle
+      stateReg := sIdle
     }
   }
 
