@@ -29,7 +29,7 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
   val imm = WireDefault(0.S(32.W))
 
   when(io.id.opcode === Opcodes.LUI) {
-    imm := (io.instrF.instr(31, 10) << 10).asSInt
+    imm := (io.instrF.instr(24, 10) << 17).asSInt
   }.elsewhen(io.id.opcode === Opcodes.BRNZP) {
     imm := io.instrF.instr(31, 10).asSInt
   }.otherwise {
