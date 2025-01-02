@@ -1,15 +1,14 @@
 package SM
 
-import SM.Backend.Backend
-import SM.Frontend.Frontend
+import SM.Backend.Back
+import SM.Frontend.Front
 import chisel3._
 
 class Sm(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    val loadInstr = new Bundle {
-      val en = Input(Bool())
-      val instr = Input(UInt(32.W))
-      val addr = Input(UInt(32.W))
+    val instrMem = new Bundle {
+      val addr = Output(UInt(32.W))
+      val data = Input(UInt(32.W))
     }
 
     val start = new Bundle {
@@ -21,10 +20,10 @@ class Sm(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
     val wbOutTest = Output(UInt((warpSize * 32).W))
   })
 
-  val frontend = Module(new Frontend(warpCount, warpAddrLen))
-  val backend = Module(new Backend(warpCount, warpSize, warpAddrLen))
+  val frontend = Module(new Front(warpCount, warpAddrLen))
+  val backend = Module(new Back(warpCount, warpSize, warpAddrLen))
 
-  frontend.io.loadInstr <> io.loadInstr
+  frontend.io.instrMem <> io.instrMem
   frontend.io.start <> io.start
   frontend.io.front <> backend.io.front
   frontend.io.wb <> backend.io.wb

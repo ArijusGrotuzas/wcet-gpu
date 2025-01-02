@@ -5,9 +5,9 @@ import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
-class BackendTest extends AnyFlatSpec with ChiselScalatestTester {
+class BackTest extends AnyFlatSpec with ChiselScalatestTester {
   def pushInstruction(
-                       dut: Backend,
+                       dut: Back,
                        warp: Int,
                        opcode: UInt,
                        dest: Int = 0,
@@ -36,7 +36,7 @@ class BackendTest extends AnyFlatSpec with ChiselScalatestTester {
     val warpSize = 8
     val warpAddrLen = 2
 
-    test(new Backend(warpCount, warpSize, warpAddrLen)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new Back(warpCount, warpSize, warpAddrLen)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.front.warp.poke(0.U)
       dut.io.front.opcode.poke(0.U)

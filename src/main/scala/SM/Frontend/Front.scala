@@ -2,12 +2,11 @@ package SM.Frontend
 
 import chisel3._
 
-class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
+class Front(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
-    val loadInstr = new Bundle {
-      val en = Input(Bool())
-      val instr = Input(UInt(32.W))
-      val addr = Input(UInt(32.W))
+    val instrMem = new Bundle {
+      val addr = Output(UInt(32.W))
+      val data = Input(UInt(32.W))
     }
 
     val start = new Bundle {
@@ -54,10 +53,10 @@ class Frontend(warpCount: Int, warpAddrLen: Int) extends Module {
   warpScheduler.io.warpTable <> instrF.io.warpTable
   warpScheduler.io.memStall := io.funcUnits.memStall
   warpScheduler.io.aluStall := io.funcUnits.aluStall
-  warpScheduler.io.headInstrType := 0.U //instrIss.io.headInstrType
+  warpScheduler.io.headInstrType := instrIss.io.headInstrType
   warpScheduler.io.scheduler <> instrF.io.scheduler
 
-  instrF.io.loadInstr <> io.loadInstr
+  instrF.io.instrMem <> io.instrMem
   instrF.io.setPending := instrIss.io.setPending
   instrF.io.wb.setInactive := io.wb.setInactive
   instrF.io.wb <> io.wb

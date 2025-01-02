@@ -4,7 +4,7 @@ import SM.Backend.Alu.AluPipeline
 import SM.Backend.Mem.MemPipeline
 import chisel3._
 
-class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
+class Back(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val front = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))

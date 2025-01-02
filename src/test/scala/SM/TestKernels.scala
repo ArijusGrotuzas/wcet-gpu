@@ -27,11 +27,18 @@ object TestKernels {
     "h000194A3", // (ADD, x5, x5, x3): b += a
     "h00011006", // (CMP, x4, x2) i < j
     "h00000000", // (NOP)
-    "hFFFFE822", // (BRNZP, NZP=100, -6)
+    "hFFFFE822", // (BRNZP, NZP=100, -6) TODO: Fix this to be -5 instead
     "h00000000", // (NOP)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
     "h0000001F" // (RET)
+  )
+
+  // TODO: Change encoding
+  val kernel3 = Array(
+    "11000000000010111101010110001101", // (LUI, 12, 21, 23, X)
+    "00000000000111011001100110101001", // (ADDI, 13, 6, 27, 1)
+    "00000000001000011001010111011111", // (RET, 14, 5, 3, 2)
   )
 }

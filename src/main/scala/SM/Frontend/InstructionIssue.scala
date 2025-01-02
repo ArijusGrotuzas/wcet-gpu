@@ -3,6 +3,7 @@ package SM.Frontend
 import SM.Opcodes
 import chisel3._
 
+// TODO: Create register file, that contains the thread iDs
 class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val id = new Bundle {
@@ -65,7 +66,6 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
     dataOut
   }
 
-  // TODO: Add output if each warp's head instruction is a mem-instr
   val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount)(0.U(3.W))))
   val inQueueSel = WireDefault(0.U(warpCount.W))
   val outQueueSel = WireDefault(0.U(warpCount.W))

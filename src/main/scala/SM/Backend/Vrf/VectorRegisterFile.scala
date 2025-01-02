@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import SM.Frontend.DualPortedRam
 
+// TODO: Create functions for generating hardware to make the code cleaner
 class VectorRegisterFile(bankDepth: Int, bankWidth: Int, addrLen: Int) extends Module {
   val io = IO(new Bundle {
     // Inputs
