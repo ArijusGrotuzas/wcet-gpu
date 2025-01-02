@@ -8,15 +8,14 @@ class DataQueues[T <: Data](gen: T, queueCount: Int, queueDepth: Int) extends Mo
     val dataIn = Input(gen)
     val inQueueSel = Input(UInt(queueCount.W))
     val outQueueSel = Input(UInt(queueCount.W))
-    val outDataSel = Input(UInt(queueCount.W))
 
-    val dataOut = Output(gen)
+    val data = Output(Vec(queueCount, gen))
+    val notEmpty = Output(Vec(queueCount, Bool()))
   })
 
   val queues = Array.fill(queueCount)(Module(new RegFifo(gen, queueDepth)))
   val outBits = VecInit(queues.toSeq.map(_.io.deq.bits))
   val notEmpty = VecInit(queues.toSeq.map(_.io.deq.valid))
-  val dataOut = Wire(gen)
 
   // Opcode queues
   for (i <- 0 until queueCount) {
@@ -25,12 +24,6 @@ class DataQueues[T <: Data](gen: T, queueCount: Int, queueDepth: Int) extends Mo
     queues(i).io.deq.ready := io.outQueueSel(i)
   }
 
-  // If the selected queue is empty, then return 0
-  when(notEmpty(io.outDataSel)) {
-    dataOut := outBits(io.outDataSel)
-  }.otherwise {
-    dataOut := 0.U.asTypeOf(gen)
-  }
-
-  io.dataOut := dataOut
+  io.data := outBits
+  io.notEmpty := notEmpty
 }

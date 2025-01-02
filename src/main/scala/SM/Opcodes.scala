@@ -10,7 +10,6 @@ object Opcodes {
   val ST = "b00101".U // TODO: Implement
   // Immediate instructions
   val ADDI = "b01001".U //*
-  val ADDIU = "b01101".U // TODO: Implement for adding the lower bits to upper immediate
   val LUI = "b01101".U //*
   // Arithmetic
   val ADD = "b00011".U //*
