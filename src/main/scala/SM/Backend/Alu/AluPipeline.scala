@@ -58,7 +58,7 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
     out(i) := alu.io.out
 
     if (i == 0) {
-      nzp := alu.io.neg ## alu.io.zero ## !alu.io.neg
+      nzp := !alu.io.neg ## alu.io.zero ## alu.io.neg
     }
   }
 

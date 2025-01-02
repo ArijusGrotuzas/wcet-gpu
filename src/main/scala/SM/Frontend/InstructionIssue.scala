@@ -51,12 +51,7 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   })
 
   // TODO: Add output if each warp's head instruction is a mem-instr
-  // TODO: Add logic for deciding if to make a jump when a BRNZP instruction is issued
   val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount)(0.U(3.W))))
-
-  when(io.nzpUpdate.en) {
-    nzpRegFile(io.nzpUpdate.warp) := io.nzpUpdate.nzp
-  }
 
   val inQueueSel = WireDefault(0.U(warpCount.W))
   val outQueueSel = WireDefault(0.U(warpCount.W))
@@ -64,7 +59,9 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
   val setPending = WireDefault(false.B)
   val jump = WireDefault(false.B)
   val jumpAddr = WireDefault(0.U(32.W))
+  val nzpRegOut = WireDefault(0.U(3.W))
 
+  // Logic for selecting queues and thus popping entries from them
   when(io.id.valid) {
     inQueueSel := 1.U << io.id.warp
   }
@@ -73,103 +70,117 @@ class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
     outQueueSel := 1.U << io.scheduler.warp
   }
 
-  // TODO: Think if 32 bits is not too much for a PC, this ends up using a lot of LUTs
+  // Update the correct nzp register
+  when(io.nzpUpdate.en) {
+    nzpRegFile(io.nzpUpdate.warp) := io.nzpUpdate.nzp
+  }
+
+  // Create queues for the decoded instructions
+  // TODO: Think if 32 bits is not too much for a PC, this ends up using a lot of LUTs for a queue
   val pcQueues = Module(new DataQueues(UInt(32.W), warpCount, 3))
-  val pc = WireDefault(0.U(5.W))
+  val pcCurr = WireDefault(0.U(5.W))
 
   pcQueues.io.dataIn := io.id.pc
   pcQueues.io.inQueueSel := inQueueSel
   pcQueues.io.outQueueSel := outQueueSel
   pcQueues.io.outDataSel := io.scheduler.warp
-  pc := pcQueues.io.dataOut
+  pcCurr := pcQueues.io.dataOut
 
   val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
-  val opcode = WireDefault(0.U(5.W))
+  val opcodeCurr = WireDefault(0.U(5.W))
 
   opcodeQueues.io.dataIn := io.id.opcode
   opcodeQueues.io.inQueueSel := inQueueSel
   opcodeQueues.io.outQueueSel := outQueueSel
   opcodeQueues.io.outDataSel := io.scheduler.warp
-  opcode := opcodeQueues.io.dataOut
+  opcodeCurr := opcodeQueues.io.dataOut
 
   val destQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
-  val dest = WireDefault(0.U(5.W))
+  val destCurr = WireDefault(0.U(5.W))
 
   destQueues.io.dataIn := io.id.dest
   destQueues.io.inQueueSel := inQueueSel
   destQueues.io.outQueueSel := outQueueSel
   destQueues.io.outDataSel := io.scheduler.warp
-  dest := destQueues.io.dataOut
+  destCurr := destQueues.io.dataOut
 
   val nzpQueues = Module(new DataQueues(UInt(3.W), warpCount, 3))
-  val nzp = WireDefault(0.U(5.W))
+  val nzpCurr = WireDefault(0.U(3.W))
 
   nzpQueues.io.dataIn := io.id.nzp
   nzpQueues.io.inQueueSel := inQueueSel
   nzpQueues.io.outQueueSel := outQueueSel
   nzpQueues.io.outDataSel := io.scheduler.warp
-  nzp := nzpQueues.io.dataOut
+  nzpCurr := nzpQueues.io.dataOut
 
   val rs1Queues = Module(new DataQueues(UInt(5.W), warpCount, 3))
-  val rs1 = WireDefault(0.U(5.W))
+  val rs1Curr = WireDefault(0.U(5.W))
 
   rs1Queues.io.dataIn := io.id.rs1
   rs1Queues.io.inQueueSel := inQueueSel
   rs1Queues.io.outQueueSel := outQueueSel
   rs1Queues.io.outDataSel := io.scheduler.warp
-  rs1 := rs1Queues.io.dataOut
+  rs1Curr := rs1Queues.io.dataOut
 
   val rs2Queues = Module(new DataQueues(UInt(5.W), warpCount, 3))
-  val rs2 = WireDefault(0.U(5.W))
+  val rs2Curr = WireDefault(0.U(5.W))
 
   rs2Queues.io.dataIn := io.id.rs2
   rs2Queues.io.inQueueSel := inQueueSel
   rs2Queues.io.outQueueSel := outQueueSel
   rs2Queues.io.outDataSel := io.scheduler.warp
-  rs2 := rs2Queues.io.dataOut
+  rs2Curr := rs2Queues.io.dataOut
 
   val rs3Queues = Module(new DataQueues(UInt(5.W), warpCount, 3))
-  val rs3 = WireDefault(0.U(5.W))
+  val rs3Curr = WireDefault(0.U(5.W))
 
   rs3Queues.io.dataIn := io.id.rs3
   rs3Queues.io.inQueueSel := inQueueSel
   rs3Queues.io.outQueueSel := outQueueSel
   rs3Queues.io.outDataSel := io.scheduler.warp
-  rs3 := rs3Queues.io.dataOut
+  rs3Curr := rs3Queues.io.dataOut
 
   val immQueues = Module(new DataQueues(SInt(32.W), warpCount, 3))
-  val imm = WireDefault(0.S(32.W))
+  val immCur = WireDefault(0.S(32.W))
 
   immQueues.io.dataIn := io.id.imm
   immQueues.io.inQueueSel := inQueueSel
   immQueues.io.outQueueSel := outQueueSel
   immQueues.io.outDataSel := io.scheduler.warp
-  imm := immQueues.io.dataOut
+  immCur := immQueues.io.dataOut
+
+  // Forward the nzp value if the warp is the same
+  when(io.nzpUpdate.warp === io.scheduler.warp && io.nzpUpdate.en) {
+    nzpRegOut := io.nzpUpdate.nzp
+  } .otherwise {
+    nzpRegOut := nzpRegFile(io.scheduler.warp)
+  }
 
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
-  when(opcode === Opcodes.LD || opcode === Opcodes.ST || opcode === Opcodes.RET) {
+  when(opcodeCurr === Opcodes.LD || opcodeCurr === Opcodes.ST || opcodeCurr === Opcodes.RET) {
     setPending := true.B
   }
 
-  when(opcode === Opcodes.CMP) {
-    jump := nzp & nzpRegFile(io.scheduler.warp).orR
+  // If cmp instruction, then perform the jump based on nzp register contents
+  when(opcodeCurr === Opcodes.BRNZP) {
+    jump := (nzpCurr & nzpRegOut).orR
   }
 
   // TODO: Think if the 22 bits of immediate are enough for calculating the jump address
-  jumpAddr := pc + imm.asUInt
+  jumpAddr := (pcCurr.asSInt + immCur).asUInt
 
   io.iss.pending := setPending
   io.iss.warp := io.scheduler.warp
-  io.iss.opcode := opcode
-  io.iss.dest := dest
-  io.iss.rs1 := rs1
-  io.iss.rs2 := rs2
-  io.iss.rs3 := rs3
-  io.iss.imm := imm
+  io.iss.opcode := opcodeCurr
+  io.iss.dest := destCurr
+  io.iss.rs1 := rs1Curr
+  io.iss.rs2 := rs2Curr
+  io.iss.rs3 := rs3Curr
+  io.iss.imm := immCur
 
   io.setPending := setPending
   io.headInstrType := headInstrType
 
   io.issIf.jump := jump
-  io.issIf.jumpAddr := 0.U
+  io.issIf.jumpAddr := jumpAddr
 }

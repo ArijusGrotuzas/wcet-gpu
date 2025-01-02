@@ -27,6 +27,12 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
       val setNotPending = Output(Bool())
     }
 
+    val nzpUpdate = new Bundle {
+      val nzp = Output(UInt(3.W))
+      val en = Output(Bool())
+      val warp = Output(UInt(warpAddrLen.W))
+    }
+
     val wbOutTest = Output(UInt((warpSize * 32).W))
   })
 
@@ -70,4 +76,5 @@ class Backend(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   io.funcUnits.memStall := mem.io.stall
   io.funcUnits.aluStall := alu.io.stall
   io.wbOutTest := wb.io.outTest
+  io.nzpUpdate := alu.io.nzpUpdate
 }

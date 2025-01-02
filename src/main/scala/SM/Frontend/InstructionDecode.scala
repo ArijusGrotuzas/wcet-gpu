@@ -30,9 +30,11 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
 
   when(io.id.opcode === Opcodes.LUI) {
     imm := (io.instrF.instr(31, 10) << 10).asSInt
-  }.otherwise(
+  }.elsewhen(io.id.opcode === Opcodes.BRNZP) {
+    imm := io.instrF.instr(31, 10).asSInt
+  }.otherwise {
     imm := io.instrF.instr(31, 15).asSInt
-  )
+  }
 
   io.id.valid := io.instrF.valid
   io.id.pc := io.instrF.pc

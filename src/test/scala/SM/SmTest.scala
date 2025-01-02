@@ -65,4 +65,33 @@ class SmTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.start.ready.expect(true.B)
     }
   }
+
+  "Sm" should "execute program 2" in {
+    test(new Sm(4, 8, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      dut.io.loadInstr.en.poke(false.B)
+      dut.io.loadInstr.instr.poke(0.U)
+      dut.io.loadInstr.addr.poke(0.U)
+      dut.io.start.valid.poke(false.B)
+      dut.io.start.data.poke(0.U)
+
+      dut.clock.step(1)
+
+      loadInstrMem(dut, TestKernels.kernel2)
+
+      dut.clock.step(1)
+
+      dut.io.start.valid.poke(true.B)
+      dut.io.start.data.poke("b0001".U)
+
+      dut.clock.step(1)
+
+      dut.io.start.valid.poke(false.B)
+      dut.io.start.data.poke(0.U)
+      dut.io.start.ready.expect(false.B)
+
+      dut.clock.step(200)
+
+//      dut.io.start.ready.expect(true.B)
+    }
+  }
 }

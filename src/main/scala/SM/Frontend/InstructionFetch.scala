@@ -72,7 +72,7 @@ class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
   // Mux for setting the next PC of a warp
   when(io.issIf.jump) {
     pcNext := io.issIf.jumpAddr
-  } .otherwise {
+  }.otherwise {
     pcNext := warpTable.io.pc(io.scheduler.warp) + 1.U
   }
 

@@ -29,6 +29,7 @@ class Sm(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   frontend.io.front <> backend.io.front
   frontend.io.wb <> backend.io.wb
   frontend.io.funcUnits <> backend.io.funcUnits
+  frontend.io.nzpUpdate <> backend.io.nzpUpdate
 
   io.wbOutTest := backend.io.wbOutTest
 }

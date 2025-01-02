@@ -18,6 +18,6 @@ object Opcodes {
   val OR = "b01111".U //*
   val MAD = "b10011".U // TODO: Implement
   // Branch
-  val BRNZP = "b00010".U // TODO: Implement
-  val CMP = "b00110".U // TODO: Implement
+  val BRNZP = "b00010".U //*
+  val CMP = "b00110".U //*
 }
