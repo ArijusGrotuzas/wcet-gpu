@@ -2,7 +2,6 @@ package SM.Backend
 
 import chisel3._
 import chiseltest._
-import chisel3.util._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
