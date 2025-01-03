@@ -40,5 +40,5 @@ class SmTop(warpCount: Int, warpSize: Int, freq: Int, instructionFile: String = 
 // generate Verilog
 object SmTop extends App {
   println("Generating the SM hardware")
-  (new chisel3.stage.ChiselStage).emitVerilog(new SmTop(4, 8, 100000000, "src/test/scala/kernel2.hex"), Array("--target-dir", "generated"))
+  (new chisel3.stage.ChiselStage).emitVerilog(new SmTop(4, 8, 100000000, "bootkernel.hex"), Array("--target-dir", "generated"))
 }
