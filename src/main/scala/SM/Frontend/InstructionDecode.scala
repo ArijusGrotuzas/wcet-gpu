@@ -7,15 +7,15 @@ class InstructionDecode(warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val instrF = new Bundle {
       val valid = Input(Bool())
+      val warp = Input(UInt(warpAddrLen.W))
       val pc = Input(UInt(32.W))
       val instr = Input(UInt(32.W))
-      val warp = Input(UInt(warpAddrLen.W))
     }
 
     val id = new Bundle {
       val valid = Output(Bool())
-      val pc = Output(UInt(32.W))
       val warp = Output(UInt(warpAddrLen.W))
+      val pc = Output(UInt(32.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
       val nzp = Output(UInt(3.W))
