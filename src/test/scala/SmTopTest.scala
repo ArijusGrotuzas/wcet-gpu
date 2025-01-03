@@ -17,12 +17,12 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.ready.expect(true.B)
 
       // Step for a few clock cycles to allow the debounced signals to propagate
-      dut.clock.step(5)
+      dut.clock.step(20)
 
       // Reset the start signals
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
-//      dut.io.ready.expect(false.B)
+      dut.io.ready.expect(false.B)
 
       dut.clock.step(100)
 
@@ -44,14 +44,14 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.ready.expect(true.B)
 
       // Step for a few clock cycles to allow the debounced signals to propagate
-      dut.clock.step(5)
+      dut.clock.step(20)
 
       // Reset the start signals
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
       dut.io.ready.expect(false.B)
 
-      dut.clock.step(200)
+      dut.clock.step(150)
 
       // Expect the SM to be done
       dut.io.ready.expect(true.B)

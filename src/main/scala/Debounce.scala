@@ -14,15 +14,23 @@ class Debounce(dataSize: Int, freq: Int) extends Module {
 
   def syncIn(din: UInt): UInt = RegNext(RegNext(din))
 
-  def tickGen(max: Int): Bool = {
-    val reg = RegInit(0.U(log2Up(max).W))
-    val tick = reg === (max - 1).U
-    reg := Mux(tick, 0.U, reg + 1.U)
+  def tickGen(fac: Int): Bool = {
+    val cntReg = RegInit(0.U(log2Up(fac).W))
+    val tick = cntReg === (fac - 1).U
+    cntReg := Mux(tick, 0.U, cntReg + 1.U)
     tick
   }
 
+  def majorityFilter(din: Bool, tick: Bool): Bool = {
+    val reg = RegInit(0.U(3.W))
+    when(tick) {
+      reg := reg(1, 0) ## din
+    }
+    (reg(2) & reg(1)) | (reg(2) & reg(0)) | (reg(1) & reg(0))
+  }
+
   // Synchronized inputs
-  val syncRest = syncIn(io.reset)
+  val syncReset = syncIn(io.reset)
   val syncValid = syncIn(io.valid)
   val syncData = syncIn(io.data)
 
@@ -36,12 +44,12 @@ class Debounce(dataSize: Int, freq: Int) extends Module {
 
   // Debounce Inputs
   when(tick) {
-    debResetReg := syncRest
+    debResetReg := syncReset
     debValidReg := syncValid
     debDataReg := syncData
   }
 
-  io.resetDb := debResetReg
-  io.validDb := debValidReg
+  io.resetDb := majorityFilter(debResetReg, tick)
+  io.validDb := majorityFilter(debValidReg, tick)
   io.dataDb := debDataReg
 }
