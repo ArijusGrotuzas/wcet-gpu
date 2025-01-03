@@ -27,8 +27,6 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
       val en = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
     }
-
-    val stall = Output(Bool())
   })
 
   // ALU lane control unit
@@ -71,6 +69,4 @@ class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
   io.nzpUpdate.nzp := nzp
   io.nzpUpdate.en := nzpUpdate
   io.nzpUpdate.warp := io.of.warp
-
-  io.stall := false.B // TODO: Implement the stall signal
 }

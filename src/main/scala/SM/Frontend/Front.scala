@@ -23,7 +23,6 @@ class Front(warpCount: Int, warpAddrLen: Int) extends Module {
 
     val funcUnits = new Bundle {
       val memStall = Input(Bool())
-      val aluStall = Input(Bool())
     }
 
     val nzpUpdate = new Bundle {
@@ -52,7 +51,6 @@ class Front(warpCount: Int, warpAddrLen: Int) extends Module {
   warpScheduler.io.start <> io.start
   warpScheduler.io.warpTable <> instrF.io.warpTable
   warpScheduler.io.memStall := io.funcUnits.memStall
-  warpScheduler.io.aluStall := io.funcUnits.aluStall
   warpScheduler.io.headInstrType := instrIss.io.headInstrType
   warpScheduler.io.scheduler <> instrF.io.scheduler
 

@@ -1,5 +1,3 @@
-package SM
-
 object TestKernels {
   val kernel1 = Array(
     "h0024682D", // (LUI, x1, 2330)
@@ -16,7 +14,7 @@ object TestKernels {
     "h00020CEB", // (AND, x7, x3, x4)
     "h2000910F", // (OR, x8, x4, x5)
     "h00000000", // (NOP)
-    "h0000001F"  // (RET)
+    "h0000001F" // (RET)
   )
 
   val kernel2 = Array(
@@ -27,7 +25,7 @@ object TestKernels {
     "h000194A3", // (ADD, x5, x5, x3): b += a
     "h00011006", // (CMP, x4, x2) i < j
     "h00000000", // (NOP)
-    "hFFFFE822", // (BRNZP, NZP=100, -6) TODO: Fix this to be -5 instead
+    "h3FFEC22", // (BRNZP, NZP=100, -6)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
@@ -35,10 +33,9 @@ object TestKernels {
     "h0000001F" // (RET)
   )
 
-  // TODO: Change encoding
   val kernel3 = Array(
-    "11000000000010111101010110001101", // (LUI, 12, 21, 23, X)
-    "00000000000111011001100110101001", // (ADDI, 13, 6, 27, 1)
-    "00000000001000011001010111011111", // (RET, 14, 5, 3, 2)
+    "hC00BD58D", // (LUI, 12, 21, 23, X)
+    "h01D99A9", // (ADDI, 13, 6, 27, 1)
+    "h2195DF", // (RET, 14, 5, 3, 2)
   )
 }

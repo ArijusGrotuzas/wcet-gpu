@@ -19,7 +19,6 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
 
     val headInstrType = Input(UInt(warpCount.W))
     val memStall = Input(Bool())
-    val aluStall = Input(Bool())
 
     val scheduler = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))

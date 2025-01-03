@@ -47,7 +47,7 @@ class VectorRegisterFileTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.readData2.expect("hcafebabe".U)
       dut.io.readData3.expect("hdeadbabe".U)
 
-      dut.clock.step(1)
+      dut.clock.step(20)
     }
   }
 }

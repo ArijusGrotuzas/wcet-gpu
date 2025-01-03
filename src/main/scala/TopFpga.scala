@@ -1,9 +1,7 @@
-package SM
-
+import SM.Sm
 import chisel3._
 
-// TODO: Create two different top modules one for testing and another for synthesis
-class Top extends Module {
+class TopFpga extends Module {
   val io = new Bundle {
     val valid = Input(Bool())
     val data = Input(UInt(4.W))

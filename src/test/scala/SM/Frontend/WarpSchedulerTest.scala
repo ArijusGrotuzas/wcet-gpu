@@ -16,7 +16,6 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.warpTable.pending.poke("b0000".U)
       dut.io.headInstrType.poke("b0000".U)
       dut.io.memStall.poke(false.B)
-      dut.io.aluStall.poke(false.B)
 
       dut.io.scheduler.warp.expect(0.U)
 
@@ -26,7 +25,6 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.warpTable.pending.poke("b0001".U)
       dut.io.headInstrType.poke("b0000".U)
       dut.io.memStall.poke(false.B)
-      dut.io.aluStall.poke(false.B)
 
       dut.io.scheduler.warp.expect(2.U)
 
@@ -36,7 +34,6 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.warpTable.pending.poke("b0100".U)
       dut.io.headInstrType.poke("b0000".U)
       dut.io.memStall.poke(false.B)
-      dut.io.aluStall.poke(false.B)
 
       dut.io.scheduler.warp.expect(0.U)
 
@@ -46,7 +43,6 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.warpTable.pending.poke("b0000".U)
       dut.io.headInstrType.poke("b0001".U)
       dut.io.memStall.poke(true.B)
-      dut.io.aluStall.poke(false.B)
 
       dut.io.scheduler.warp.expect(2.U)
     }

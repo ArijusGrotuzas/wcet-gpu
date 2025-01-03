@@ -18,7 +18,6 @@ class Back(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
 
     val funcUnits = new Bundle {
       val memStall = Output(Bool())
-      val aluStall = Output(Bool())
     }
 
     val wb = new Bundle {
@@ -74,7 +73,6 @@ class Back(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
   io.wb <> wb.io.wbIf
 
   io.funcUnits.memStall := mem.io.stall
-  io.funcUnits.aluStall := alu.io.stall
   io.wbOutTest := wb.io.outTest
   io.nzpUpdate := alu.io.nzpUpdate
 }
