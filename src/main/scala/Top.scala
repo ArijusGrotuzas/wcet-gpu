@@ -1,26 +1,25 @@
 import SM.Sm
 import chisel3._
 
-class TopSim(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
+class Top(warpCount: Int, warpSize: Int, warpAddrLen: Int, instructionFile: String = "") extends Module {
   val io = IO(new Bundle {
+    val reset = Input(Bool())
     val valid = Input(Bool())
     val data = Input(UInt(4.W))
-    val loadInstr = Input(UInt(32.W))
-    val loadInstrEn = Input(Bool())
-    val loadInstrAddr = Input(UInt(32.W))
 
     val wbOutTest = Output(UInt((warpSize * 32).W))
     val ready = Output(Bool())
   })
 
+  // TODO: Debounce the input signals
   // TODO: Add data memory
   val sm = Module(new Sm(warpCount, warpSize, warpAddrLen))
-  val instrMem = Module(new InstructionMemory(32, 1024, 32))
+  val instrMem = Module(new InstructionMemory(32, 1024, 32, instructionFile))
 
   // Load instruction inputs
-  instrMem.io.we := io.loadInstrEn
-  instrMem.io.wAddr := io.loadInstrAddr
-  instrMem.io.dataIn := io.loadInstr
+  instrMem.io.we := false.B
+  instrMem.io.wAddr := 0.U
+  instrMem.io.dataIn := 0.U
 
   // Access to the instruction memory from SM
   instrMem.io.addr := sm.io.instrMem.addr
