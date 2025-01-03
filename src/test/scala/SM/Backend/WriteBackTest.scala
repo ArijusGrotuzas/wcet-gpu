@@ -2,11 +2,12 @@ package SM.Backend
 
 import chisel3._
 import chiseltest._
+import chisel3.util._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
-  "InstructionDecode" should "route correct data" in {
-    test(new WriteBack(1, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+  "WriteBack" should "route correct data" in {
+    test(new WriteBack(1, 1)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default signal assignments
       dut.io.alu.warp.poke(0.U)
       dut.io.alu.valid.poke(false.B)
@@ -70,8 +71,8 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  "InstructionDecode" should "set correct control signals" in {
-    test(new WriteBack(1, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+  "WriteBack" should "set correct control signals" in {
+    test(new WriteBack(4, 1)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default signal assignments
       dut.io.alu.warp.poke(0.U)
       dut.io.alu.valid.poke(false.B)

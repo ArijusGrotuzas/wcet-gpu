@@ -24,7 +24,7 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   "InstructionIssue" should "push and pop correct instructions from queues" in {
-    test(new InstructionIssue(4, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new InstructionIssue(4)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       val inputBitFields = List(
         (1, 5, 7, 8, 9, 32),
         (2, 8, 12, 13, 14, 255),

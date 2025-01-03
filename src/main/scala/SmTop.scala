@@ -37,7 +37,6 @@ class SmTop(warpCount: Int, warpSize: Int, freq: Int, instructionFile: String = 
 //  io.wbOutTest := sm.io.wbOutTest
 }
 
-// generate Verilog
 object SmTop extends App {
   println("Generating the SM hardware")
   (new chisel3.stage.ChiselStage).emitVerilog(new SmTop(4, 8, 100000000, "bootkernel.hex"), Array("--target-dir", "generated"))

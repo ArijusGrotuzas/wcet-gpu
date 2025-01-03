@@ -45,10 +45,10 @@ class Front(warpCount: Int) extends Module {
     }
   })
 
-  val instrF = Module(new InstructionFetch(warpCount, warpAddrLen))
-  val instrD = Module(new InstructionDecode(warpAddrLen))
-  val instrIss = Module(new InstructionIssue(warpCount, warpAddrLen))
-  val warpScheduler = Module(new WarpScheduler(warpCount, warpAddrLen))
+  val instrF = Module(new InstructionFetch(warpCount))
+  val instrD = Module(new InstructionDecode(warpCount))
+  val instrIss = Module(new InstructionIssue(warpCount))
+  val warpScheduler = Module(new WarpScheduler(warpCount))
 
   warpScheduler.io.start <> io.start
   warpScheduler.io.warpTable <> instrF.io.warpTable

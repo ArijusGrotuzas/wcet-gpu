@@ -37,10 +37,10 @@ class Back(warpCount: Int, warpSize: Int) extends Module {
     val wbOutTest = Output(UInt((warpSize * 32).W))
   })
 
-  val of = Module(new OperandFetch(warpCount, warpSize, warpAddrLen))
-  val alu = Module(new AluPipeline(warpSize, warpAddrLen))
-  val mem = Module(new MemPipeline(warpSize, warpAddrLen))
-  val wb = Module(new WriteBack(warpSize, warpAddrLen))
+  val of = Module(new OperandFetch(warpCount, warpSize))
+  val alu = Module(new AluPipeline(warpCount, warpSize))
+  val mem = Module(new MemPipeline(warpCount, warpSize))
+  val wb = Module(new WriteBack(warpCount, warpSize))
 
   of.io.iss <> io.front
 

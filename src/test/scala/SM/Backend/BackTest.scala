@@ -34,7 +34,6 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
   "Backend" should "process arithmetic instructions" in {
     val warpCount = 4
     val warpSize = 8
-    val warpAddrLen = 2
 
     test(new Back(warpCount, warpSize)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments

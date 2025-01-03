@@ -2,8 +2,10 @@ package SM.Frontend
 
 import SM.Opcodes
 import chisel3._
+import chisel3.util._
 
-class InstructionDecode(warpAddrLen: Int) extends Module {
+class InstructionDecode(warpCount: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val instrF = new Bundle {
       val valid = Input(Bool())

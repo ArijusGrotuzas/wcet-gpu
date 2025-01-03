@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
   "OperandFetch" should "fetch correct operands" in {
-    test(new OperandFetch(4, 1, 2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new OperandFetch(4, 1)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.wb.we.poke(false.B)
       dut.io.wb.warp.poke(0.U)
       dut.io.wb.writeAddr.poke(0.U)

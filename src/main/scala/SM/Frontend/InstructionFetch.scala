@@ -2,8 +2,10 @@ package SM.Frontend
 
 import SM.Opcodes
 import chisel3._
+import chisel3.util._
 
-class InstructionFetch(warpCount: Int, warpAddrLen: Int) extends Module {
+class InstructionFetch(warpCount: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val scheduler = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))

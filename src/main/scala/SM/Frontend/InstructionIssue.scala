@@ -2,9 +2,11 @@ package SM.Frontend
 
 import SM.Opcodes
 import chisel3._
+import chisel3.util._
 
 // TODO: Create register file, that contains the thread iDs
-class InstructionIssue(warpCount: Int, warpAddrLen: Int) extends Module {
+class InstructionIssue(warpCount: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val id = new Bundle {
       val valid = Input(Bool())

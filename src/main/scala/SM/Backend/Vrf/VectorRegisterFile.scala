@@ -4,7 +4,9 @@ import chisel3._
 import chisel3.util._
 import SM.Frontend.DualPortedRam
 
-class VectorRegisterFile(bankDepth: Int, bankWidth: Int, addrLen: Int) extends Module {
+class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
+  val bankDepth = warpCount * 8
+  val addrLen = log2Up(bankDepth) + 2
   val io = IO(new Bundle {
     // Inputs
     val we = Input(Bool())

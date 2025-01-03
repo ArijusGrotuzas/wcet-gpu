@@ -5,7 +5,8 @@ import SM.Opcodes
 import chisel3._
 import chisel3.util._
 
-class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
+class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val wb = new Bundle {
       val we = Input(Bool())
@@ -46,7 +47,7 @@ class OperandFetch(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Modu
     }
   })
 
-  val vrf = Module(new VectorRegisterFile(warpCount * 8, 32 * warpSize, warpAddrLen + 5))
+  val vrf = Module(new VectorRegisterFile(warpCount, 32 * warpSize))
   val pipeSel = WireDefault(true.B)
 
   // Registers to hold values while the operands are fetched from VRF

@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class VectorRegisterFileTest extends AnyFlatSpec with ChiselScalatestTester {
   "VectorRegisterFile" should "write and read register contents" in {
-    test(new VectorRegisterFile(32, 32, 7)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new VectorRegisterFile(32, 32)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Perform first write operation
       dut.io.we.poke(1.B)
       dut.io.writeAddr.poke("b0001010".U) // w0, r10

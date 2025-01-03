@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
   "WarpScheduler" should "schedule warps correctly" in {
-    test(new WarpScheduler(4, 2)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
+    test(new WarpScheduler(4)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
       dut.io.start.valid.poke(true.B)
       dut.io.warpTable.valid.poke("b0111".U)
 

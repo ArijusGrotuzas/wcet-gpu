@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
   "InstructionFetch" should "fetch the instructions in correct order" in {
-    test(new InstructionFetch(4, 2)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
+    test(new InstructionFetch(4)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
       // Default assignments
       dut.io.scheduler.warp.poke(0.U)
       dut.io.scheduler.stall.poke(true.B)

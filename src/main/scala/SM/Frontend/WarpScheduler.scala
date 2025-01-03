@@ -3,7 +3,8 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
-class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
+class WarpScheduler(warpCount: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val start = new Bundle {
       val valid = Input(Bool())

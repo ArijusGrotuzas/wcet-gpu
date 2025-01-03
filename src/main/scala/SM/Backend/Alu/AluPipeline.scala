@@ -1,8 +1,10 @@
 package SM.Backend.Alu
 
 import chisel3._
+import chisel3.util._
 
-class AluPipeline(warpSize: Int, warpAddrLen: Int) extends Module {
+class AluPipeline(warpCount: Int, warpSize: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val of = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
