@@ -1,8 +1,10 @@
 package SM.Frontend
 
 import chisel3._
+import chisel3.util._
 
-class Front(warpCount: Int, warpAddrLen: Int) extends Module {
+class Front(warpCount: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val instrMem = new Bundle {
       val addr = Output(UInt(32.W))

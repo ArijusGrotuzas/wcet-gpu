@@ -6,9 +6,9 @@ import chisel3.util._
 class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
   val io = IO(new Bundle {
     val start = new Bundle {
-      val ready = Output(Bool())
       val valid = Input(Bool())
       val data = Input(UInt(warpCount.W))
+      val ready = Output(Bool())
     }
 
     val warpTable = new Bundle {
@@ -140,7 +140,10 @@ class WarpScheduler(warpCount: Int, warpAddrLen: Int) extends Module {
     is(sDone) {
       stall := true.B
       rst := true.B
-      stateReg := sIdle
+
+      when(io.start.valid === false.B) {
+        stateReg := sIdle
+      }
     }
   }
 

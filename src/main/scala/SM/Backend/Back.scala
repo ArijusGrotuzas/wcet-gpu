@@ -3,8 +3,10 @@ package SM.Backend
 import SM.Backend.Alu.AluPipeline
 import SM.Backend.Mem.MemPipeline
 import chisel3._
+import chisel3.util._
 
-class Back(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
+class Back(warpCount: Int, warpSize: Int) extends Module {
+  val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val front = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
@@ -29,7 +31,7 @@ class Back(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
     val nzpUpdate = new Bundle {
       val nzp = Output(UInt(3.W))
       val en = Output(Bool())
-      val warp = Output(UInt(warpAddrLen.W))
+      val warp = Output(UInt(log2Up(warpCount).W))
     }
 
     val wbOutTest = Output(UInt((warpSize * 32).W))

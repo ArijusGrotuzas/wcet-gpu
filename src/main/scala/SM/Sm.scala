@@ -4,7 +4,7 @@ import SM.Backend.Back
 import SM.Frontend.Front
 import chisel3._
 
-class Sm(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
+class Sm(warpCount: Int, warpSize: Int) extends Module {
   val io = IO(new Bundle {
     val instrMem = new Bundle {
       val addr = Output(UInt(32.W))
@@ -20,8 +20,8 @@ class Sm(warpCount: Int, warpSize: Int, warpAddrLen: Int) extends Module {
     val wbOutTest = Output(UInt((warpSize * 32).W))
   })
 
-  val frontend = Module(new Front(warpCount, warpAddrLen))
-  val backend = Module(new Back(warpCount, warpSize, warpAddrLen))
+  val frontend = Module(new Front(warpCount))
+  val backend = Module(new Back(warpCount, warpSize))
 
   frontend.io.instrMem <> io.instrMem
   frontend.io.start <> io.start

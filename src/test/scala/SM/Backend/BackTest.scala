@@ -36,7 +36,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
     val warpSize = 8
     val warpAddrLen = 2
 
-    test(new Back(warpCount, warpSize, warpAddrLen)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new Back(warpCount, warpSize)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.front.warp.poke(0.U)
       dut.io.front.opcode.poke(0.U)
