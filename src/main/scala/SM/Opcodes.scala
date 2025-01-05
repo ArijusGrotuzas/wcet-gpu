@@ -8,7 +8,7 @@ object Opcodes {
   // Loads/Stores
   val LD = "b00001".U // TODO: Implement
   val ST = "b00101".U // TODO: Implement
-  val LS = "b01001".U // X xxSRS RD 01001
+  val LS = "b10001".U // X xxSRS RD 01001
   // Immediate instructions
   val ADDI = "b01001".U // IMM RS1 RD 01001
   val LUI = "b01101".U // X IMM RD 01101
