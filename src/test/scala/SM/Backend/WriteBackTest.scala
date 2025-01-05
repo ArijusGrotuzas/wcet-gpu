@@ -9,19 +9,19 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new WriteBack(1, 1)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default signal assignments
       dut.io.alu.warp.poke(0.U)
-      dut.io.alu.valid.poke(false.B)
+      dut.io.alu.we.poke(false.B)
       dut.io.alu.done.poke(false.B)
       dut.io.alu.dest.poke(0.U)
       dut.io.alu.out.poke(0.U)
       dut.io.mem.warp.poke(0.U)
-      dut.io.mem.valid.poke(false.B)
+      dut.io.mem.we.poke(false.B)
       dut.io.mem.dest.poke(0.U)
       dut.io.mem.out.poke(0.U)
 
       dut.clock.step(1)
 
       // alu result valid and memory result not valid
-      dut.io.alu.valid.poke(true.B)
+      dut.io.alu.we.poke(true.B)
       dut.io.alu.dest.poke(5.U)
       dut.io.alu.out.poke("hdeadbeef".U)
 
@@ -32,10 +32,10 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // alu result valid and memory result valid
-      dut.io.alu.valid.poke(true.B)
+      dut.io.alu.we.poke(true.B)
       dut.io.alu.dest.poke(7.U)
       dut.io.alu.out.poke("hcafebabe".U)
-      dut.io.mem.valid.poke(true.B)
+      dut.io.mem.we.poke(true.B)
       dut.io.mem.dest.poke(16.U)
       dut.io.mem.out.poke("hdeadbabe".U)
 
@@ -46,10 +46,10 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // alu result not valid and mem result not valid
-      dut.io.alu.valid.poke(false.B)
+      dut.io.alu.we.poke(false.B)
       dut.io.alu.dest.poke(0.U)
       dut.io.alu.out.poke(0.U)
-      dut.io.mem.valid.poke(false.B)
+      dut.io.mem.we.poke(false.B)
       dut.io.mem.dest.poke(0.U)
       dut.io.mem.out.poke(0.U)
 
@@ -60,7 +60,7 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // alu result valid and mem result not valid
-      dut.io.alu.valid.poke(true.B)
+      dut.io.alu.we.poke(true.B)
       dut.io.alu.dest.poke(23.U)
       dut.io.alu.out.poke("hbabecafe".U)
 
@@ -74,12 +74,12 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new WriteBack(4, 1)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default signal assignments
       dut.io.alu.warp.poke(0.U)
-      dut.io.alu.valid.poke(false.B)
+      dut.io.alu.we.poke(false.B)
       dut.io.alu.done.poke(false.B)
       dut.io.alu.dest.poke(0.U)
       dut.io.alu.out.poke(0.U)
       dut.io.mem.warp.poke(0.U)
-      dut.io.mem.valid.poke(false.B)
+      dut.io.mem.we.poke(false.B)
       dut.io.mem.dest.poke(0.U)
       dut.io.mem.out.poke(0.U)
 
@@ -95,7 +95,7 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       dut.io.alu.done.poke(false.B)
-      dut.io.mem.valid.poke(true.B)
+      dut.io.mem.we.poke(true.B)
       dut.io.mem.warp.poke(1.U)
       dut.io.mem.pending.poke(true.B)
 

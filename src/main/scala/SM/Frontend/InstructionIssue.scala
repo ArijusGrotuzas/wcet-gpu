@@ -4,7 +4,6 @@ import SM.Opcodes
 import chisel3._
 import chisel3.util._
 
-// TODO: Create register file, that contains the thread iDs
 class InstructionIssue(warpCount: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -18,6 +17,7 @@ class InstructionIssue(warpCount: Int) extends Module {
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
+      val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
     }
 
@@ -35,6 +35,7 @@ class InstructionIssue(warpCount: Int) extends Module {
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
+      val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
     }
 
@@ -85,6 +86,7 @@ class InstructionIssue(warpCount: Int) extends Module {
   val rs1Curr = WireDefault(0.U(5.W))
   val rs2Curr = WireDefault(0.U(5.W))
   val rs3Curr = WireDefault(0.U(5.W))
+  val srsCurr = WireDefault(0.U(3.W))
   val immCurr = WireDefault(0.S(32.W))
   // Since there is a need for getting all warp head instruction opcodes, a queue is generated outside the function
   val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
@@ -110,6 +112,7 @@ class InstructionIssue(warpCount: Int) extends Module {
   rs1Curr := generateQueues(UInt(5.W), io.id.rs1, inQueueSel, outQueueSel, io.scheduler.warp)
   rs2Curr := generateQueues(UInt(5.W), io.id.rs2, inQueueSel, outQueueSel, io.scheduler.warp)
   rs3Curr := generateQueues(UInt(5.W), io.id.rs3, inQueueSel, outQueueSel, io.scheduler.warp)
+  srsCurr := generateQueues(UInt(3.W), io.id.srs, inQueueSel, outQueueSel, io.scheduler.warp)
   immCurr := generateQueues(SInt(32.W), io.id.imm, inQueueSel, outQueueSel, io.scheduler.warp)
 
   opcodeQueues.io.dataIn := io.id.opcode
@@ -152,6 +155,7 @@ class InstructionIssue(warpCount: Int) extends Module {
   io.iss.rs1 := rs1Curr
   io.iss.rs2 := rs2Curr
   io.iss.rs3 := rs3Curr
+  io.iss.srs := srsCurr
   io.iss.imm := immCurr
 
   io.setPending := setPending

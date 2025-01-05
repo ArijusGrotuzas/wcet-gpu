@@ -17,7 +17,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
 
     val mem = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
-      val valid = Output(Bool())
+      val we = Output(Bool())
       val pending = Output(Bool())
       val dest = Output(UInt(5.W))
       val out = Output(UInt((32 * warpSize).W))
@@ -32,7 +32,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   // TODO: Add pending input signals
 
   io.mem.warp := io.of.warp
-  io.mem.valid := false.B
+  io.mem.we := false.B
   io.mem.pending := false.B
   io.mem.dest := io.of.dest
   io.mem.out := 0.U

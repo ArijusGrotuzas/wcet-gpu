@@ -24,6 +24,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
+      val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
     }
 
@@ -34,6 +35,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
       val rs1 = Output(UInt((32 * warpSize).W))
       val rs2 = Output(UInt((32 * warpSize).W))
       val rs3 = Output(UInt((32 * warpSize).W))
+      val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
     }
 
@@ -82,6 +84,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   io.aluOf.rs1 := Mux(pipeSel, vrf.io.readData1, 0.U)
   io.aluOf.rs2 := Mux(pipeSel, vrf.io.readData2, 0.U)
   io.aluOf.rs3 := Mux(pipeSel, vrf.io.readData3, 0.U)
+  io.aluOf.srs := Mux(pipeSel, io.iss.srs, 0.U)
   io.aluOf.imm := Mux(pipeSel, imm, 0.S)
 
   // To mem pipeline

@@ -15,6 +15,7 @@ class Back(warpCount: Int, warpSize: Int) extends Module {
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
+      val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
     }
 
@@ -44,14 +45,17 @@ class Back(warpCount: Int, warpSize: Int) extends Module {
 
   of.io.iss <> io.front
 
+  // Pipeline register between the operand fetch and alu stages
   alu.io.of.warp := RegNext(of.io.aluOf.warp, 0.U)
   alu.io.of.opcode := RegNext(of.io.aluOf.opcode, 0.U)
   alu.io.of.dest := RegNext(of.io.aluOf.dest, 0.U)
   alu.io.of.rs1 := RegNext(of.io.aluOf.rs1, 0.U)
   alu.io.of.rs2 := RegNext(of.io.aluOf.rs2, 0.U)
   alu.io.of.rs3 := RegNext(of.io.aluOf.rs3, 0.U)
+  alu.io.of.srs := RegNext(of.io.aluOf.srs, 0.U)
   alu.io.of.imm := RegNext(of.io.aluOf.imm, 0.S)
 
+  // Pipeline register between the operand fetch and memory stages
   mem.io.of.warp := RegNext(of.io.memOf.warp, 0.U)
   mem.io.of.opcode := RegNext(of.io.memOf.opcode, 0.U)
   mem.io.of.dest := RegNext(of.io.memOf.dest, 0.U)
@@ -59,14 +63,16 @@ class Back(warpCount: Int, warpSize: Int) extends Module {
   mem.io.of.rs2 := RegNext(of.io.memOf.rs2, 0.U)
   mem.io.of.imm := RegNext(of.io.memOf.imm, 0.S)
 
+  // Pipeline register between the alu and write-back stages
   wb.io.alu.warp := RegNext(alu.io.alu.warp, 0.U)
   wb.io.alu.done := RegNext(alu.io.alu.done, false.B)
-  wb.io.alu.valid := RegNext(alu.io.alu.valid, false.B)
+  wb.io.alu.we := RegNext(alu.io.alu.we, false.B)
   wb.io.alu.dest := RegNext(alu.io.alu.dest, 0.U)
   wb.io.alu.out := RegNext(alu.io.alu.out, 0.U)
 
+  // Pipeline register between the memory and write-back stages
   wb.io.mem.warp := RegNext(mem.io.mem.warp, 0.U)
-  wb.io.mem.valid := RegNext(mem.io.mem.valid, false.B)
+  wb.io.mem.we := RegNext(mem.io.mem.we, false.B)
   wb.io.mem.pending := RegNext(mem.io.mem.pending, false.B)
   wb.io.mem.dest := RegNext(mem.io.mem.dest, 0.U)
   wb.io.mem.out := RegNext(mem.io.mem.out, 0.U)

@@ -24,6 +24,7 @@ class InstructionDecode(warpCount: Int) extends Module {
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
+      val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
     }
   })
@@ -31,21 +32,22 @@ class InstructionDecode(warpCount: Int) extends Module {
   val imm = WireDefault(0.S(32.W))
 
   when(io.id.opcode === Opcodes.LUI) {
-    imm := (io.instrF.instr(24, 10) << 17).asSInt
+    imm := (io.instrF.instr(24, 10) << 17).asSInt // Load the upper 15 bits as an immediate
   }.elsewhen(io.id.opcode === Opcodes.BRNZP) {
-    imm := io.instrF.instr(31, 10).asSInt
+    imm := io.instrF.instr(31, 10).asSInt // Load the 22 bit immediate for addressing PC
   }.otherwise {
-    imm := io.instrF.instr(31, 15).asSInt
+    imm := io.instrF.instr(31, 15).asSInt // Load the 17 bit immediate
   }
 
   io.id.valid := io.instrF.valid
   io.id.pc := io.instrF.pc
   io.id.warp := io.instrF.warp
+  io.id.opcode := io.instrF.instr(4, 0)
   io.id.dest := io.instrF.instr(9, 5)
   io.id.nzp := io.instrF.instr(7, 5)
   io.id.rs1 := io.instrF.instr(14, 10)
   io.id.rs2 := io.instrF.instr(19, 15)
   io.id.rs3 := io.instrF.instr(24, 20)
-  io.id.opcode := io.instrF.instr(4, 0)
+  io.id.srs := io.instrF.instr(12, 10)
   io.id.imm := imm
 }

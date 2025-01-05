@@ -17,17 +17,17 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val io = IO(new Bundle {
     val alu = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
-      val valid = Input(Bool())
+      val we = Input(Bool())
       val done = Input(Bool())
       val dest = Input(UInt(5.W))
       val out = Input(UInt((warpSize * 32).W))
     }
 
     val mem = new Bundle {
-      val warp = Input(UInt(warpAddrLen.W))
-      val valid = Input(Bool())
-      val pending = Input(Bool())
+      val we = Input(Bool())
       val dest = Input(UInt(5.W))
+      val pending = Input(Bool())
+      val warp = Input(UInt(warpAddrLen.W))
       val out = Input(UInt((warpSize * 32).W))
     }
 
@@ -54,7 +54,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val setNotPending = WireDefault(false.B)
 
   val aluWarpDelay = RegNext(io.alu.warp)
-  val aluValidDelay = RegNext(io.alu.valid)
+  val aluWeDelay = RegNext(io.alu.we)
   val aluDestDelay = RegNext(io.alu.dest)
   val aluOutDelay = RegNext(io.alu.out)
   val aluDoneDelay = RegNext(io.alu.done)
@@ -66,26 +66,26 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val outInactive = WireDefault(false.B)
 
   // Update the alu output delay state register
-  when(io.mem.valid && !aluDelay) {
+  when(io.mem.we && !aluDelay) {
     aluDelay := true.B
-  }.elsewhen(!io.alu.valid && aluDelay) {
+  }.elsewhen(!io.alu.we && aluDelay) {
     aluDelay := false.B
   }
 
-  when(io.mem.valid) { // Send the memory result to the register file
-    outWe := io.mem.valid
+  when(io.mem.we) { // Send the memory result to the register file
+    outWe := io.mem.we
     outAddr := io.mem.dest
     outData := io.mem.out
     outWarp := io.mem.warp
   }.otherwise { // Send the ALU result to the register file
     when(aluDelay) { // Take the delayed values of the ALU
-      outWe := aluValidDelay
+      outWe := aluWeDelay
       outAddr := aluDestDelay
       outData := aluOutDelay
       outWarp := aluWarpDelay
       outInactive := aluDoneDelay
     }.otherwise {
-      outWe := io.alu.valid
+      outWe := io.alu.we
       outAddr := io.alu.dest
       outData := io.alu.out
       outWarp := io.alu.warp
@@ -93,7 +93,8 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
     }
   }
 
-  when(io.mem.pending && io.mem.valid) {
+  // When a result arrives from the LD/ST unit set the warp as not pending
+  when(io.mem.pending && io.mem.we) {
     setNotPending := true.B
   }
 

@@ -41,6 +41,7 @@ class Front(warpCount: Int) extends Module {
       val rs1 = Output(UInt(5.W))
       val rs2 = Output(UInt(5.W))
       val rs3 = Output(UInt(5.W))
+      val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
     }
   })
@@ -50,12 +51,14 @@ class Front(warpCount: Int) extends Module {
   val instrIss = Module(new InstructionIssue(warpCount))
   val warpScheduler = Module(new WarpScheduler(warpCount))
 
+  // Control signals to and from warp scheduler
   warpScheduler.io.start <> io.start
   warpScheduler.io.warpTable <> instrF.io.warpTable
   warpScheduler.io.memStall := io.funcUnits.memStall
   warpScheduler.io.headInstrType := instrIss.io.headInstrType
   warpScheduler.io.scheduler <> instrF.io.scheduler
 
+  // Control signals to and from the instruction fetch stage
   instrF.io.instrMem <> io.instrMem
   instrF.io.setPending := instrIss.io.setPending
   instrF.io.wb.setInactive := io.wb.setInactive
@@ -63,11 +66,13 @@ class Front(warpCount: Int) extends Module {
   instrF.io.issIf <> instrIss.io.issIf
   instrF.io.issIf <> instrIss.io.issIf
 
+  // Pipeline register between IF and ID
   instrD.io.instrF.valid := RegNext(instrF.io.instrF.valid, false.B)
   instrD.io.instrF.pc := RegNext(instrF.io.instrF.pc, 0.U)
   instrD.io.instrF.instr := RegNext(instrF.io.instrF.instr, 0.U)
   instrD.io.instrF.warp := RegNext(instrF.io.instrF.warp, 0.U)
 
+  // Pipeline register between ID and ISS
   instrIss.io.id.valid := RegNext(instrD.io.id.valid, false.B)
   instrIss.io.id.pc := RegNext(instrD.io.id.pc, 0.U)
   instrIss.io.id.warp := RegNext(instrD.io.id.warp, 0.U)
@@ -78,15 +83,18 @@ class Front(warpCount: Int) extends Module {
   instrIss.io.id.rs2 := RegNext(instrD.io.id.rs2, 0.U)
   instrIss.io.id.rs3 := RegNext(instrD.io.id.rs3, 0.U)
   instrIss.io.id.imm := RegNext(instrD.io.id.imm, 0.S)
+  instrIss.io.id.srs := RegNext(instrD.io.id.srs, 0.U)
   instrIss.io.scheduler.warp := warpScheduler.io.scheduler.warp
   instrIss.io.scheduler.stall := warpScheduler.io.scheduler.stall
   instrIss.io.nzpUpdate <> io.nzpUpdate
 
+  // Outputs of the instruction issues stage
   io.front.warp := instrIss.io.iss.warp
   io.front.opcode := instrIss.io.iss.opcode
   io.front.dest := instrIss.io.iss.dest
   io.front.rs1 := instrIss.io.iss.rs1
   io.front.rs2 := instrIss.io.iss.rs2
   io.front.rs3 := instrIss.io.iss.rs3
+  io.front.srs := instrIss.io.iss.srs
   io.front.imm := instrIss.io.iss.imm
 }
