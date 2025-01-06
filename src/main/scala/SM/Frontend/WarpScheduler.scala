@@ -76,7 +76,7 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
         setValid := true.B
         setBlockIdx := io.start.data(true.B)
         setValidWarps := io.start.data(warpCount - 1, 0)
-        blockIdx := io.start.data(blockAddrLen + warpCount - 1, warpCount)
+        blockIdx := io.start.data((blockAddrLen + warpCount) - 1, warpCount)
         stateReg := s0
       }
     }

@@ -9,12 +9,12 @@ class SmTop(blockCount: Int, warpCount: Int, warpSize: Int, freq: Int, instructi
     val valid = Input(Bool())
     val data = Input(UInt((blockAddrLen + warpCount).W))
 
-//    val wbOutTest = Output(UInt((warpSize * 32).W))
+    val wbOutTest = Output(UInt((warpSize * 32).W))
     val ready = Output(Bool())
   })
 
   // TODO: Add data memory
-  val debounce = Module(new Debounce(warpCount, freq))
+  val debounce = Module(new Debounce((blockAddrLen + warpCount), freq))
   val sm = Module(new Sm(blockCount, warpCount, warpSize))
   val instrMem = Module(new InstructionMemory(32, 1024, 32, instructionFile))
 
@@ -36,7 +36,7 @@ class SmTop(blockCount: Int, warpCount: Int, warpSize: Int, freq: Int, instructi
   sm.io.start.data := debounce.io.dataDb
 
   io.ready := sm.io.start.ready
-//  io.wbOutTest := sm.io.wbOutTest
+  io.wbOutTest := sm.io.wbOutTest
 }
 
 object SmTop extends App {

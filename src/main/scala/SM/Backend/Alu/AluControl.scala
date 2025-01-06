@@ -11,15 +11,15 @@ class AluControl extends Module {
     val we = Output(Bool())
     val done = Output(Bool())
     val aluOp = Output(UInt(4.W))
-    val rs1Sel = Output(Bool())
-    val rs2Sel = Output(Bool())
+    val aSel = Output(UInt(2.W))
+    val bSel = Output(UInt(2.W))
     val nzpUpdate = Output(Bool())
   })
 
   val we = WireDefault(false.B)
   val aluOp = WireDefault(0.U(4.W))
-  val rs1Sel = WireDefault(false.B)
-  val rs2Sel = WireDefault(false.B)
+  val aSel = WireDefault(0.U(2.W))
+  val bSel = WireDefault(0.U(2.W))
   val done = WireDefault(false.B)
   val nzpUpdate = WireDefault(false.B)
 
@@ -30,12 +30,12 @@ class AluControl extends Module {
   switch (io.instrOpcode) {
     is(Opcodes.ADDI) {
       aluOp := AluOps.ADD
-      rs2Sel := true.B
+      bSel := "b10".U
       we := true.B
     }
     is(Opcodes.LUI) {
       aluOp := AluOps.FORB
-      rs2Sel := true.B
+      bSel := "b10".U
       we := true.B
     }
     is(Opcodes.ADD) {
@@ -54,13 +54,24 @@ class AluControl extends Module {
       aluOp := AluOps.OR
       we := true.B
     }
+    is(Opcodes.MUL) {
+      aluOp := AluOps.FORA
+      aSel := "b10".U
+      we := true.B
+    }
+    is(Opcodes.MAD) {
+      aluOp := AluOps.ADD
+      aSel := "b10".U
+      bSel := "b01".U
+      we := true.B
+    }
     is(Opcodes.CMP) {
       aluOp := AluOps.SUB
       nzpUpdate := true.B
     }
-    is(Opcodes.LS) {
+    is(Opcodes.LDS) {
       aluOp := AluOps.FORA
-      rs1Sel := true.B
+      aSel := "b01".U
       we := true.B
     }
   }
@@ -68,7 +79,7 @@ class AluControl extends Module {
   io.we := we
   io.done := done
   io.aluOp := aluOp
-  io.rs2Sel := rs2Sel
-  io.rs1Sel := rs1Sel
+  io.aSel := aSel
+  io.bSel := bSel
   io.nzpUpdate := nzpUpdate
 }

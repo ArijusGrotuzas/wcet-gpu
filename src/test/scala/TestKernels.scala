@@ -34,8 +34,15 @@ object TestKernels {
   )
 
   val kernel3 = Array(
-    "hC00BD58D", // (LUI, 12, 21, 23, X)
-    "h01D99A9", // (ADDI, 13, 6, 27, 1)
-    "h2195DF", // (RET, 14, 5, 3, 2)
+    "h00000C91", // (LDS, x4, s3): Load warp width to register 4
+    "h00000451", // (LDS, x2, s1): Load warp ID to register 2
+    "h00000031", // (LDS, x1, s0): Load thread ID to register 1
+    "h000010B1", // (LDS, x5, s4): Load block width to register 5
+    "h000008D1", // (LDS, x6, s2): Load block ID to register 3
+    "h001110F7", // (MAD, x7, x4, x2, x1): x7 = (warpWidth * warpID) + threadID (00000100010001000011110111)
+    "h00000000", // (NOP)
+    "h00000000", // (NOP)
+    "h00731517", // (MAD, x8, x5, x6, x7): x8 = (blockWidth * blockId) + x7 (0011100110001010100010111)
+    "h0000001F" // (RET)
   )
 }
