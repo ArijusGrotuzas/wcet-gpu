@@ -3,7 +3,8 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
-class Front(warpCount: Int) extends Module {
+class Front(blockCount: Int, warpCount: Int) extends Module {
+  val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val instrMem = new Bundle {
@@ -14,7 +15,7 @@ class Front(warpCount: Int) extends Module {
     val start = new Bundle {
       val ready = Output(Bool())
       val valid = Input(Bool())
-      val data = Input(UInt(warpCount.W))
+      val data = Input(UInt((blockAddrLen + warpCount).W))
     }
 
     val wb = new Bundle {
@@ -44,12 +45,17 @@ class Front(warpCount: Int) extends Module {
       val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
     }
+
+    val aluInitCtrl = new Bundle {
+      val setBlockIdx = Output(Bool())
+      val blockIdx = Output(UInt(blockAddrLen.W))
+    }
   })
 
   val instrF = Module(new InstructionFetch(warpCount))
   val instrD = Module(new InstructionDecode(warpCount))
   val instrIss = Module(new InstructionIssue(warpCount))
-  val warpScheduler = Module(new WarpScheduler(warpCount))
+  val warpScheduler = Module(new WarpScheduler(blockCount, warpCount))
 
   // Control signals to and from warp scheduler
   warpScheduler.io.start <> io.start
@@ -97,4 +103,6 @@ class Front(warpCount: Int) extends Module {
   io.front.rs3 := instrIss.io.iss.rs3
   io.front.srs := instrIss.io.iss.srs
   io.front.imm := instrIss.io.iss.imm
+
+  io.aluInitCtrl <> warpScheduler.io.aluInitCtrl
 }

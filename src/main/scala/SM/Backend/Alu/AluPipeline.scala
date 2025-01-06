@@ -3,8 +3,10 @@ package SM.Backend.Alu
 import chisel3._
 import chisel3.util._
 
-class AluPipeline(warpCount: Int, warpSize: Int) extends Module {
+class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
+  val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
+
   val io = IO(new Bundle {
     val of = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
@@ -15,6 +17,11 @@ class AluPipeline(warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Input(UInt((32 * warpSize).W))
       val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
+    }
+
+    val aluInitCtrl = new Bundle {
+      val setBlockIdx = Input(Bool())
+      val blockIdx = Input(UInt(blockAddrLen.W))
     }
 
     val alu = new Bundle {
@@ -32,18 +39,24 @@ class AluPipeline(warpCount: Int, warpSize: Int) extends Module {
     }
   })
 
-  private def getSpecialValue(srs: UInt, laneId: Int): SInt = {
+  private def getSpecialValue(srs: UInt, laneId: Int, blockIdx: UInt): SInt = {
     val out = WireDefault(0.S(32.W))
 
     switch(srs) {
-      is(0.U) { out := laneId.S } // thread ID
-      is(1.U) { out := io.of.warp.asSInt } // warp ID
-      is(2.U) { out := 0.S } // block ID TODO: Add this value
-      is(3.U) { out := warpSize.S } // warp width
-      is(4.U) { out := warpCount.S } // block width
+      is(0.U) { out := (0.U ## laneId.U).asSInt } // thread ID
+      is(1.U) { out := (0.U ## io.of.warp).asSInt } // warp ID
+      is(2.U) { out := (0.U ## blockIdx).asSInt } // block ID
+      is(3.U) { out := (0.U ## warpSize.U).asSInt } // warp width
+      is(4.U) { out := (0.U ## warpSize.U).asSInt } // block width
     }
 
     out
+  }
+
+  val blockIdxReg = RegInit(0.U(blockAddrLen.W))
+
+  when(io.aluInitCtrl.setBlockIdx) {
+    blockIdxReg := io.aluInitCtrl.blockIdx
   }
 
   // ALU lane control unit
@@ -65,7 +78,7 @@ class AluPipeline(warpCount: Int, warpSize: Int) extends Module {
     val alu = Module(new Alu(32))
 
     // Select the first operand
-    val srs = getSpecialValue(io.of.srs, i)
+    val srs = getSpecialValue(io.of.srs, i, blockIdxReg)
     val a = Mux(aluCtrl.io.rs1Sel, srs, io.of.rs1(((i + 1) * 32) - 1, i * 32).asSInt)
     alu.io.a := a
 

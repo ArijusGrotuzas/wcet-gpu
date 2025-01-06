@@ -5,7 +5,8 @@ import SM.Backend.Mem.MemPipeline
 import chisel3._
 import chisel3.util._
 
-class Back(warpCount: Int, warpSize: Int) extends Module {
+class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
+  val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val front = new Bundle {
@@ -17,6 +18,11 @@ class Back(warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Input(UInt(5.W))
       val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
+    }
+
+    val aluInitCtrl = new Bundle {
+      val setBlockIdx = Input(Bool())
+      val blockIdx = Input(UInt(blockAddrLen.W))
     }
 
     val funcUnits = new Bundle {
@@ -39,7 +45,7 @@ class Back(warpCount: Int, warpSize: Int) extends Module {
   })
 
   val of = Module(new OperandFetch(warpCount, warpSize))
-  val alu = Module(new AluPipeline(warpCount, warpSize))
+  val alu = Module(new AluPipeline(blockCount, warpCount, warpSize))
   val mem = Module(new MemPipeline(warpCount, warpSize))
   val wb = Module(new WriteBack(warpCount, warpSize))
 
@@ -54,6 +60,7 @@ class Back(warpCount: Int, warpSize: Int) extends Module {
   alu.io.of.rs3 := RegNext(of.io.aluOf.rs3, 0.U)
   alu.io.of.srs := RegNext(of.io.aluOf.srs, 0.U)
   alu.io.of.imm := RegNext(of.io.aluOf.imm, 0.S)
+  alu.io.aluInitCtrl <> io.aluInitCtrl
 
   // Pipeline register between the operand fetch and memory stages
   mem.io.of.warp := RegNext(of.io.memOf.warp, 0.U)

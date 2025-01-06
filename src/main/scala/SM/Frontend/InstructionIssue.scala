@@ -105,6 +105,7 @@ class InstructionIssue(warpCount: Int) extends Module {
     nzpRegFile(io.nzpUpdate.warp) := io.nzpUpdate.nzp
   }
 
+  // TODO: Think if all of these queues are necessary
   // Generate buffers for decoded instructions
   pcCurr := generateQueues(UInt(32.W), io.id.pc, inQueueSel, outQueueSel, io.scheduler.warp)
   destCurr := generateQueues(UInt(5.W), io.id.dest, inQueueSel, outQueueSel, io.scheduler.warp)
@@ -145,8 +146,7 @@ class InstructionIssue(warpCount: Int) extends Module {
     jump := (nzpCurr & nzpRegOut).orR
   }
 
-  // TODO: Think if the 22 bits of immediate are enough for calculating the jump address
-  jumpAddr := (pcCurr.asSInt + immCurr).asUInt
+  jumpAddr := ((0.U ## pcCurr).asSInt + immCurr).asUInt
 
   io.iss.pending := setPending
   io.iss.warp := io.scheduler.warp

@@ -12,7 +12,7 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.scheduler.stall.poke(true.B)
       dut.io.scheduler.reset.poke(false.B)
       dut.io.scheduler.setValid.poke(false.B)
-      dut.io.scheduler.validWarps.poke(0.U)
+      dut.io.scheduler.setValidWarps.poke(0.U)
       dut.io.setPending.poke(false.B)
       dut.io.issIf.jump.poke(false.B)
       dut.io.issIf.jumpAddr.poke(0.U)
@@ -25,7 +25,7 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // Set valid warps and load instructions
       dut.io.scheduler.setValid.poke(true.B)
-      dut.io.scheduler.validWarps.poke("b0001".U)
+      dut.io.scheduler.setValidWarps.poke("b0001".U)
 
       dut.clock.step(1)
 

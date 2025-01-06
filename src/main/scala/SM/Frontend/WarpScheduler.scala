@@ -3,12 +3,13 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
-class WarpScheduler(warpCount: Int) extends Module {
+class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
+  val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val start = new Bundle {
       val valid = Input(Bool())
-      val data = Input(UInt(warpCount.W))
+      val data = Input(UInt((blockAddrLen + warpCount).W))
       val ready = Output(Bool())
     }
 
@@ -26,7 +27,12 @@ class WarpScheduler(warpCount: Int) extends Module {
       val stall = Output(Bool())
       val reset = Output(Bool())
       val setValid = Output(Bool())
-      val validWarps = Output(UInt(warpCount.W))
+      val setValidWarps = Output(UInt(warpCount.W))
+    }
+
+    val aluInitCtrl = new Bundle {
+      val setBlockIdx = Output(Bool())
+      val blockIdx = Output(UInt(blockAddrLen.W))
     }
   })
 
@@ -39,7 +45,9 @@ class WarpScheduler(warpCount: Int) extends Module {
   val allDone = WireDefault(false.B)
   val rst = WireDefault(false.B)
   val setValid = WireDefault(false.B)
-  val validWarps = WireDefault(0.U(warpCount.W))
+  val setValidWarps = WireDefault(0.U(warpCount.W))
+  val setBlockIdx = WireDefault(false.B)
+  val blockIdx = WireDefault(0.U(blockAddrLen.W))
 
   val stateReg = RegInit(sIdle)
 
@@ -66,7 +74,9 @@ class WarpScheduler(warpCount: Int) extends Module {
 
       when(io.start.valid === true.B) {
         setValid := true.B
-        validWarps := io.start.data
+        setBlockIdx := io.start.data(true.B)
+        setValidWarps := io.start.data(warpCount - 1, 0)
+        blockIdx := io.start.data(blockAddrLen + warpCount - 1, warpCount)
         stateReg := s0
       }
     }
@@ -148,10 +158,12 @@ class WarpScheduler(warpCount: Int) extends Module {
     }
   }
 
+  io.start.ready := ready
   io.scheduler.warp := warp
   io.scheduler.stall := stall
   io.scheduler.reset := rst
   io.scheduler.setValid := setValid
-  io.scheduler.validWarps := validWarps
-  io.start.ready := ready
+  io.scheduler.setValidWarps := setValidWarps
+  io.aluInitCtrl.setBlockIdx := setBlockIdx
+  io.aluInitCtrl.blockIdx := blockIdx
 }

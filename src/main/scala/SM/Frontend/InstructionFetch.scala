@@ -12,7 +12,7 @@ class InstructionFetch(warpCount: Int) extends Module {
       val stall = Input(Bool())
       val reset = Input(Bool())
       val setValid = Input(Bool())
-      val validWarps = Input(UInt(warpCount.W))
+      val setValidWarps = Input(UInt(warpCount.W))
     }
 
     val setPending = Input(Bool())
@@ -83,7 +83,7 @@ class InstructionFetch(warpCount: Int) extends Module {
 
   warpTable.io.reset := io.scheduler.reset
   warpTable.io.validCtrl.set := io.scheduler.setValid
-  warpTable.io.validCtrl.data := io.scheduler.validWarps
+  warpTable.io.validCtrl.data := io.scheduler.setValidWarps
   warpTable.io.pcCtrl.update := fetchRegNext
   warpTable.io.pcCtrl.idx := io.scheduler.warp
   warpTable.io.pcCtrl.data := warpTablePcNext

@@ -34,8 +34,9 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
   "Backend" should "process arithmetic instructions" in {
     val warpCount = 4
     val warpSize = 8
+    val blockCount = 4
 
-    test(new Back(warpCount, warpSize)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new Back(blockCount, warpCount, warpSize)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.front.warp.poke(0.U)
       dut.io.front.opcode.poke(0.U)

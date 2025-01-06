@@ -1,11 +1,13 @@
 import SM.Sm
 import chisel3._
+import chisel3.util._
 
-class SmTop(warpCount: Int, warpSize: Int, freq: Int, instructionFile: String = "") extends Module {
+class SmTop(blockCount: Int, warpCount: Int, warpSize: Int, freq: Int, instructionFile: String = "") extends Module {
+  private val blockAddrLen = log2Up(blockCount)
   val io = IO(new Bundle {
     val reset = Input(Bool())
     val valid = Input(Bool())
-    val data = Input(UInt(warpCount.W))
+    val data = Input(UInt((blockAddrLen + warpCount).W))
 
 //    val wbOutTest = Output(UInt((warpSize * 32).W))
     val ready = Output(Bool())
@@ -13,7 +15,7 @@ class SmTop(warpCount: Int, warpSize: Int, freq: Int, instructionFile: String = 
 
   // TODO: Add data memory
   val debounce = Module(new Debounce(warpCount, freq))
-  val sm = Module(new Sm(warpCount, warpSize))
+  val sm = Module(new Sm(blockCount, warpCount, warpSize))
   val instrMem = Module(new InstructionMemory(32, 1024, 32, instructionFile))
 
   debounce.io.reset := io.reset
@@ -39,5 +41,5 @@ class SmTop(warpCount: Int, warpSize: Int, freq: Int, instructionFile: String = 
 
 object SmTop extends App {
   println("Generating the SM hardware")
-  (new chisel3.stage.ChiselStage).emitVerilog(new SmTop(4, 8, 50000000, "bootkernel.hex"), Array("--target-dir", "generated"))
+  (new chisel3.stage.ChiselStage).emitVerilog(new SmTop(4, 4, 8, 50000000, "bootkernel.hex"), Array("--target-dir", "generated"))
 }
