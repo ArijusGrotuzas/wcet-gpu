@@ -21,6 +21,6 @@ object Opcodes {
   // Large Arithmetic
   val MAD = "b10111".U // X RS3 RS2 RS1 RD 10011
   // Control
-  val BRNZP = "b00010".U // IMM xxNZP xxxxx 00010 // TODO: Change this
+  val BRNZP = "b00010".U // IMM NZP xxxxx 00010
   val CMP = "b00110".U // X RS2 RS1 xxxxx 00010
 }

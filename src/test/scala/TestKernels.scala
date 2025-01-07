@@ -27,7 +27,7 @@ object TestKernels {
     "h000194A3", // (ADD, x5, x5, x3): b += a
     "h00011006", // (CMP, x4, x2) i < j
     "h00000000", // (NOP)
-    "hFFFFEC22", // (BRNZP, NZP=100, -6)
+    "hFFFFF362", // (BRNZP, NZP=100, -6)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
