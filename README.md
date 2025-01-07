@@ -19,3 +19,5 @@
 | MAD      | 10111  |             |
 | BRNZP    | 00010  |             |
 | CMP      | 00110  |             |
+
+![ISA](/images/isa.png)
