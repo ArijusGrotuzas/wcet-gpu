@@ -20,4 +20,6 @@
 | BRNZP    | 00010  |             |
 | CMP      | 00110  |             |
 
+### Instruction encoding
+
 ![ISA](/images/isa.png)
