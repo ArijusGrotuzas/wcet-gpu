@@ -41,7 +41,6 @@ class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
       }
     }
 
-    // TODO: Prevent writing to the 0th register of any warp
     bank.io.readAddr := bankReadAddr
 
     bank.io.we := we
@@ -101,7 +100,10 @@ class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
   requestArbiter.io.in_sel(1) := io.readAddr2(1, 0)
   requestArbiter.io.in_sel(2) := io.readAddr3(1, 0)
 
-  val bank1ReadData = bankRouter(requestArbiter.io.out_sel(0), io.readAddr1, io.readAddr2, io.readAddr3, b1We, io.writeData, io.writeAddr)
+  // Prevent writing to the x0 register
+  val writeToZeroReg = io.writeAddr(4, 2) === 0.U
+
+  val bank1ReadData = bankRouter(requestArbiter.io.out_sel(0), io.readAddr1, io.readAddr2, io.readAddr3, Mux(writeToZeroReg, false.B, b1We), io.writeData, io.writeAddr)
   val bank2ReadData = bankRouter(requestArbiter.io.out_sel(1), io.readAddr1, io.readAddr2, io.readAddr3, b2We, io.writeData, io.writeAddr)
   val bank3ReadData = bankRouter(requestArbiter.io.out_sel(2), io.readAddr1, io.readAddr2, io.readAddr3, b3We, io.writeData, io.writeAddr)
   val bank4ReadData = bankRouter(requestArbiter.io.out_sel(3), io.readAddr1, io.readAddr2, io.readAddr3, b4We, io.writeData, io.writeAddr)

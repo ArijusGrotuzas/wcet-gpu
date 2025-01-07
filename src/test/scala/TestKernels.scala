@@ -48,4 +48,8 @@ object TestKernels {
     "h00731517", // (MAD, x8, x5, x6, x7): x8 = (blockWidth * blockId) + x7
     "h0000001F" // (RET)
   )
+
+  // Tests loading and storing from data memory
+  val kernel4 = Array(
+  )
 }
