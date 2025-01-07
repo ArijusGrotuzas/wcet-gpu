@@ -1,4 +1,5 @@
 object TestKernels {
+  // Tests the ability to perform basic arithmetic operations
   val kernel1 = Array(
     "h0024682D", // (LUI, x1, 2330)
     "h00AB984D", // (LUI, x2, 10982)
@@ -17,6 +18,7 @@ object TestKernels {
     "h0000001F" // (RET)
   )
 
+  // Tests the ability to perform warp wide conditional jumps, for example, for for-loops
   val kernel2 = Array(
     "h00050049", // (ADDI, x2, x0, 10): j = 10
     "h00028069", // (ADDI, x3, x0, 5): a = 5
@@ -33,6 +35,7 @@ object TestKernels {
     "h0000001F" // (RET)
   )
 
+  // Tests calculation of threads global ID
   val kernel3 = Array(
     "h00000C91", // (LDS, x4, s3): Load warp width to register 4
     "h00000451", // (LDS, x2, s1): Load warp ID to register 2

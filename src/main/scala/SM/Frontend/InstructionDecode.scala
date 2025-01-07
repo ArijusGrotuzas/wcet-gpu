@@ -35,6 +35,7 @@ class InstructionDecode(warpCount: Int) extends Module {
     imm := (io.instrF.instr(24, 10) << 17).asSInt // Load the upper 15 bits as an immediate
   }.elsewhen(io.id.opcode === Opcodes.BRNZP) {
     imm := io.instrF.instr(31, 10).asSInt // Load the 22 bit immediate for addressing PC
+    // TODO: Fix this according to the ISA
   }.otherwise {
     imm := io.instrF.instr(31, 15).asSInt // Load the 17 bit immediate
   }

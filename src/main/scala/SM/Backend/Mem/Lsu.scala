@@ -42,7 +42,6 @@ class Lsu(memDepth: Int, dataWidth: Int) extends Module {
   val memAddr = WireDefault(0.U(memAddrLen.W))
   val dataOut = RegInit(0.U(dataWidth.W))
 
-  // TODO: Share addr and data
   // FSM
   switch(stateReg) {
     is(sIdle) {
