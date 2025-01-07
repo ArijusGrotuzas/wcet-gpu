@@ -40,12 +40,12 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val memOf = new Bundle {
+      val valid = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
       val rs1 = Output(UInt((32 * warpSize).W))
       val rs2 = Output(UInt((32 * warpSize).W))
-      val imm = Output(SInt(32.W))
     }
   })
 
@@ -90,10 +90,10 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   io.aluOf.imm := Mux(pipeSel, imm, 0.S)
 
   // To mem pipeline
+  io.memOf.valid := !pipeSel
   io.memOf.warp := Mux(!pipeSel, warp, 0.U)
   io.memOf.opcode := Mux(!pipeSel, opcode, 0.U)
   io.memOf.dest := Mux(!pipeSel, dest, 0.U)
   io.memOf.rs1 := Mux(!pipeSel, vrf.io.readData1, 0.U)
   io.memOf.rs2 := Mux(!pipeSel, vrf.io.readData2, 0.U)
-  io.memOf.imm := Mux(!pipeSel, imm, 0.S)
 }

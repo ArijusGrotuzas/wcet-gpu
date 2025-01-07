@@ -24,9 +24,7 @@ class Front(blockCount: Int, warpCount: Int) extends Module {
       val setNotPending = Input(Bool())
     }
 
-    val funcUnits = new Bundle {
-      val memStall = Input(Bool())
-    }
+    val memStall = Input(Bool())
 
     val nzpUpdate = new Bundle {
       val nzp = Input(UInt(3.W))
@@ -60,7 +58,7 @@ class Front(blockCount: Int, warpCount: Int) extends Module {
   // Control signals to and from warp scheduler
   warpScheduler.io.start <> io.start
   warpScheduler.io.warpTable <> instrF.io.warpTable
-  warpScheduler.io.memStall := io.funcUnits.memStall
+  warpScheduler.io.memStall := io.memStall
   warpScheduler.io.headInstrType := instrIss.io.headInstrType
   warpScheduler.io.scheduler <> instrF.io.scheduler
 

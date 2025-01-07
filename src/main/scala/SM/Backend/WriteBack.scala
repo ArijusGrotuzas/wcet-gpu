@@ -26,7 +26,6 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
     val mem = new Bundle {
       val we = Input(Bool())
       val dest = Input(UInt(5.W))
-      val pending = Input(Bool())
       val warp = Input(UInt(warpAddrLen.W))
       val out = Input(UInt((warpSize * 32).W))
     }
@@ -47,8 +46,9 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
 
     val outTest = Output(UInt((warpSize * 32).W))
   })
-  // Alu delay state register
-  val aluDelay = RegInit(false.B)
+
+  val sForwardAlu :: sDelayAlu :: Nil = Enum(2)
+  val aluDelay = RegInit(sForwardAlu)
 
   val setInactive = WireDefault(false.B)
   val setNotPending = WireDefault(false.B)
@@ -66,10 +66,17 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val outInactive = WireDefault(false.B)
 
   // Update the alu output delay state register
-  when(io.mem.we && !aluDelay) {
-    aluDelay := true.B
-  }.elsewhen(!io.alu.we && aluDelay) {
-    aluDelay := false.B
+  switch(aluDelay) {
+    is(sForwardAlu) {
+      when(io.mem.we) {
+        aluDelay := sDelayAlu
+      }
+    }
+    is(sDelayAlu) {
+      when(!io.alu.we) {
+        aluDelay := sForwardAlu
+      }
+    }
   }
 
   when(io.mem.we) { // Send the memory result to the register file
@@ -77,8 +84,9 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
     outAddr := io.mem.dest
     outData := io.mem.out
     outWarp := io.mem.warp
+    setNotPending := true.B // When a result arrives from the LD/ST unit set the warp as not pending
   }.otherwise { // Send the ALU result to the register file
-    when(aluDelay) { // Take the delayed values of the ALU
+    when(aluDelay === sDelayAlu) { // Take the delayed values of the ALU
       outWe := aluWeDelay
       outAddr := aluDestDelay
       outData := aluOutDelay
@@ -91,11 +99,6 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
       outWarp := io.alu.warp
       outInactive := io.alu.done
     }
-  }
-
-  // When a result arrives from the LD/ST unit set the warp as not pending
-  when(io.mem.pending && io.mem.we) {
-    setNotPending := true.B
   }
 
   io.wbOf.we := outWe

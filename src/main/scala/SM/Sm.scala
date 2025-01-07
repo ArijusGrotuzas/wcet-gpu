@@ -13,6 +13,19 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val data = Input(UInt(32.W))
     }
 
+    val dataMem = new Bundle {
+      // Read signals
+      val readAck = Input(UInt(warpSize.W))
+      val readReq = Output(UInt(warpSize.W))
+      val readData = Input(UInt((32 * warpSize).W))
+      // Write Signals
+      val writeAck = Input(UInt(warpSize.W))
+      val writeReq = Output(UInt(warpSize.W))
+      val writeData = Output(UInt((32 * warpSize).W))
+      // Shared address signal
+      val addr = Output(UInt((32 * warpSize).W))
+    }
+
     val start = new Bundle {
       val valid = Input(Bool())
       val data = Input(UInt((blockAddrLen + warpCount).W))
@@ -29,9 +42,10 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   frontend.io.start <> io.start
   frontend.io.front <> backend.io.front
   frontend.io.wb <> backend.io.wb
-  frontend.io.funcUnits <> backend.io.funcUnits
   frontend.io.nzpUpdate <> backend.io.nzpUpdate
   frontend.io.aluInitCtrl <> backend.io.aluInitCtrl
+  frontend.io.memStall := backend.io.memStall
 
+  io.dataMem <> backend.io.dataMem
   io.wbOutTest := backend.io.wbOutTest
 }

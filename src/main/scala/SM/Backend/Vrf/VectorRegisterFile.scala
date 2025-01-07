@@ -41,6 +41,7 @@ class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
       }
     }
 
+    // TODO: Prevent writing to the 0th register of any warp
     bank.io.readAddr := bankReadAddr
 
     bank.io.we := we

@@ -6,8 +6,8 @@ object Opcodes {
   val NOP = "b00000".U // X 00000
   val RET = "b11111".U // X 11111
   // Loads/Stores
-  val LD = "b00001".U // TODO: Implement
-  val ST = "b00101".U // TODO: Implement
+  val LD = "b00001".U // X RS1 RD 00001
+  val ST = "b00101".U // X RS2 RS1 xxxxx 00101
   val LDS = "b10001".U // X xxSRS RD 01001
   // Immediate instructions
   val ADDI = "b01001".U // IMM RS1 RD 01001
