@@ -1,6 +1,6 @@
 package SM.Frontend
 
-import SM.Opcodes
+import Constants.Opcodes
 import chisel3._
 import chisel3.util._
 
@@ -126,7 +126,7 @@ class InstructionIssue(warpCount: Int) extends Module {
 
   // Forward data if all head instruction types are mem-instr
   for (i <- 0 until warpCount) {
-    headInstrType(i) := opcodeQueues.io.data(i) === Opcodes.LD || opcodeQueues.io.data(i) === Opcodes.ST
+    headInstrType(i) := opcodeQueues.io.data(i) === Opcodes.LD.asUInt(5.W) || opcodeQueues.io.data(i) === Opcodes.ST.asUInt(5.W)
   }
 
   // Forward the nzp value if the warp is the same
@@ -137,12 +137,12 @@ class InstructionIssue(warpCount: Int) extends Module {
   }
 
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
-  when(opcodeCurr === Opcodes.LD || opcodeCurr === Opcodes.ST || opcodeCurr === Opcodes.RET) {
+  when(opcodeCurr === Opcodes.LD.asUInt(5.W) || opcodeCurr === Opcodes.ST.asUInt(5.W) || opcodeCurr === Opcodes.RET.asUInt(5.W)) {
     setPending := true.B
   }
 
   // If cmp instruction, then perform the jump based on nzp register contents
-  when(opcodeCurr === Opcodes.BRNZP) {
+  when(opcodeCurr === Opcodes.BRNZP.asUInt(5.W)) {
     jump := (nzpCurr & nzpRegOut).orR
   }
 

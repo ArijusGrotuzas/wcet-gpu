@@ -1,6 +1,6 @@
 package SM.Backend.Mem
 
-import SM.Opcodes
+import Constants.Opcodes
 import chisel3._
 import chisel3.util._
 
@@ -29,9 +29,9 @@ class MemControl extends Module {
     is(sIdle) {
       when(io.valid) {
         memStall := true.B
-        when(io.opcode === Opcodes.LD) {
+        when(io.opcode === Opcodes.LD.asUInt(5.W)) {
           stateReg := sLoad
-        }.elsewhen(io.opcode === Opcodes.ST) {
+        }.elsewhen(io.opcode === Opcodes.ST.asUInt(5.W)) {
           stateReg := sStore
         }
       }

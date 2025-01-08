@@ -2,17 +2,8 @@ package SM.Backend.Alu
 
 import chisel3._
 import chisel3.util._
+import Constants.AluOps
 
-object AluOps{
-  val ADD = "b000".U
-  val SUB = "b001".U
-  val AND = "b010".U
-  val OR = "b011".U
-  val SRL = "b100".U
-  val SLL = "b101".U
-  val FORA = "b110".U
-  val FORB = "b111".U
-}
 
 class Alu(operandWidth: Int) extends Module {
   val io = IO(new Bundle{
@@ -31,12 +22,12 @@ class Alu(operandWidth: Int) extends Module {
   val out = WireDefault(0.S(operandWidth.W))
 
   switch (io.op) {
-    is(AluOps.ADD) {out := io.a + io.b}
-    is(AluOps.SUB) {out := io.a - io.b}
-    is(AluOps.AND) {out := io.a & io.b}
-    is(AluOps.OR) {out := io.a | io.b}
-    is(AluOps.FORA) {out := io.a}
-    is(AluOps.FORB) {out := io.b}
+    is(AluOps.ADD.asUInt(3.W)) {out := io.a + io.b}
+    is(AluOps.SUB.asUInt(3.W)) {out := io.a - io.b}
+    is(AluOps.AND.asUInt(3.W)) {out := io.a & io.b}
+    is(AluOps.OR.asUInt(3.W)) {out := io.a | io.b}
+    is(AluOps.FORA.asUInt(3.W)) {out := io.a}
+    is(AluOps.FORB.asUInt(3.W)) {out := io.b}
   }
 
   io.zero := !out.asUInt.orR

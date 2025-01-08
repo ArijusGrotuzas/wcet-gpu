@@ -1,6 +1,6 @@
 package SM.Frontend
 
-import SM.Opcodes
+import Constants.Opcodes
 import chisel3._
 import chisel3.util._
 
@@ -31,9 +31,9 @@ class InstructionDecode(warpCount: Int) extends Module {
 
   val imm = WireDefault(0.S(32.W))
 
-  when(io.id.opcode === Opcodes.LUI) {
+  when(io.id.opcode === Opcodes.LUI.asUInt(5.W)) {
     imm := (io.instrF.instr(24, 10) << 17).asSInt // Load the upper 15 bits as an immediate
-  }.elsewhen(io.id.opcode === Opcodes.BRNZP) {
+  }.elsewhen(io.id.opcode === Opcodes.BRNZP.asUInt(5.W)) {
     imm := (io.instrF.instr(31, 13) ## io.instrF.instr(9, 5)).asSInt // Load the 22 bit immediate for addressing PC
   }.otherwise {
     imm := io.instrF.instr(31, 15).asSInt // Load the 17 bit immediate

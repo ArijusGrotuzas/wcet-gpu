@@ -16,7 +16,7 @@ class SmTop(blockCount: Int, warpCount: Int, warpSize: Int, freq: Int, instructi
   // TODO: Add data memory controller
   // TODO: Add data memory
   val debounce = Module(new Debounce(blockAddrLen + warpCount, freq))
-  val instrMem = Module(new synchronousMemory(32, 1024, 32, instructionFile))
+  val instrMem = Module(new SyncMem(32, 1024, 32, instructionFile))
   val sm = Module(new Sm(blockCount, warpCount, warpSize))
 
   debounce.io.reset := io.reset

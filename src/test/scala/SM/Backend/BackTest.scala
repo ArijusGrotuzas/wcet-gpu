@@ -1,6 +1,6 @@
 package SM.Backend
 
-import SM.Opcodes
+import Constants.Opcodes
 import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
@@ -49,22 +49,22 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send an ADDI instruction
-      pushInstruction(dut, 0, Opcodes.ADDI, 2, 0, 0, 0, 256)
+      pushInstruction(dut, 0, Opcodes.ADDI.asUInt(5.W), 2, 0, 0, 0, 256)
 
       dut.clock.step(1)
 
       // Send an ADDI instruction
-      pushInstruction(dut, 0, Opcodes.ADDI, 11, 0, 0, 0, 119)
+      pushInstruction(dut, 0, Opcodes.ADDI.asUInt(5.W), 11, 0, 0, 0, 119)
 
       dut.clock.step(1)
 
       // Send an ADDI instruction
-      pushInstruction(dut, 1, Opcodes.ADDI, 20, 0, 0, 0, 240)
+      pushInstruction(dut, 1, Opcodes.ADDI.asUInt(5.W), 20, 0, 0, 0, 240)
 
       dut.clock.step(1)
 
       // Send an ADDI instruction
-      pushInstruction(dut, 1, Opcodes.ADDI, 25, 0, 0, 0, 103)
+      pushInstruction(dut, 1, Opcodes.ADDI.asUInt(5.W), 25, 0, 0, 0, 103)
 
       // Expect the first Immediate instruction to return the results
       dut.io.wbOutTest.expect(generateBinaryString(warpSize, 256).U)
@@ -72,7 +72,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send ADD instruction
-      pushInstruction(dut, 0, Opcodes.ADD, 3, 11, 2)
+      pushInstruction(dut, 0, Opcodes.ADD.asUInt(5.W), 3, 11, 2)
 
       // Expect the second Immediate instruction to return the results
       dut.io.wbOutTest.expect(generateBinaryString(warpSize, 119).U)
@@ -80,7 +80,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send RET instruction
-      pushInstruction(dut, 0, Opcodes.RET)
+      pushInstruction(dut, 0, Opcodes.RET.asUInt(5.W))
 
       // Expect the third Immediate instruction to return the results
       dut.io.wbOutTest.expect(generateBinaryString(warpSize, 240).U)
@@ -88,7 +88,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send AND instruction
-      pushInstruction(dut, 1, Opcodes.AND, 19, 20, 25)
+      pushInstruction(dut, 1, Opcodes.AND.asUInt(5.W), 19, 20, 25)
 
       // Expect the fourth Immediate instruction to return the results
       dut.io.wbOutTest.expect(generateBinaryString(warpSize, 103).U)
@@ -96,7 +96,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send an NOP instruction
-      pushInstruction(dut, 0, Opcodes.NOP)
+      pushInstruction(dut, 0, Opcodes.NOP.asUInt(5.W))
 
       // Expect the ADD instruction to return the results
       dut.io.wbOutTest.expect(generateBinaryString(warpSize, 375).U)
@@ -104,7 +104,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send an NOP instruction
-      pushInstruction(dut, 0, Opcodes.NOP)
+      pushInstruction(dut, 0, Opcodes.NOP.asUInt(5.W))
 
       // Expect the RET instruction to return the results
       dut.io.wb.setInactive.expect(true.B)
@@ -112,7 +112,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Send AND instruction
-      pushInstruction(dut, 1, Opcodes.AND, 19, 20, 25)
+      pushInstruction(dut, 1, Opcodes.AND.asUInt(5.W), 19, 20, 25)
 
       // Expect the AND instruction to return the results
       dut.io.wbOutTest.expect(generateBinaryString(warpSize, 96).U)

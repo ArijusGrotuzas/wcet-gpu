@@ -1,6 +1,6 @@
 package SM.Frontend
 
-import SM.Opcodes
+import Constants.Opcodes
 import chisel3._
 import chisel3.util._
 
@@ -110,7 +110,7 @@ class InstructionFetch(warpCount: Int) extends Module {
   opcode := instr(4, 0)
 
   // If the instruction opcode is RET, set the warp as done
-  when(opcode === Opcodes.RET) {
+  when(opcode === Opcodes.RET.asUInt(5.W)) {
     setDone := true.B
   }
 

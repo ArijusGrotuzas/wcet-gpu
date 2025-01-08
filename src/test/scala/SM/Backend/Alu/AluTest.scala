@@ -2,6 +2,7 @@ package SM.Backend.Alu
 
 import chisel3._
 import chiseltest._
+import Constants.AluOps
 import org.scalatest.flatspec.AnyFlatSpec
 
 class AluTest extends AnyFlatSpec with ChiselScalatestTester {
@@ -9,7 +10,7 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new Alu(32)) { dut =>
       dut.io.a.poke(10.S)
       dut.io.b.poke(5.S)
-      dut.io.op.poke(AluOps.ADD)
+      dut.io.op.poke(AluOps.ADD.asUInt(5.W))
 
       dut.io.out.expect(15.S)
       dut.io.zero.expect(false.B)
@@ -20,7 +21,7 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new Alu(32)) { dut =>
       dut.io.a.poke(10.S)
       dut.io.b.poke(5.S)
-      dut.io.op.poke(AluOps.SUB)
+      dut.io.op.poke(AluOps.SUB.asUInt(5.W))
 
       dut.io.out.expect(5.S)
       dut.io.zero.expect(false.B)
@@ -31,7 +32,7 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new Alu(32)) { dut =>
       dut.io.a.poke(10.S)
       dut.io.b.poke(5.S)
-      dut.io.op.poke(AluOps.AND)
+      dut.io.op.poke(AluOps.AND.asUInt(5.W))
 
       dut.io.out.expect(0.S)
       dut.io.zero.expect(true.B)
@@ -42,7 +43,7 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new Alu(32)) { dut =>
       dut.io.a.poke(10.S)
       dut.io.b.poke(5.S)
-      dut.io.op.poke(AluOps.OR)
+      dut.io.op.poke(AluOps.OR.asUInt(5.W))
 
       dut.io.out.expect(15.S)
       dut.io.zero.expect(false.B)

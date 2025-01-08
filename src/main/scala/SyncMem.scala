@@ -1,7 +1,7 @@
 import chisel3._
 import chisel3.util.experimental.loadMemoryFromFileInline
 
-class synchronousMemory(width: Int, depth: Int, addrLen: Int, dataFile: String = "") extends Module {
+class SyncMem(width: Int, depth: Int, addrLen: Int, dataFile: String = "") extends Module {
   val io = IO(new Bundle {
     val we = Input(Bool())
     val dataW = Input(UInt(width.W))

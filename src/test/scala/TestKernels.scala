@@ -8,12 +8,12 @@ object TestKernels {
     "h01778889", // (ADDI, x4, x2, 751)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
-    "h000190A3", // (ADD, x5, x3, x4)
+    "h00020CA3", // (ADD, x5, x3, x4)
     "h00000000", // (NOP)
     "h00000000", // (NOP)
     "h000290C7", // (SUB, x6, x4, x5)
     "h00020CEB", // (AND, x7, x3, x4)
-    "h2000910F", // (OR, x8, x4, x5)
+    "h0002910F", // (OR, x8, x4, x5)
     "h00000000", // (NOP)
     "h0000001F" // (RET)
   )
@@ -51,5 +51,17 @@ object TestKernels {
 
   // Tests loading and storing from data memory
   val kernel4 = Array(
+    "h00000C91", // (LDS, x4, s3): Load warp width to register 4
+    "h00000451", // (LDS, x2, s1): Load warp ID to register 2
+    "h00000031", // (LDS, x1, s0): Load thread ID to register 1
+    "h000010B1", // (LDS, x5, s4): Load block width to register 5
+    "h000008D1", // (LDS, x6, s2): Load block ID to register 3
+    "h001110F7", // (MAD, x7, x4, x2, x1): x7 = (warpWidth * warpID) + threadID
+    "h00000000", // (NOP)
+    "h00000000", // (NOP)
+    "h00731517", // (MAD, x8, x5, x6, x7): x8 = (blockWidth * blockId) + x7
+    "h00000000", // (NOP)
+    "h00000000", // (NOP)
+    "h0000001F" // (RET)
   )
 }

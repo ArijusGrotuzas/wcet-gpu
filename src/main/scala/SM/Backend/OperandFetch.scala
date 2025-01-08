@@ -1,7 +1,7 @@
 package SM.Backend
 
+import Constants.Opcodes
 import SM.Backend.Vrf.VectorRegisterFile
-import SM.Opcodes
 import chisel3._
 import chisel3.util._
 
@@ -66,7 +66,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   srs := io.iss.srs
 
   // Select the one of the functional units based on the opcode
-  when(io.iss.opcode === Opcodes.LD || io.iss.opcode === Opcodes.ST) {
+  when(io.iss.opcode === Opcodes.LD.asUInt(5.W) || io.iss.opcode === Opcodes.ST.asUInt(5.W)) {
     pipeSel := false.B
   }
 
