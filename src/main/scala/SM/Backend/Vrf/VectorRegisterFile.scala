@@ -22,6 +22,7 @@ class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
     val readData3 = Output(UInt(bankWidth.W))
   })
 
+  // TODO: If attempting to read 0 register, return 0
   def bankRouter(arbiterSel: UInt, readAddr1: UInt, readAddr2: UInt, readAddr3: UInt, we: UInt, writeData: UInt, writeAddr: UInt): UInt = {
     val bank = Module(new DualPortedRam(bankDepth, bankWidth, addrLen - 2))
     val bankReadAddr = WireDefault(0.U((addrLen - 2).W))

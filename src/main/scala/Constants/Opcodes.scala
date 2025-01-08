@@ -4,8 +4,8 @@ object Opcodes {
   val NOP = 0x00 // 00000
   val RET = 0x1F // 11111
   // Loads/Stores
-  val LD = 0x01 // 00001
   val ST = 0x05 // 00101
+  val LD = 0x01 // 00001
   val LDS = 0x11 // 01001
   // Immediate instructions
   val ADDI = 0x09 // 01001
