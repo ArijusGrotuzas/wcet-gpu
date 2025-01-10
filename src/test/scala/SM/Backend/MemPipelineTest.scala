@@ -1,4 +1,4 @@
-package SM.Backend.Mem
+package SM.Backend
 
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec

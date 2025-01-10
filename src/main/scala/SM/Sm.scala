@@ -1,9 +1,9 @@
 package SM
 
-import chisel3._
-import chisel3.util._
 import SM.Backend.Back
 import SM.Frontend.Front
+import chisel3._
+import chisel3.util._
 
 class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   private val blockAddrLen = log2Up(blockCount)
@@ -14,16 +14,10 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
     }
 
     val dataMem = new Bundle {
-      // Read signals
-      val readAck = Input(UInt(warpSize.W))
-      val readReq = Output(UInt(warpSize.W))
-      val readData = Input(UInt((32 * warpSize).W))
-      // Write Signals
-      val writeAck = Input(UInt(warpSize.W))
-      val writeReq = Output(UInt(warpSize.W))
-      val writeData = Output(UInt((32 * warpSize).W))
-      // Shared address signal
-      val addr = Output(UInt((32 * warpSize).W))
+      val dataR = Input(UInt(32.W))
+      val we = Output(Bool())
+      val dataW = Output(UInt(32.W))
+      val addr = Output(UInt(32.W))
     }
 
     val start = new Bundle {
@@ -37,15 +31,28 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
 
   val frontend = Module(new Front(blockCount, warpCount))
   val backend = Module(new Back(blockCount, warpCount, warpSize))
+  val lsuArbiter = Module(new LsuArbiter(warpSize, 32))
 
-  frontend.io.instrMem <> io.instrMem
+  // Control for starting the SM
   frontend.io.start <> io.start
+
+  // Access to instruction memory
+  frontend.io.instrMem <> io.instrMem
+
+  // Connect frontend output to backend
   frontend.io.front <> backend.io.front
-  frontend.io.wb <> backend.io.wb
+
+  // Control signal connections between frontend and backend
+  frontend.io.wbIfCtrl <> backend.io.wbIfCtrl
+  frontend.io.memIfCtrl <> backend.io.memIfCtrl
   frontend.io.nzpUpdate <> backend.io.nzpUpdate
   frontend.io.aluInitCtrl <> backend.io.aluInitCtrl
   frontend.io.memStall := backend.io.memStall
 
-  io.dataMem <> backend.io.dataMem
+  // Connection to data memory
+  lsuArbiter.io.lsu <> backend.io.lsu
+  io.dataMem <> lsuArbiter.io.dataMem
+
+  // Test signal
   io.wbOutTest := backend.io.wbOutTest
 }

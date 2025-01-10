@@ -88,9 +88,8 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.alu.done.poke(true.B)
       dut.io.alu.warp.poke(2.U)
 
-      dut.io.wbIf.setInactive.expect(true.B)
-      dut.io.wbIf.setNotPending.expect(false.B)
-      dut.io.wbIf.warp.expect(2.U)
+      dut.io.wbIfCtrl.setInactive.expect(true.B)
+      dut.io.wbIfCtrl.warp.expect(2.U)
 
       dut.clock.step(1)
 
@@ -98,9 +97,8 @@ class WriteBackTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.mem.we.poke(true.B)
       dut.io.mem.warp.poke(1.U)
 
-      dut.io.wbIf.setInactive.expect(false.B)
-      dut.io.wbIf.setNotPending.expect(true.B)
-      dut.io.wbIf.warp.expect(1.U)
+      dut.io.wbIfCtrl.setInactive.expect(false.B)
+      dut.io.wbIfCtrl.warp.expect(1.U)
     }
   }
 }

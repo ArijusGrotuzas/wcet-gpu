@@ -14,15 +14,17 @@ class MemControl extends Module {
     val memWriteEn = Output(Bool())
     val request = Output(Bool())
     val memStall = Output(Bool())
+    val setNotPending = Output(Bool())
   })
 
-  val sIdle :: sStore :: sLoad :: Nil = Enum(3)
+  val sIdle :: sStore :: sLoad :: sDone :: Nil = Enum(4)
   val stateReg = RegInit(sIdle)
 
   val memReadEn = WireDefault(false.B)
   val memWriteEn = WireDefault(false.B)
   val request = WireDefault(false.B)
   val memStall = WireDefault(false.B)
+  val setNotPending = WireDefault(false.B)
 
   // FSM
   switch(stateReg) {
@@ -41,7 +43,7 @@ class MemControl extends Module {
       request := true.B
       memStall := true.B
       when(io.allLsuDone) {
-        stateReg := sIdle
+        stateReg := sDone
       }
     }
     is(sLoad) {
@@ -49,8 +51,12 @@ class MemControl extends Module {
       request := true.B
       memStall := true.B
       when(io.allLsuDone) {
-        stateReg := sIdle
+        stateReg := sDone
       }
+    }
+    is(sDone) {
+      setNotPending := true.B
+      stateReg := sIdle
     }
   }
 
@@ -58,4 +64,5 @@ class MemControl extends Module {
   io.memWriteEn := memWriteEn
   io.request := request
   io.memStall := memStall
+  io.setNotPending := setNotPending
 }

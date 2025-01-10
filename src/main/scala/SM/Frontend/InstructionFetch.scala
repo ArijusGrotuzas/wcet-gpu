@@ -17,15 +17,19 @@ class InstructionFetch(warpCount: Int) extends Module {
 
     val setPending = Input(Bool())
 
-    val issIf = new Bundle {
+    val issIfCtrl = new Bundle {
       val jump = Input(Bool())
       val jumpAddr = Input(UInt(32.W))
     }
 
-    val wb = new Bundle {
+    val wbIfCtrl = new Bundle {
+      val warp = Input(UInt(warpAddrLen.W))
+      val setInactive = Input(Bool())
+    }
+
+    val memIfCtrl = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
       val setNotPending = Input(Bool())
-      val setInactive = Input(Bool())
     }
 
     val instrF = new Bundle {
@@ -35,7 +39,7 @@ class InstructionFetch(warpCount: Int) extends Module {
       val instr = Output(UInt(32.W))
     }
 
-    val warpTable = new Bundle {
+    val warpTableStatus = new Bundle {
       val valid = Output(UInt(warpCount.W))
       val active = Output(UInt(warpCount.W))
       val pending = Output(UInt(warpCount.W))
@@ -69,8 +73,8 @@ class InstructionFetch(warpCount: Int) extends Module {
   fetchReg := fetchRegNext
 
   // Mux for setting the next PC of a warp
-  when(io.issIf.jump) {
-    warpTablePcNext := io.issIf.jumpAddr
+  when(io.issIfCtrl.jump) {
+    warpTablePcNext := io.issIfCtrl.jumpAddr
   }.otherwise {
     when(fetchRegNext) {
       warpTablePcNext := warpTable.io.pc(io.scheduler.warp) + 1.U
@@ -84,17 +88,17 @@ class InstructionFetch(warpCount: Int) extends Module {
   warpTable.io.reset := io.scheduler.reset
   warpTable.io.validCtrl.set := io.scheduler.setValid
   warpTable.io.validCtrl.data := io.scheduler.setValidWarps
-  warpTable.io.pcCtrl.update := fetchRegNext
+  warpTable.io.pcCtrl.set := fetchRegNext
   warpTable.io.pcCtrl.idx := io.scheduler.warp
   warpTable.io.pcCtrl.data := warpTablePcNext
   warpTable.io.doneCtrl.set := setDone
   warpTable.io.doneCtrl.idx := warpReg
-  warpTable.io.pendingCtrlIssue.set := io.setPending
-  warpTable.io.pendingCtrlIssue.idx := io.scheduler.warp
-  warpTable.io.activeCtrl.set := io.wb.setInactive
-  warpTable.io.activeCtrl.idx := io.wb.warp
-  warpTable.io.pendingCtrlWb.set := io.wb.setNotPending
-  warpTable.io.pendingCtrlWb.idx := io.wb.warp
+  warpTable.io.setPendingCtrl.set := io.setPending
+  warpTable.io.setPendingCtrl.idx := io.scheduler.warp
+  warpTable.io.activeCtrl.set := io.wbIfCtrl.setInactive
+  warpTable.io.activeCtrl.idx := io.wbIfCtrl.warp
+  warpTable.io.setNotPendingCtrl.set := io.memIfCtrl.setNotPending
+  warpTable.io.setNotPendingCtrl.idx := io.memIfCtrl.warp
 
   // Get the instruction from the instruction memory
   io.instrMem.addr := warpTable.io.pc(io.scheduler.warp)
@@ -119,7 +123,7 @@ class InstructionFetch(warpCount: Int) extends Module {
   io.instrF.instr := outInstr
   io.instrF.pc := pcReg
 
-  io.warpTable.valid := warpTable.io.valid
-  io.warpTable.active := warpTable.io.active
-  io.warpTable.pending := warpTable.io.pending
+  io.warpTableStatus.valid := warpTable.io.valid
+  io.warpTableStatus.active := warpTable.io.active
+  io.warpTableStatus.pending := warpTable.io.pending
 }

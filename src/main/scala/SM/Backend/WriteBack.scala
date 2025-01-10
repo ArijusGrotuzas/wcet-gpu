@@ -38,10 +38,9 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
       val writeData = Output(UInt((warpSize * 32).W))
     }
 
-    val wbIf = new Bundle {
+    val wbIfCtrl = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
       val setInactive = Output(Bool())
-      val setNotPending = Output(Bool())
     }
 
     val outTest = Output(UInt((warpSize * 32).W))
@@ -84,7 +83,6 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
     outAddr := io.mem.dest
     outData := io.mem.out
     outWarp := io.mem.warp
-    setNotPending := true.B // When a result arrives from the LD/ST unit set the warp as not pending
   }.otherwise { // Send the ALU result to the register file
     when(aluDelay === sDelayAlu) { // Take the delayed values of the ALU
       outWe := aluWeDelay
@@ -107,8 +105,8 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   io.wbOf.writeData := outData
   io.wbOf.writeMask := 0.U
 
-  io.wbIf.warp := outWarp
-  io.wbIf.setNotPending := setNotPending
-  io.wbIf.setInactive := outInactive
+  io.wbIfCtrl.warp := outWarp
+  io.wbIfCtrl.setInactive := outInactive
+
   io.outTest := outData
 }

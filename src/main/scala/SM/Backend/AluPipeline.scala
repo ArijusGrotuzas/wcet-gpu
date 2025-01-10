@@ -1,5 +1,6 @@
-package SM.Backend.Alu
+package SM.Backend
 
+import SM.Backend.Alu._
 import chisel3._
 import chisel3.util._
 
@@ -32,7 +33,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
       val out = Output(UInt((32 * warpSize).W))
     }
 
-    val nzpUpdate = new Bundle {
+    val nzpUpdateCtrl = new Bundle {
       val nzp = Output(UInt(3.W))
       val en = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
@@ -112,13 +113,15 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     }
   }
 
+  // Alu pipeline outputs to write-back
   io.alu.warp := io.of.warp
   io.alu.dest := io.of.dest
   io.alu.done := done
   io.alu.we := we
   io.alu.out := out.asUInt
 
-  io.nzpUpdate.nzp := nzp
-  io.nzpUpdate.en := nzpUpdate
-  io.nzpUpdate.warp := io.of.warp
+  // Alu pipeline control signals
+  io.nzpUpdateCtrl.nzp := nzp
+  io.nzpUpdateCtrl.en := nzpUpdate
+  io.nzpUpdateCtrl.warp := io.of.warp
 }

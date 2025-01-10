@@ -107,7 +107,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
       pushInstruction(dut, 0, Opcodes.NOP.asUInt(5.W))
 
       // Expect the RET instruction to return the results
-      dut.io.wb.setInactive.expect(true.B)
+      dut.io.wbIfCtrl.setInactive.expect(true.B)
 
       dut.clock.step(1)
 

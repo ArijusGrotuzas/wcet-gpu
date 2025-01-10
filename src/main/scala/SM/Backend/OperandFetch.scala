@@ -47,10 +47,12 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
       val rs1 = Output(UInt((32 * warpSize).W))
       val rs2 = Output(UInt((32 * warpSize).W))
     }
+
+    val ofContainsMemInstr = Output(Bool())
   })
 
   val vrf = Module(new VectorRegisterFile(warpCount, 32 * warpSize))
-  val pipeSel = WireDefault(true.B)
+  val memOrAluSel = WireDefault(true.B)
 
   // Registers to hold values while the operands are fetched from VRF
   val warp = RegInit(0.U(warpAddrLen.W))
@@ -66,8 +68,8 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   srs := io.iss.srs
 
   // Select the one of the functional units based on the opcode
-  when(io.iss.opcode === Opcodes.LD.asUInt(5.W) || io.iss.opcode === Opcodes.ST.asUInt(5.W)) {
-    pipeSel := false.B
+  when(opcode === Opcodes.LD.asUInt(5.W) || opcode === Opcodes.ST.asUInt(5.W)) {
+    memOrAluSel := false.B
   }
 
   vrf.io.we := io.wb.we
@@ -80,20 +82,22 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   vrf.io.readAddr3 := Cat(io.iss.warp, io.iss.rs3)
 
   // To alu pipeline
-  io.aluOf.warp := Mux(pipeSel, warp, 0.U)
-  io.aluOf.opcode := Mux(pipeSel, opcode, 0.U)
-  io.aluOf.dest := Mux(pipeSel, dest, 0.U)
-  io.aluOf.rs1 := Mux(pipeSel, vrf.io.readData1, 0.U)
-  io.aluOf.rs2 := Mux(pipeSel, vrf.io.readData2, 0.U)
-  io.aluOf.rs3 := Mux(pipeSel, vrf.io.readData3, 0.U)
-  io.aluOf.srs := Mux(pipeSel, srs, 0.U)
-  io.aluOf.imm := Mux(pipeSel, imm, 0.S)
+  io.aluOf.warp := Mux(memOrAluSel, warp, 0.U)
+  io.aluOf.opcode := Mux(memOrAluSel, opcode, 0.U)
+  io.aluOf.dest := Mux(memOrAluSel, dest, 0.U)
+  io.aluOf.rs1 := Mux(memOrAluSel, vrf.io.readData1, 0.U)
+  io.aluOf.rs2 := Mux(memOrAluSel, vrf.io.readData2, 0.U)
+  io.aluOf.rs3 := Mux(memOrAluSel, vrf.io.readData3, 0.U)
+  io.aluOf.srs := Mux(memOrAluSel, srs, 0.U)
+  io.aluOf.imm := Mux(memOrAluSel, imm, 0.S)
 
   // To mem pipeline
-  io.memOf.valid := !pipeSel
-  io.memOf.warp := Mux(!pipeSel, warp, 0.U)
-  io.memOf.opcode := Mux(!pipeSel, opcode, 0.U)
-  io.memOf.dest := Mux(!pipeSel, dest, 0.U)
-  io.memOf.rs1 := Mux(!pipeSel, vrf.io.readData1, 0.U)
-  io.memOf.rs2 := Mux(!pipeSel, vrf.io.readData2, 0.U)
+  io.memOf.valid := !memOrAluSel
+  io.memOf.warp := Mux(!memOrAluSel, warp, 0.U)
+  io.memOf.opcode := Mux(!memOrAluSel, opcode, 0.U)
+  io.memOf.dest := Mux(!memOrAluSel, dest, 0.U)
+  io.memOf.rs1 := Mux(!memOrAluSel, vrf.io.readData1, 0.U)
+  io.memOf.rs2 := Mux(!memOrAluSel, vrf.io.readData2, 0.U)
+
+  io.ofContainsMemInstr := !memOrAluSel
 }

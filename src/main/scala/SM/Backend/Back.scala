@@ -1,7 +1,5 @@
 package SM.Backend
 
-import SM.Backend.Alu.AluPipeline
-import SM.Backend.Mem.MemPipeline
 import chisel3._
 import chisel3.util._
 
@@ -25,7 +23,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val blockIdx = Input(UInt(blockAddrLen.W))
     }
 
-    val dataMem = new Bundle {
+    val lsu = new Bundle {
       // Read signals
       val readAck = Input(UInt(warpSize.W))
       val readReq = Output(UInt(warpSize.W))
@@ -38,9 +36,13 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val addr = Output(UInt((32 * warpSize).W))
     }
 
-    val wb = new Bundle {
+    val wbIfCtrl = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
       val setInactive = Output(Bool())
+    }
+
+    val memIfCtrl = new Bundle {
+      val warp = Output(UInt(warpAddrLen.W))
       val setNotPending = Output(Bool())
     }
 
@@ -66,7 +68,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val rs1MemOfReg = RegInit(0.U((32 * warpSize).W))
   val rs2MemOfReg = RegInit(0.U((32 * warpSize).W))
 
-  // Gate the pipeline register for
+  // Gate the pipeline register for memory unit
   validMemOfReg := Mux(mem.io.memStall, validMemOfReg, of.io.memOf.valid)
   warpMemOfReg := Mux(mem.io.memStall, warpMemOfReg, of.io.memOf.warp)
   opcodeMemOfReg := Mux(mem.io.memStall, opcodeMemOfReg, of.io.memOf.opcode)
@@ -76,7 +78,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
 
   of.io.iss <> io.front
 
-  // Pipeline register between the operand fetch and alu stages
+  // Pipeline registers between the operand fetch and alu stages
   alu.io.of.warp := RegNext(of.io.aluOf.warp, 0.U)
   alu.io.of.opcode := RegNext(of.io.aluOf.opcode, 0.U)
   alu.io.of.dest := RegNext(of.io.aluOf.dest, 0.U)
@@ -87,7 +89,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   alu.io.of.imm := RegNext(of.io.aluOf.imm, 0.S)
   alu.io.aluInitCtrl <> io.aluInitCtrl
 
-  // Pipeline register between the operand fetch and memory stages
+  // Pipeline registers between the operand fetch and memory stages
   mem.io.of.valid := validMemOfReg
   mem.io.of.warp := warpMemOfReg
   mem.io.of.opcode := opcodeMemOfReg
@@ -95,24 +97,27 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   mem.io.of.rs1 := rs1MemOfReg
   mem.io.of.rs2 := rs2MemOfReg
 
-  // Pipeline register between the alu and write-back stages
+  // Pipeline registers between the alu and write-back stages
   wb.io.alu.warp := RegNext(alu.io.alu.warp, 0.U)
   wb.io.alu.done := RegNext(alu.io.alu.done, false.B)
   wb.io.alu.we := RegNext(alu.io.alu.we, false.B)
   wb.io.alu.dest := RegNext(alu.io.alu.dest, 0.U)
   wb.io.alu.out := RegNext(alu.io.alu.out, 0.U)
 
-  // Pipeline register between the memory and write-back stages
+  // Pipeline registers between the memory and write-back stages
   wb.io.mem.warp := RegNext(mem.io.mem.warp, 0.U)
   wb.io.mem.we := RegNext(mem.io.mem.we, false.B)
   wb.io.mem.dest := RegNext(mem.io.mem.dest, 0.U)
   wb.io.mem.out := RegNext(mem.io.mem.out, 0.U)
 
+  // Connect operand fetch with write-back
   of.io.wb <> wb.io.wbOf
-  io.wb <> wb.io.wbIf
-  io.dataMem <> mem.io.dataMem
 
-  io.memStall := mem.io.memStall
+  // backend control signals
+  io.lsu <> mem.io.lsu
+  io.wbIfCtrl <> wb.io.wbIfCtrl
+  io.memIfCtrl <> mem.io.memIfCtrl
+  io.nzpUpdate <> alu.io.nzpUpdateCtrl
+  io.memStall := (mem.io.memStall || of.io.ofContainsMemInstr)
   io.wbOutTest := wb.io.outTest
-  io.nzpUpdate := alu.io.nzpUpdate
 }

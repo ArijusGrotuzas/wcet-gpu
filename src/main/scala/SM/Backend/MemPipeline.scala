@@ -1,5 +1,6 @@
-package SM.Backend.Mem
+package SM.Backend
 
+import SM.Backend.Mem.{Lsu, MemControl}
 import chisel3._
 import chisel3.util._
 
@@ -22,7 +23,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
       val out = Output(UInt((32 * warpSize).W))
     }
 
-    val dataMem = new Bundle {
+    val lsu = new Bundle {
       // Read signals
       val readAck = Input(UInt(warpSize.W))
       val readReq = Output(UInt(warpSize.W))
@@ -33,6 +34,11 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
       val writeData = Output(UInt((32 * warpSize).W))
       // Shared address signal
       val addr = Output(UInt((32 * warpSize).W))
+    }
+
+    val memIfCtrl = new Bundle {
+      val warp = Output(UInt(warpAddrLen.W))
+      val setNotPending = Output(Bool())
     }
 
     val memStall = Output(Bool())
@@ -55,15 +61,15 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
 
     val rs1 = io.of.rs1(((i + 1) * 32) - 1, i * 32)
     val rs2 = io.of.rs2(((i + 1) * 32) - 1, i * 32)
-    val lsuMemReadData = io.dataMem.readData(((i + 1) * 32) - 1, i * 32)
+    val lsuMemReadData = io.lsu.readData(((i + 1) * 32) - 1, i * 32)
 
     lsu.io.request := memCtrl.io.request
     lsu.io.dataIn.memReadEn := memCtrl.io.memReadEn
     lsu.io.dataIn.memWriteEn := memCtrl.io.memWriteEn
     lsu.io.dataIn.rs1 := rs1
     lsu.io.dataIn.rs2 := rs2
-    lsu.io.mem.readAck := io.dataMem.readAck(i)
-    lsu.io.mem.writeAck := io.dataMem.writeAck(i)
+    lsu.io.mem.readAck := io.lsu.readAck(i)
+    lsu.io.mem.writeAck := io.lsu.writeAck(i)
     lsu.io.mem.readData := lsuMemReadData
 
     lsuOut(i) := lsu.io.dataOut
@@ -75,7 +81,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   }
 
   // Check if all the LSUs are done
-  allLsuDone := lsuAcks.asUInt.orR
+  allLsuDone := lsuAcks.asUInt.andR
   memCtrl.io.allLsuDone := allLsuDone
 
   io.mem.warp := io.of.warp
@@ -84,8 +90,11 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   io.mem.out := lsuOut.asUInt
   io.memStall := memCtrl.io.memStall
 
-  io.dataMem.readReq := lsuMemReadReq.asUInt
-  io.dataMem.writeReq := lsuMemWriteReq.asUInt
-  io.dataMem.writeData := lsuMemWriteData.asUInt
-  io.dataMem.addr := lsuMemAddr.asUInt
+  io.lsu.readReq := lsuMemReadReq.asUInt
+  io.lsu.writeReq := lsuMemWriteReq.asUInt
+  io.lsu.writeData := lsuMemWriteData.asUInt
+  io.lsu.addr := lsuMemAddr.asUInt
+
+  io.memIfCtrl.warp := io.of.warp
+  io.memIfCtrl.setNotPending := memCtrl.io.setNotPending
 }

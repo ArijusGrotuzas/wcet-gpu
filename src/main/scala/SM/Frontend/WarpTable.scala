@@ -12,7 +12,7 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     }
     
     val pcCtrl = new Bundle {
-      val update = Input(Bool())
+      val set = Input(Bool())
       val idx = Input(UInt(warpCount.W))
       val data = Input(UInt(32.W))
     }
@@ -22,12 +22,12 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
       val idx = Input(UInt(warpCount.W))
     }
     
-    val pendingCtrlIssue = new Bundle {
+    val setPendingCtrl = new Bundle {
       val set = Input(Bool())
       val idx = Input(UInt(warpCount.W))
     }
 
-    val pendingCtrlWb = new Bundle {
+    val setNotPendingCtrl = new Bundle {
       val set = Input(Bool())
       val idx = Input(UInt(warpCount.W))
     }
@@ -60,13 +60,15 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     doneReg(io.doneCtrl.idx) := true.B
   }
 
-  when((io.pendingCtrlWb.idx =/= io.pendingCtrlIssue.idx) || !(io.pendingCtrlWb.set && io.pendingCtrlIssue.set)) {
-    when (io.pendingCtrlIssue.set) {
-      pendingReg(io.pendingCtrlIssue.idx) := true.B
+  // If attempting to set the same warp as pending and not pending, do not update the table
+  // This technically should not happen, but this is just a safety measure
+  when((io.setNotPendingCtrl.idx =/= io.setPendingCtrl.idx) || !(io.setNotPendingCtrl.set && io.setPendingCtrl.set)) {
+    when (io.setPendingCtrl.set) {
+      pendingReg(io.setPendingCtrl.idx) := true.B
     }
 
-    when (io.pendingCtrlWb.set) {
-      pendingReg(io.pendingCtrlWb.idx) := false.B
+    when (io.setNotPendingCtrl.set) {
+      pendingReg(io.setNotPendingCtrl.idx) := false.B
     }
   }
 
@@ -74,7 +76,7 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     activeReg(io.activeCtrl.idx) := false.B
   }
   
-  when(io.pcCtrl.update) {
+  when(io.pcCtrl.set) {
     pcReg(io.pcCtrl.idx) := io.pcCtrl.data
   }
 

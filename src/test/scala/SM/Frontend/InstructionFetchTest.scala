@@ -14,11 +14,12 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.scheduler.setValid.poke(false.B)
       dut.io.scheduler.setValidWarps.poke(0.U)
       dut.io.setPending.poke(false.B)
-      dut.io.issIf.jump.poke(false.B)
-      dut.io.issIf.jumpAddr.poke(0.U)
-      dut.io.wb.warp.poke(0.U)
-      dut.io.wb.setNotPending.poke(false.B)
-      dut.io.wb.setInactive.poke(false.B)
+      dut.io.issIfCtrl.jump.poke(false.B)
+      dut.io.issIfCtrl.jumpAddr.poke(0.U)
+      dut.io.wbIfCtrl.warp.poke(0.U)
+      dut.io.wbIfCtrl.setInactive.poke(false.B)
+      dut.io.memIfCtrl.warp.poke(0.U)
+      dut.io.memIfCtrl.setNotPending.poke(false.B)
       dut.io.instrMem.data.poke(0.U)
 
       dut.clock.step(1)
@@ -82,13 +83,13 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Set first warp as inactive
-      dut.io.wb.setInactive.poke(true.B)
+      dut.io.wbIfCtrl.setInactive.poke(true.B)
 
       dut.clock.step(1)
 
       // Expect that the correct warp entry was updated in the warp table
-      dut.io.wb.setInactive.poke(false.B)
-      dut.io.warpTable.active.expect("b1110".U)
+      dut.io.wbIfCtrl.setInactive.poke(false.B)
+      dut.io.warpTableStatus.active.expect("b1110".U)
 
       dut.clock.step(1)
     }

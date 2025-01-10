@@ -10,9 +10,9 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       // Default assignments
       dut.io.start.valid.poke(false.B)
       dut.io.start.data.poke(0.U)
-      dut.io.warpTable.valid.poke(0.U)
-      dut.io.warpTable.active.poke(0.U)
-      dut.io.warpTable.pending.poke(0.U)
+      dut.io.warpTableStatus.valid.poke(0.U)
+      dut.io.warpTableStatus.active.poke(0.U)
+      dut.io.warpTableStatus.pending.poke(0.U)
       dut.io.headInstrType.poke(0.U)
       dut.io.memStall.poke(false.B)
 
@@ -37,9 +37,9 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.scheduler.setValidWarps.expect(0.U)
 
       // Poke some data to allow scheduler to make a choice
-      dut.io.warpTable.valid.poke("b0111".U)
-      dut.io.warpTable.active.poke("b1101".U)
-      dut.io.warpTable.pending.poke("b0000".U)
+      dut.io.warpTableStatus.valid.poke("b0111".U)
+      dut.io.warpTableStatus.active.poke("b1101".U)
+      dut.io.warpTableStatus.pending.poke("b0000".U)
       dut.io.headInstrType.poke("b0000".U)
 
       // Expect the first warp to be scheduled and the scheduler not stalled
@@ -49,8 +49,8 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Set the first warp now as pending and expect not to stall
-      dut.io.warpTable.active.poke("b1101".U)
-      dut.io.warpTable.pending.poke("b0001".U)
+      dut.io.warpTableStatus.active.poke("b1101".U)
+      dut.io.warpTableStatus.pending.poke("b0001".U)
       dut.io.headInstrType.poke("b0000".U)
       dut.io.memStall.poke(false.B)
 
@@ -60,8 +60,8 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Set the third warp as pending and the second as inactive
-      dut.io.warpTable.active.poke("b1101".U)
-      dut.io.warpTable.pending.poke("b0100".U)
+      dut.io.warpTableStatus.active.poke("b1101".U)
+      dut.io.warpTableStatus.pending.poke("b0100".U)
       dut.io.headInstrType.poke("b0000".U)
       dut.io.memStall.poke(false.B)
 
@@ -72,8 +72,8 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Set the first warp as having a memory instruction at the head of the queue
-      dut.io.warpTable.active.poke("b1101".U)
-      dut.io.warpTable.pending.poke("b0000".U)
+      dut.io.warpTableStatus.active.poke("b1101".U)
+      dut.io.warpTableStatus.pending.poke("b0000".U)
       dut.io.headInstrType.poke("b0001".U)
       dut.io.memStall.poke(true.B)
 
@@ -84,8 +84,8 @@ class WarpSchedulerTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Set all warps as having a memory instruction at the front of their queues
-      dut.io.warpTable.active.poke("b1101".U)
-      dut.io.warpTable.pending.poke("b0000".U)
+      dut.io.warpTableStatus.active.poke("b1101".U)
+      dut.io.warpTableStatus.pending.poke("b0000".U)
       dut.io.headInstrType.poke("b1111".U)
       dut.io.memStall.poke(true.B)
 

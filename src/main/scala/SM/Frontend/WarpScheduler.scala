@@ -13,7 +13,7 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
       val ready = Output(Bool())
     }
 
-    val warpTable = new Bundle {
+    val warpTableStatus = new Bundle {
       val valid = Input(UInt(warpCount.W))
       val active = Input(UInt(warpCount.W))
       val pending = Input(UInt(warpCount.W))
@@ -37,6 +37,7 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
   })
 
   val sIdle :: sDone :: s0 :: s1 :: s2 :: s3 :: Nil = Enum(6)
+  val stateReg = RegInit(sIdle)
 
   val availableWarps = WireDefault(0.U(warpCount.W))
   val warp = WireDefault(0.U(warpAddrLen.W))
@@ -49,14 +50,12 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
   val setBlockIdx = WireDefault(false.B)
   val blockIdx = WireDefault(0.U(blockAddrLen.W))
 
-  val stateReg = RegInit(sIdle)
-
   // Calculate which warps can be scheduled
   when(io.memStall) {
     // If the memory pipeline is stalled, remove warps that have memory instructions in the head of their instruction queue
-    availableWarps := ((io.warpTable.active & (~io.warpTable.pending).asUInt) & io.warpTable.valid) & (~io.headInstrType).asUInt
+    availableWarps := ((io.warpTableStatus.active & (~io.warpTableStatus.pending).asUInt) & io.warpTableStatus.valid) & (~io.headInstrType).asUInt
   }.otherwise(
-    availableWarps := (io.warpTable.active & (~io.warpTable.pending).asUInt) & io.warpTable.valid
+    availableWarps := (io.warpTableStatus.active & (~io.warpTableStatus.pending).asUInt) & io.warpTableStatus.valid
   )
 
   // If there are no available warps, stall the pipeline
@@ -64,7 +63,7 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
     stall := true.B
   }
 
-  allDone := !(io.warpTable.valid & io.warpTable.active).orR
+  allDone := !(io.warpTableStatus.valid & io.warpTableStatus.active).orR
 
   // Scheduler FSM
   switch(stateReg) {

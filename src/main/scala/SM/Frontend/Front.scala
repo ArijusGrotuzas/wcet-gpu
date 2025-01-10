@@ -7,29 +7,33 @@ class Front(blockCount: Int, warpCount: Int) extends Module {
   val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
-    val instrMem = new Bundle {
-      val addr = Output(UInt(32.W))
-      val data = Input(UInt(32.W))
-    }
-
-    val start = new Bundle {
-      val ready = Output(Bool())
-      val valid = Input(Bool())
-      val data = Input(UInt((blockAddrLen + warpCount).W))
-    }
-
-    val wb = new Bundle {
+    val wbIfCtrl = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
       val setInactive = Input(Bool())
-      val setNotPending = Input(Bool())
     }
 
-    val memStall = Input(Bool())
+    val memIfCtrl = new Bundle {
+      val warp = Input(UInt(warpAddrLen.W))
+      val setNotPending = Input(Bool())
+    }
 
     val nzpUpdate = new Bundle {
       val nzp = Input(UInt(3.W))
       val en = Input(Bool())
       val warp = Input(UInt(warpAddrLen.W))
+    }
+
+    val memStall = Input(Bool())
+
+    val instrMem = new Bundle {
+      val data = Input(UInt(32.W))
+      val addr = Output(UInt(32.W))
+    }
+
+    val start = new Bundle {
+      val valid = Input(Bool())
+      val data = Input(UInt((blockAddrLen + warpCount).W))
+      val ready = Output(Bool())
     }
 
     val front = new Bundle {
@@ -57,18 +61,18 @@ class Front(blockCount: Int, warpCount: Int) extends Module {
 
   // Control signals to and from warp scheduler
   warpScheduler.io.start <> io.start
-  warpScheduler.io.warpTable <> instrF.io.warpTable
   warpScheduler.io.memStall := io.memStall
-  warpScheduler.io.headInstrType := instrIss.io.headInstrType
   warpScheduler.io.scheduler <> instrF.io.scheduler
+  warpScheduler.io.warpTableStatus <> instrF.io.warpTableStatus
+  warpScheduler.io.headInstrType := instrIss.io.headInstrType
 
   // Control signals to and from the instruction fetch stage
-  instrF.io.instrMem <> io.instrMem
   instrF.io.setPending := instrIss.io.setPending
-  instrF.io.wb.setInactive := io.wb.setInactive
-  instrF.io.wb <> io.wb
-  instrF.io.issIf <> instrIss.io.issIf
-  instrF.io.issIf <> instrIss.io.issIf
+  instrF.io.instrMem <> io.instrMem
+  instrF.io.wbIfCtrl <> io.wbIfCtrl
+  instrF.io.memIfCtrl <> io.memIfCtrl
+  instrF.io.issIfCtrl <> instrIss.io.issIfCtrl
+  instrF.io.issIfCtrl <> instrIss.io.issIfCtrl
 
   // Pipeline register between IF and ID
   instrD.io.instrF.valid := RegNext(instrF.io.instrF.valid, false.B)
