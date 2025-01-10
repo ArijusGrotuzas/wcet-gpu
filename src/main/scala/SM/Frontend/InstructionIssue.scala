@@ -138,8 +138,6 @@ class InstructionIssue(warpCount: Int) extends Module {
 
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
   when(opcodeCurr === Opcodes.LD.asUInt(5.W) || opcodeCurr === Opcodes.ST.asUInt(5.W) || opcodeCurr === Opcodes.RET.asUInt(5.W)) {
-    // TODO: If a memory might not be stalled but two load or store instructions can be scheduled one after another
-    // TODO: due to the operand fetch pipeline register
     setPending := true.B
   }
 

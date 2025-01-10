@@ -22,7 +22,6 @@ class SmTop(
     val ready = Output(Bool())
   })
 
-  // TODO: Add data memory controller
   val debounce = Module(new Debounce(blockAddrLen + warpCount, freq))
   val instrMem = Module(new SyncMem(32, instrMemDepth, instructionFile))
   val dataMem = Module(new SyncMem(32, dataMemDepth, dataFile))
