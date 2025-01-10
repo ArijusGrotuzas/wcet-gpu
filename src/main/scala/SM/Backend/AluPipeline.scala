@@ -34,8 +34,8 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     }
 
     val nzpUpdateCtrl = new Bundle {
-      val nzp = Output(UInt(3.W))
       val en = Output(Bool())
+      val nzp = Output(UInt((3 * warpSize).W))
       val warp = Output(UInt(warpAddrLen.W))
     }
   })
@@ -76,7 +76,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
 
   val we = WireDefault(false.B)
   val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
-  val nzp = WireDefault(0.U(3.W))
+  val nzp = VecInit(Seq.fill(warpSize)(0.U(3.W)))
   val done = WireDefault(false.B)
   val nzpUpdate = WireDefault(false.B)
 
@@ -106,11 +106,9 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     alu.io.b := b
 
     alu.io.op := aluCtrl.io.aluOp
-    out(i) := alu.io.out
 
-    if (i == 0) {
-      nzp := alu.io.neg ## alu.io.zero ## !alu.io.neg
-    }
+    out(i) := alu.io.out
+    nzp(i) := alu.io.neg ## alu.io.zero ## !alu.io.neg
   }
 
   // Alu pipeline outputs to write-back
@@ -121,7 +119,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
   io.alu.out := out.asUInt
 
   // Alu pipeline control signals
-  io.nzpUpdateCtrl.nzp := nzp
+  io.nzpUpdateCtrl.nzp := nzp.asUInt
   io.nzpUpdateCtrl.en := nzpUpdate
   io.nzpUpdateCtrl.warp := io.of.warp
 }

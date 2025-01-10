@@ -46,10 +46,10 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val setNotPending = Output(Bool())
     }
 
-    val nzpUpdate = new Bundle {
-      val nzp = Output(UInt(3.W))
+    val nzpUpdateCtrl = new Bundle {
       val en = Output(Bool())
-      val warp = Output(UInt(log2Up(warpCount).W))
+      val nzp = Output(UInt((3 * warpSize).W))
+      val warp = Output(UInt(warpAddrLen.W))
     }
 
     val memStall = Output(Bool())
@@ -117,7 +117,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   io.lsu <> mem.io.lsu
   io.wbIfCtrl <> wb.io.wbIfCtrl
   io.memIfCtrl <> mem.io.memIfCtrl
-  io.nzpUpdate <> alu.io.nzpUpdateCtrl
+  io.nzpUpdateCtrl <> alu.io.nzpUpdateCtrl
   io.memStall := (mem.io.memStall || of.io.ofContainsMemInstr)
   io.wbOutTest := wb.io.outTest
 }

@@ -23,7 +23,7 @@ class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
   })
 
   // TODO: If attempting to read 0 register, return 0
-  def bankRouter(arbiterSel: UInt, readAddr1: UInt, readAddr2: UInt, readAddr3: UInt, we: UInt, writeData: UInt, writeAddr: UInt): UInt = {
+  def genBankWRouter(arbiterSel: UInt, readAddr1: UInt, readAddr2: UInt, readAddr3: UInt, we: UInt, writeData: UInt, writeAddr: UInt): UInt = {
     val bank = Module(new DualPortedRam(bankDepth, bankWidth, addrLen - 2))
     val bankReadAddr = WireDefault(0.U((addrLen - 2).W))
 
@@ -104,10 +104,10 @@ class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
   // Prevent writing to the x0 register
   val writeToZeroReg = io.writeAddr(4, 2) === 0.U
 
-  val bank1ReadData = bankRouter(requestArbiter.io.out_sel(0), io.readAddr1, io.readAddr2, io.readAddr3, Mux(writeToZeroReg, false.B, b1We), io.writeData, io.writeAddr)
-  val bank2ReadData = bankRouter(requestArbiter.io.out_sel(1), io.readAddr1, io.readAddr2, io.readAddr3, b2We, io.writeData, io.writeAddr)
-  val bank3ReadData = bankRouter(requestArbiter.io.out_sel(2), io.readAddr1, io.readAddr2, io.readAddr3, b3We, io.writeData, io.writeAddr)
-  val bank4ReadData = bankRouter(requestArbiter.io.out_sel(3), io.readAddr1, io.readAddr2, io.readAddr3, b4We, io.writeData, io.writeAddr)
+  val bank1ReadData = genBankWRouter(requestArbiter.io.out_sel(0), io.readAddr1, io.readAddr2, io.readAddr3, Mux(writeToZeroReg, false.B, b1We), io.writeData, io.writeAddr)
+  val bank2ReadData = genBankWRouter(requestArbiter.io.out_sel(1), io.readAddr1, io.readAddr2, io.readAddr3, b2We, io.writeData, io.writeAddr)
+  val bank3ReadData = genBankWRouter(requestArbiter.io.out_sel(2), io.readAddr1, io.readAddr2, io.readAddr3, b3We, io.writeData, io.writeAddr)
+  val bank4ReadData = genBankWRouter(requestArbiter.io.out_sel(3), io.readAddr1, io.readAddr2, io.readAddr3, b4We, io.writeData, io.writeAddr)
 
   // Update the output data multiplexer select signal registers
   outOpSel1 := io.readAddr1(1, 0)

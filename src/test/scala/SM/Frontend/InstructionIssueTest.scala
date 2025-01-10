@@ -24,7 +24,7 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   "InstructionIssue" should "push and pop correct instructions from queues" in {
-    test(new InstructionIssue(4)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new InstructionIssue(4, 8)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       val inputBitFields = List(
         (1, 5, 7, 8, 9, 32),
         (2, 8, 12, 13, 14, 255),
@@ -43,9 +43,9 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.id.imm.poke(0.S)
       dut.io.scheduler.warp.poke(0.U)
       dut.io.scheduler.stall.poke(false.B)
-      dut.io.nzpUpdate.en.poke(false.B)
-      dut.io.nzpUpdate.warp.poke(0.U)
-      dut.io.nzpUpdate.nzp.poke(0.U)
+      dut.io.nzpUpdateCtrl.en.poke(false.B)
+      dut.io.nzpUpdateCtrl.warp.poke(0.U)
+      dut.io.nzpUpdateCtrl.nzp.poke(0.U)
 
       dut.clock.step(4)
 

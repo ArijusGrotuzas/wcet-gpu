@@ -47,7 +47,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       instrMemDepth = 1024,
       dataMemDepth = 1024,
       freq = 100,
-      instructionFile = "hex/kernel1.hex"
+      instructionFile = "hex/kernel2.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
@@ -82,7 +82,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       instrMemDepth = 1024,
       dataMemDepth = 1024,
       freq = 100,
-      instructionFile = "hex/kernel1.hex"
+      instructionFile = "hex/kernel3.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)

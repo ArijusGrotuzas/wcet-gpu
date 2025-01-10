@@ -29,7 +29,7 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
     val wbOutTest = Output(UInt((warpSize * 32).W))
   })
 
-  val frontend = Module(new Front(blockCount, warpCount))
+  val frontend = Module(new Front(blockCount, warpCount, warpSize))
   val backend = Module(new Back(blockCount, warpCount, warpSize))
   val lsuArbiter = Module(new LsuArbiter(warpSize, 32))
 
@@ -45,7 +45,7 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   // Control signal connections between frontend and backend
   frontend.io.wbIfCtrl <> backend.io.wbIfCtrl
   frontend.io.memIfCtrl <> backend.io.memIfCtrl
-  frontend.io.nzpUpdate <> backend.io.nzpUpdate
+  frontend.io.nzpUpdateCtrl <> backend.io.nzpUpdateCtrl
   frontend.io.aluInitCtrl <> backend.io.aluInitCtrl
   frontend.io.memStall := backend.io.memStall
 

@@ -65,7 +65,7 @@ object Assembler {
       case "or" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.OR
       case "mul" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.MUL
       case "mad" => (getVecRegNum(tokens(4)) << 20) + (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.MAD
-      case "brnzp" => ((getBrnOff(tokens(2), pc) & 0xFFFFFE0) << 13) + (getNZP(tokens(1)) << 10) + ((getBrnOff(tokens(2), pc) & 0x1F) << 5) + Opcodes.BRNZP
+      case "brnzp" => ((getBrnOff(tokens(2), pc) & 0xFFFFFE0) << 8) + (getNZP(tokens(1)) << 10) + ((getBrnOff(tokens(2), pc) & 0x1F) << 5) + Opcodes.BNZP
       case "cmp" => (getVecRegNum(tokens(2)) << 15) + (getVecRegNum(tokens(1)) << 10) + Opcodes.CMP
       case "//" =>  // Comment
       case "" =>  // Empty line
@@ -117,7 +117,7 @@ object Assembler {
 }
 
 object Main extends App {
-  private val program = Assembler.assembleProgram("asm/kernel4.asm")
+  private val program = Assembler.assembleProgram("asm/kernel2.asm")
 
   for (i <- program) {
     val instr = f"${i & 0xFFFFFFFF}%08X"

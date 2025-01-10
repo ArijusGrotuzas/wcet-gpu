@@ -4,7 +4,7 @@ import Constants.Opcodes
 import chisel3._
 import chisel3.util._
 
-class InstructionIssue(warpCount: Int) extends Module {
+class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val id = new Bundle {
@@ -26,6 +26,12 @@ class InstructionIssue(warpCount: Int) extends Module {
       val stall = Input(Bool())
     }
 
+    val nzpUpdateCtrl = new Bundle {
+      val en = Input(Bool())
+      val nzp = Input(UInt((3 * warpSize).W))
+      val warp = Input(UInt(warpAddrLen.W))
+    }
+
     val iss = new Bundle {
       //      val pc = Output(UInt(32.W))
       val pending = Output(Bool())
@@ -44,17 +50,31 @@ class InstructionIssue(warpCount: Int) extends Module {
       val jumpAddr = Output(UInt(32.W))
     }
 
-    val nzpUpdate = new Bundle {
-      val en = Input(Bool())
-      val warp = Input(UInt(warpAddrLen.W))
-      val nzp = Input(UInt(3.W))
-    }
-
     val setPending = Output(Bool())
     val headInstrType = Output(UInt(warpCount.W))
   })
 
-  private def generateQueues[T <: Data](gen: T, dataIn: T, inQueueSel: UInt, outQueueSel: UInt, warp: UInt): T = {
+  private def genNzpRegFile(idx: UInt, addrR: UInt, addrW: UInt, dataW: UInt = 0.U, we: Bool = false.B): UInt = {
+    // Size = (3 * warpSize) * warpCount
+    val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount)(0.U((3 * warpSize).W))))
+    val out = WireDefault(0.U((3 * warpSize).W))
+
+    // Update the correct nzp register
+    when(we) {
+      nzpRegFile(addrW) := dataW
+    }
+
+    // Forward the nzp value if the warp is the same
+    when(addrW === addrR && we) {
+      out := dataW
+    }.otherwise {
+      out := nzpRegFile(addrR)
+    }
+
+    out
+  }
+
+  private def genDataQueues[T <: Data](gen: T, dataIn: T, inQueueSel: UInt, outQueueSel: UInt, warp: UInt): T = {
     val queues = Module(new DataQueues(gen, warpCount, 3))
     val dataOut = WireDefault(0.U.asTypeOf(gen))
 
@@ -69,14 +89,14 @@ class InstructionIssue(warpCount: Int) extends Module {
     dataOut
   }
 
-  val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount)(0.U(3.W))))
+  val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount)(0.U((3 * warpSize).W))))
   val inQueueSel = WireDefault(0.U(warpCount.W))
   val outQueueSel = WireDefault(0.U(warpCount.W))
   val headInstrType = VecInit(Seq.fill(warpCount)(0.U(1.W)))
   val setPending = WireDefault(false.B)
   val jump = WireDefault(false.B)
   val jumpAddr = WireDefault(0.U(32.W))
-  val nzpRegOut = WireDefault(0.U(3.W))
+  val bnzpRegOut = WireDefault(0.U(3.W))
 
   // TODO: Think if 32 bits is not too much for a PC, this ends up using a lot of LUTs for a queue
   val pcCurr = WireDefault(0.U(32.W))
@@ -88,8 +108,6 @@ class InstructionIssue(warpCount: Int) extends Module {
   val rs3Curr = WireDefault(0.U(5.W))
   val srsCurr = WireDefault(0.U(3.W))
   val immCurr = WireDefault(0.S(32.W))
-  // Since there is a need for getting all warp head instruction opcodes, a queue is generated outside the function
-  val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
 
   // Logic for selecting queues and thus popping entries from them
   when(io.id.valid) {
@@ -100,21 +118,19 @@ class InstructionIssue(warpCount: Int) extends Module {
     outQueueSel := 1.U << io.scheduler.warp
   }
 
-  // Update the correct nzp register
-  when(io.nzpUpdate.en) {
-    nzpRegFile(io.nzpUpdate.warp) := io.nzpUpdate.nzp
-  }
-
-  // TODO: Think if all of these queues are necessary
+  // TODO: Think if all of these queues are necessary maybe one queue for an instruction of each warp is enough
   // Generate buffers for decoded instructions
-  pcCurr := generateQueues(UInt(32.W), io.id.pc, inQueueSel, outQueueSel, io.scheduler.warp)
-  destCurr := generateQueues(UInt(5.W), io.id.dest, inQueueSel, outQueueSel, io.scheduler.warp)
-  nzpCurr := generateQueues(UInt(3.W), io.id.nzp, inQueueSel, outQueueSel, io.scheduler.warp)
-  rs1Curr := generateQueues(UInt(5.W), io.id.rs1, inQueueSel, outQueueSel, io.scheduler.warp)
-  rs2Curr := generateQueues(UInt(5.W), io.id.rs2, inQueueSel, outQueueSel, io.scheduler.warp)
-  rs3Curr := generateQueues(UInt(5.W), io.id.rs3, inQueueSel, outQueueSel, io.scheduler.warp)
-  srsCurr := generateQueues(UInt(3.W), io.id.srs, inQueueSel, outQueueSel, io.scheduler.warp)
-  immCurr := generateQueues(SInt(32.W), io.id.imm, inQueueSel, outQueueSel, io.scheduler.warp)
+  pcCurr := genDataQueues(UInt(32.W), io.id.pc, inQueueSel, outQueueSel, io.scheduler.warp)
+  destCurr := genDataQueues(UInt(5.W), io.id.dest, inQueueSel, outQueueSel, io.scheduler.warp)
+  nzpCurr := genDataQueues(UInt(3.W), io.id.nzp, inQueueSel, outQueueSel, io.scheduler.warp)
+  rs1Curr := genDataQueues(UInt(5.W), io.id.rs1, inQueueSel, outQueueSel, io.scheduler.warp)
+  rs2Curr := genDataQueues(UInt(5.W), io.id.rs2, inQueueSel, outQueueSel, io.scheduler.warp)
+  rs3Curr := genDataQueues(UInt(5.W), io.id.rs3, inQueueSel, outQueueSel, io.scheduler.warp)
+  srsCurr := genDataQueues(UInt(3.W), io.id.srs, inQueueSel, outQueueSel, io.scheduler.warp)
+  immCurr := genDataQueues(SInt(32.W), io.id.imm, inQueueSel, outQueueSel, io.scheduler.warp)
+
+  // Since there is a need for getting all warp head instruction opcodes, a queue is generated outside the function
+  val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
 
   opcodeQueues.io.dataIn := io.id.opcode
   opcodeQueues.io.inQueueSel := inQueueSel
@@ -124,16 +140,21 @@ class InstructionIssue(warpCount: Int) extends Module {
     opcodeCurr := opcodeQueues.io.data(io.scheduler.warp)
   }
 
-  // Forward data if all head instruction types are mem-instr
+  // Forward instruction type if all head instruction types are mem-instr
   for (i <- 0 until warpCount) {
     headInstrType(i) := opcodeQueues.io.data(i) === Opcodes.LD.asUInt(5.W) || opcodeQueues.io.data(i) === Opcodes.ST.asUInt(5.W)
   }
 
+  // Update the correct nzp register
+  when(io.nzpUpdateCtrl.en) {
+    nzpRegFile(io.nzpUpdateCtrl.warp) := io.nzpUpdateCtrl.nzp
+  }
+
   // Forward the nzp value if the warp is the same
-  when(io.nzpUpdate.warp === io.scheduler.warp && io.nzpUpdate.en) {
-    nzpRegOut := io.nzpUpdate.nzp
+  when(io.nzpUpdateCtrl.warp === io.scheduler.warp && io.nzpUpdateCtrl.en) {
+    bnzpRegOut := io.nzpUpdateCtrl.nzp(2, 0)
   }.otherwise {
-    nzpRegOut := nzpRegFile(io.scheduler.warp)
+    bnzpRegOut := nzpRegFile(io.scheduler.warp)(2, 0)
   }
 
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
@@ -142,12 +163,19 @@ class InstructionIssue(warpCount: Int) extends Module {
   }
 
   // If cmp instruction, then perform the jump based on nzp register contents
-  when(opcodeCurr === Opcodes.BRNZP.asUInt(5.W)) {
-    jump := (nzpCurr & nzpRegOut).orR
+  when(opcodeCurr === Opcodes.BNZP.asUInt(5.W)) {
+    when(nzpCurr =/= 0.U) {
+      // When the nzp value is not zero, then it is a conditional jump
+      jump := (nzpCurr & bnzpRegOut).orR
+    }.otherwise {
+      // When the nzp value is zero, then it is an unconditional jump
+      jump := true.B
+    }
   }
 
   jumpAddr := ((0.U ## pcCurr).asSInt + immCurr).asUInt
 
+  // To operand fetch stage
   io.iss.pending := setPending
   io.iss.warp := io.scheduler.warp
   io.iss.opcode := opcodeCurr
@@ -158,9 +186,9 @@ class InstructionIssue(warpCount: Int) extends Module {
   io.iss.srs := srsCurr
   io.iss.imm := immCurr
 
+  // Control signals
   io.setPending := setPending
   io.headInstrType := headInstrType.asUInt
-
   io.issIfCtrl.jump := jump
   io.issIfCtrl.jumpAddr := jumpAddr
 }

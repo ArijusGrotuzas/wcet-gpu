@@ -3,7 +3,7 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
-class Front(blockCount: Int, warpCount: Int) extends Module {
+class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -17,9 +17,9 @@ class Front(blockCount: Int, warpCount: Int) extends Module {
       val setNotPending = Input(Bool())
     }
 
-    val nzpUpdate = new Bundle {
-      val nzp = Input(UInt(3.W))
+    val nzpUpdateCtrl = new Bundle {
       val en = Input(Bool())
+      val nzp = Input(UInt((3 * warpSize).W))
       val warp = Input(UInt(warpAddrLen.W))
     }
 
@@ -56,7 +56,7 @@ class Front(blockCount: Int, warpCount: Int) extends Module {
 
   val instrF = Module(new InstructionFetch(warpCount))
   val instrD = Module(new InstructionDecode(warpCount))
-  val instrIss = Module(new InstructionIssue(warpCount))
+  val instrIss = Module(new InstructionIssue(warpCount, warpSize))
   val warpScheduler = Module(new WarpScheduler(blockCount, warpCount))
 
   // Control signals to and from warp scheduler
@@ -94,7 +94,7 @@ class Front(blockCount: Int, warpCount: Int) extends Module {
   instrIss.io.id.srs := RegNext(instrD.io.id.srs, 0.U)
   instrIss.io.scheduler.warp := warpScheduler.io.scheduler.warp
   instrIss.io.scheduler.stall := warpScheduler.io.scheduler.stall
-  instrIss.io.nzpUpdate <> io.nzpUpdate
+  instrIss.io.nzpUpdateCtrl <> io.nzpUpdateCtrl
 
   // Outputs of the instruction issues stage
   io.front.warp := instrIss.io.iss.warp
