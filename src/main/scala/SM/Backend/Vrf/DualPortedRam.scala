@@ -1,4 +1,4 @@
-package SM.Frontend
+package SM.Backend.Vrf
 
 import chisel3._
 
@@ -13,15 +13,17 @@ class DualPortedRam(depth: Int, width: Int, addrLen: Int) extends Module {
     val readData = Output(UInt(width.W))
   })
 
-  val readData = WireDefault(0.U(width.W))
   val mem = SyncReadMem(depth, UInt(width.W))
+  val readData = WireDefault(0.U(width.W))
+  val writeDataReg = RegNext(io.writeData)
+  val forwardSelReg = RegNext(io.writeAddr === io.readAddr && io.we)
+
+  readData := mem.read(io.readAddr)
 
   // Create one write port and one read port
   when(io.we) {
     mem.write(io.writeAddr, io.writeData)
   }
 
-  readData := mem.read(io.readAddr, true.B)
-
-  io.readData := readData
+  io.readData := Mux(forwardSelReg, writeDataReg, readData)
 }

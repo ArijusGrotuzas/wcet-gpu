@@ -1,6 +1,6 @@
 package SM.Backend.Old
 
-import SM.Frontend.DualPortedRam
+import SM.Backend.Vrf.DualPortedRam
 import chisel3._
 import chisel3.util._
 

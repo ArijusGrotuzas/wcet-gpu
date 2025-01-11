@@ -2,7 +2,6 @@ package SM.Backend.Vrf
 
 import chisel3._
 import chisel3.util._
-import SM.Frontend.DualPortedRam
 
 class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
   val bankDepth = warpCount * 8
@@ -21,6 +20,7 @@ class VectorRegisterFile(warpCount: Int, bankWidth: Int) extends Module {
     val readData2 = Output(UInt(bankWidth.W))
     val readData3 = Output(UInt(bankWidth.W))
   })
+
 
   // TODO: If attempting to read 0 register, return 0
   def genBankWRouter(arbiterSel: UInt, readAddr1: UInt, readAddr2: UInt, readAddr3: UInt, we: UInt, writeData: UInt, writeAddr: UInt): UInt = {

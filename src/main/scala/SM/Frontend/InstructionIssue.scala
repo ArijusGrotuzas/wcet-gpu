@@ -1,6 +1,7 @@
 package SM.Frontend
 
 import Constants.Opcodes
+import SM.Backend.PredicateRegister
 import chisel3._
 import chisel3.util._
 
@@ -94,9 +95,9 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   val outQueueSel = WireDefault(0.U(warpCount.W))
   val headInstrType = VecInit(Seq.fill(warpCount)(0.U(1.W)))
   val setPending = WireDefault(false.B)
-  val jump = WireDefault(false.B)
-  val jumpAddr = WireDefault(0.U(32.W))
   val bnzpRegOut = WireDefault(0.U(3.W))
+  val jumpAddr = WireDefault(0.U(32.W))
+  val jump = WireDefault(false.B)
 
   // TODO: Think if 32 bits is not too much for a PC, this ends up using a lot of LUTs for a queue
   val pcCurr = WireDefault(0.U(32.W))
@@ -145,6 +146,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
     headInstrType(i) := opcodeQueues.io.data(i) === Opcodes.LD.asUInt(5.W) || opcodeQueues.io.data(i) === Opcodes.ST.asUInt(5.W)
   }
 
+  // TODO: Move the nzp register file to instruction fetch same as branch jump logic
   // Update the correct nzp register
   when(io.nzpUpdateCtrl.en) {
     nzpRegFile(io.nzpUpdateCtrl.warp) := io.nzpUpdateCtrl.nzp

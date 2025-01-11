@@ -17,10 +17,10 @@ object Opcodes {
   val OR = 0x0F // 01111
   val MUL = 0x13 // 10011
   // Large Arithmetic
-  val MAD = 0x17 // 10011
+  val MAD = 0x17 // 10111
   // Control
-  val BNZP = 0x02 // 00010 TODO: Rename this to indicate that it is a branch instruction for whole warp
-  // val SPLIT TODO: Implement this
-  // val JOIN TODO: Implement this
-  val CMP = 0x06 // 00010 TODO: Extend this to store the result for all threads in a warp
+  val BNZP = 0x02 // 00010
+  val CMP = 0x06 // 00110
+  val SPLIT = 0x0A // 01010 TODO: Implement this
+  val JOIN = 0x0E // 01110 TODO: Implement this
 }
