@@ -54,7 +54,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
     }
   })
 
-  val instrF = Module(new InstructionFetch(warpCount))
+  val instrF = Module(new InstructionFetch(warpCount, warpSize))
   val instrD = Module(new InstructionDecode(warpCount))
   val instrIss = Module(new InstructionIssue(warpCount, warpSize))
   val warpScheduler = Module(new WarpScheduler(blockCount, warpCount))
@@ -71,8 +71,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   instrF.io.instrMem <> io.instrMem
   instrF.io.wbIfCtrl <> io.wbIfCtrl
   instrF.io.memIfCtrl <> io.memIfCtrl
-  instrF.io.issIfCtrl <> instrIss.io.issIfCtrl
-  instrF.io.issIfCtrl <> instrIss.io.issIfCtrl
+  instrF.io.nzpUpdateCtrl <> io.nzpUpdateCtrl
 
   // Pipeline register between IF and ID
   instrD.io.instrF.valid := RegNext(instrF.io.instrF.valid, false.B)
@@ -85,7 +84,6 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   instrIss.io.id.pc := RegNext(instrD.io.id.pc, 0.U)
   instrIss.io.id.warp := RegNext(instrD.io.id.warp, 0.U)
   instrIss.io.id.opcode := RegNext(instrD.io.id.opcode, 0.U)
-  instrIss.io.id.nzp := RegNext(instrD.io.id.nzp, 0.U)
   instrIss.io.id.dest := RegNext(instrD.io.id.dest, 0.U)
   instrIss.io.id.rs1 := RegNext(instrD.io.id.rs1, 0.U)
   instrIss.io.id.rs2 := RegNext(instrD.io.id.rs2, 0.U)
@@ -94,7 +92,6 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   instrIss.io.id.srs := RegNext(instrD.io.id.srs, 0.U)
   instrIss.io.scheduler.warp := warpScheduler.io.scheduler.warp
   instrIss.io.scheduler.stall := warpScheduler.io.scheduler.stall
-  instrIss.io.nzpUpdateCtrl <> io.nzpUpdateCtrl
 
   // Outputs of the instruction issues stage
   io.front.warp := instrIss.io.iss.warp

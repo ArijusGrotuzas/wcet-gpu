@@ -7,9 +7,8 @@ LOOP:
     add x5, x5, x3 // b += a
     cmp x4, x2 // sign(i - j)
     nop
+    nop
+    nop
+    nop
     brnzp %n LOOP
-nop
-nop
-nop
-nop
 ret

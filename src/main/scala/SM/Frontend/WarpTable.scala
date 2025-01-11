@@ -1,8 +1,10 @@
 package SM.Frontend
 
 import chisel3._
+import chisel3.util._
 
-class WarpTable(warpCount: Int, addrLen: Int) extends Module {
+class WarpTable(warpCount: Int) extends Module {
+  val addrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val reset = Input(Bool())
     
@@ -13,28 +15,28 @@ class WarpTable(warpCount: Int, addrLen: Int) extends Module {
     
     val pcCtrl = new Bundle {
       val set = Input(Bool())
-      val idx = Input(UInt(warpCount.W))
+      val idx = Input(UInt(addrLen.W))
       val data = Input(UInt(32.W))
     }
     
     val activeCtrl = new Bundle {
       val set = Input(Bool())
-      val idx = Input(UInt(warpCount.W))
+      val idx = Input(UInt(addrLen.W))
     }
     
     val setPendingCtrl = new Bundle {
       val set = Input(Bool())
-      val idx = Input(UInt(warpCount.W))
+      val idx = Input(UInt(addrLen.W))
     }
 
     val setNotPendingCtrl = new Bundle {
       val set = Input(Bool())
-      val idx = Input(UInt(warpCount.W))
+      val idx = Input(UInt(addrLen.W))
     }
     
     val doneCtrl = new Bundle {
       val set = Input(Bool())
-      val idx = Input(UInt(warpCount.W))
+      val idx = Input(UInt(addrLen.W))
     }
     
     val done = Output(UInt(warpCount.W))

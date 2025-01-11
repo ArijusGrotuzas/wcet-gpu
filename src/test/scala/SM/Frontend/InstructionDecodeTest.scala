@@ -31,7 +31,6 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
   def testInstruction(dut: InstructionDecode, instruction: String, pc: Int, warp: Int = 0, valid: Boolean = true): Unit = {
     val opcode = "b" + instruction.slice(27, 32)
     val dest = "b" + instruction.slice(22, 27)
-    val nzp = "b" + instruction.slice(19, 22)
     val rs1 = "b" + instruction.slice(17, 22)
     val rs2 = "b" + instruction.slice(12, 17)
     val rs3 = "b" + instruction.slice(7, 12)
@@ -50,7 +49,6 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
     // Expect correct fields to be decoded
     dut.io.id.opcode.expect(opcode.U)
     dut.io.id.dest.expect(dest.U)
-    dut.io.id.nzp.expect(nzp.U)
     dut.io.id.rs1.expect(rs1.U)
     dut.io.id.rs2.expect(rs2.U)
     dut.io.id.rs3.expect(rs3.U)
@@ -58,7 +56,6 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
     // Expect a different type of immediate to be decoded based on opcode
     opcode match {
       case "b01101" => dut.io.id.imm.expect(immLui.S)
-      case "b00010" => dut.io.id.imm.expect(immBrnzp.S)
       case _ => dut.io.id.imm.expect(immArith.S)
     }
 

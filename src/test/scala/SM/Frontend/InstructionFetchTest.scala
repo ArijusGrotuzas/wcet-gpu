@@ -6,7 +6,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 
 class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
   "InstructionFetch" should "fetch the instructions in correct order" in {
-    test(new InstructionFetch(4)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
+    test(new InstructionFetch(4, 4)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>
       // Default assignments
       dut.io.scheduler.warp.poke(0.U)
       dut.io.scheduler.stall.poke(true.B)
@@ -14,8 +14,6 @@ class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.scheduler.setValid.poke(false.B)
       dut.io.scheduler.setValidWarps.poke(0.U)
       dut.io.setPending.poke(false.B)
-      dut.io.issIfCtrl.jump.poke(false.B)
-      dut.io.issIfCtrl.jumpAddr.poke(0.U)
       dut.io.wbIfCtrl.warp.poke(0.U)
       dut.io.wbIfCtrl.setInactive.poke(false.B)
       dut.io.memIfCtrl.warp.poke(0.U)
