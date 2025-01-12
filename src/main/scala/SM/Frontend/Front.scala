@@ -37,7 +37,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
     }
 
     val front = new Bundle {
-      // val pc = Output(UInt(32.W))
+      val threadMask = Output(UInt(warpSize.W))
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
@@ -55,7 +55,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   })
 
   val instrF = Module(new InstructionFetch(warpCount, warpSize))
-  val instrD = Module(new InstructionDecode(warpCount))
+  val instrD = Module(new InstructionDecode(warpCount, warpSize))
   val instrIss = Module(new InstructionIssue(warpCount, warpSize))
   val warpScheduler = Module(new WarpScheduler(blockCount, warpCount))
 
@@ -74,14 +74,14 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   instrF.io.nzpUpdateCtrl <> io.nzpUpdateCtrl
 
   // Pipeline register between IF and ID
+  instrD.io.instrF.threadMask := RegNext(instrF.io.instrF.threadMask, 0.U)
   instrD.io.instrF.valid := RegNext(instrF.io.instrF.valid, false.B)
-  instrD.io.instrF.pc := RegNext(instrF.io.instrF.pc, 0.U)
   instrD.io.instrF.instr := RegNext(instrF.io.instrF.instr, 0.U)
   instrD.io.instrF.warp := RegNext(instrF.io.instrF.warp, 0.U)
 
   // Pipeline register between ID and ISS
   instrIss.io.id.valid := RegNext(instrD.io.id.valid, false.B)
-  instrIss.io.id.pc := RegNext(instrD.io.id.pc, 0.U)
+  instrIss.io.id.threadMask := RegNext(instrD.io.id.threadMask, 0.U)
   instrIss.io.id.warp := RegNext(instrD.io.id.warp, 0.U)
   instrIss.io.id.opcode := RegNext(instrD.io.id.opcode, 0.U)
   instrIss.io.id.dest := RegNext(instrD.io.id.dest, 0.U)
@@ -94,6 +94,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   instrIss.io.scheduler.stall := warpScheduler.io.scheduler.stall
 
   // Outputs of the instruction issues stage
+  io.front.threadMask := instrIss.io.iss.threadMask
   io.front.warp := instrIss.io.iss.warp
   io.front.opcode := instrIss.io.iss.opcode
   io.front.dest := instrIss.io.iss.dest

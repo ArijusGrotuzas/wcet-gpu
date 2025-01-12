@@ -8,6 +8,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val front = new Bundle {
+      val threadMask = Input(UInt(warpSize.W))
       val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
@@ -61,6 +62,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val mem = Module(new MemPipeline(warpCount, warpSize))
   val wb = Module(new WriteBack(warpCount, warpSize))
 
+  val threadMaskMemOfReg = RegInit(0.U(warpSize.W))
   val validMemOfReg = RegInit(false.B)
   val warpMemOfReg = RegInit(0.U(warpAddrLen.W))
   val opcodeMemOfReg = RegInit(0.U(5.W))
@@ -68,7 +70,11 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val rs1MemOfReg = RegInit(0.U((32 * warpSize).W))
   val rs2MemOfReg = RegInit(0.U((32 * warpSize).W))
 
+  // Inputs to the operand fetch stage
+  of.io.iss <> io.front
+
   // Gate the pipeline register for memory unit
+  threadMaskMemOfReg := Mux(mem.io.memStall, threadMaskMemOfReg, of.io.memOf.threadMask)
   validMemOfReg := Mux(mem.io.memStall, validMemOfReg, of.io.memOf.valid)
   warpMemOfReg := Mux(mem.io.memStall, warpMemOfReg, of.io.memOf.warp)
   opcodeMemOfReg := Mux(mem.io.memStall, opcodeMemOfReg, of.io.memOf.opcode)
@@ -79,6 +85,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   of.io.iss <> io.front
 
   // Pipeline registers between the operand fetch and alu stages
+  alu.io.of.threadMask := RegNext(of.io.aluOf.threadMask, 0.U)
   alu.io.of.warp := RegNext(of.io.aluOf.warp, 0.U)
   alu.io.of.opcode := RegNext(of.io.aluOf.opcode, 0.U)
   alu.io.of.dest := RegNext(of.io.aluOf.dest, 0.U)
@@ -90,6 +97,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   alu.io.aluInitCtrl <> io.aluInitCtrl
 
   // Pipeline registers between the operand fetch and memory stages
+  mem.io.of.threadMask := threadMaskMemOfReg
   mem.io.of.valid := validMemOfReg
   mem.io.of.warp := warpMemOfReg
   mem.io.of.opcode := opcodeMemOfReg

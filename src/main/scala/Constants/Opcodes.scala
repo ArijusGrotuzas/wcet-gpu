@@ -23,4 +23,5 @@ object Opcodes {
   val CMP = 0x06 // 00110
   val SPLIT = 0x0A // 01010 TODO: Implement this
   val JOIN = 0x0E // 01110 TODO: Implement this
+  val PBS = 0x12 // 10010 TODO: Implement this
 }

@@ -2,6 +2,7 @@ package SM.Backend.Vrf
 
 import chisel3._
 
+// TODO: Add write mask if possible
 class DualPortedRam(depth: Int, width: Int, addrLen: Int) extends Module {
   val io = IO(new Bundle {
     // Inputs

@@ -1,13 +1,16 @@
 package SM.Backend
 
-import SM.Backend.Mem.{Lsu, MemControl}
+import SM.Backend.Mem._
 import chisel3._
 import chisel3.util._
 
+// TODO: Make use of threadMask and predicate value
+// TODO: Add inputs from a predicate register file
 class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val of = new Bundle {
+      val threadMask = Input(UInt(warpSize.W))
       val valid = Input(Bool())
       val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
@@ -48,7 +51,6 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   memCtrl.io.valid := io.of.valid
   memCtrl.io.opcode := io.of.opcode
 
-  val allLsuDone = WireDefault(false.B)
   val lsuAcks = VecInit(Seq.fill(warpSize)(false.B))
   val lsuOut = VecInit(Seq.fill(warpSize)(0.U(32.W)))
   val lsuMemAddr = VecInit(Seq.fill(warpSize)(0.U(32.W)))
@@ -81,7 +83,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   }
 
   // Check if all the LSUs are done
-  allLsuDone := lsuAcks.asUInt.andR
+  val allLsuDone = lsuAcks.asUInt.andR
   memCtrl.io.allLsuDone := allLsuDone
 
   io.mem.warp := io.of.warp

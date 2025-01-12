@@ -3,6 +3,7 @@ package Util
 import scala.io._
 import Constants.Opcodes
 
+// TODO: Add processing of predicate value
 object Assembler {
   // collect destination addresses in first pass
   private val symbols = collection.mutable.Map[String, Int]()
@@ -67,6 +68,8 @@ object Assembler {
       case "mad" => (getVecRegNum(tokens(4)) << 20) + (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.MAD
       case "brnzp" => ((getBrnOff(tokens(2), pc) & 0xFFFFFE0) << 8) + (getNZP(tokens(1)) << 10) + ((getBrnOff(tokens(2), pc) & 0x1F) << 5) + Opcodes.BNZP
       case "cmp" => (getVecRegNum(tokens(2)) << 15) + (getVecRegNum(tokens(1)) << 10) + Opcodes.CMP
+      case "split" => println("Split instruction not yet implemented")
+      case "join" => println("Join instruction not yet implemented")
       case "//" =>  // Comment
       case "" =>  // Empty line
       case t: String => throw new Exception("Unexpected instruction: " + t)
@@ -117,7 +120,7 @@ object Assembler {
 }
 
 object Main extends App {
-  private val program = Assembler.assembleProgram("asm/kernel2.asm")
+  private val program = Assembler.assembleProgram("asm/kernel5.asm")
 
   for (i <- program) {
     val instr = f"${i & 0xFFFFFFFF}%08X"

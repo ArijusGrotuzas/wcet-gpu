@@ -1,9 +1,11 @@
 package SM.Frontend
 
 import Constants.Opcodes
+import SM.Frontend.IF._
 import chisel3._
 import chisel3.util._
 
+// TODO: Add outputs from predicate register file
 class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -23,11 +25,6 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
 
     val setPending = Input(Bool())
 
-//    val issIfCtrl = new Bundle {
-//      val jump = Input(Bool())
-//      val jumpAddr = Input(UInt(32.W))
-//    }
-
     val wbIfCtrl = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
       val setInactive = Input(Bool())
@@ -43,6 +40,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
       val warp = Output(UInt(warpAddrLen.W))
       val valid = Output(Bool())
       val instr = Output(UInt(32.W))
+      val threadMask = Output(UInt(warpSize.W))
     }
 
     val warpTableStatus = new Bundle {
@@ -57,7 +55,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
     }
   })
 
-  val brnCtrl = Module(new BranchCtrlUnit())
+  val brnCtrl = Module(new BranchCtrlUnit(warpSize))
   val warpTable = Module(new WarpTable(warpCount))
   val predRegFile = Module(new PredicateRegister(warpCount, warpSize))
 
@@ -73,6 +71,9 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val predRegFileData = predRegFile.io.dataR
   val shouldFetchNxtInstr = warpTable.io.done(io.scheduler.warp) === 0.U && !io.scheduler.reset && !io.scheduler.stall && !io.scheduler.setValid && (opcode =/= "b11111".U)
 
+  // Active thread mask
+  val activeThreadMask = RegNext(1.U) //RegNext(Mux(brnCtrl.io.jump, predRegFileData, activeThreadMask), 0.U)
+
   // Update the registers
   pcReg := instrPc
   warpReg := io.scheduler.warp
@@ -81,7 +82,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
 
   brnCtrl.io.instr := instr
   brnCtrl.io.pcCurr := pcReg
-  brnCtrl.io.nzpPred := predRegFileData(2, 0)
+  brnCtrl.io.nzpPred := predRegFileData
 
   predRegFile.io.we := io.nzpUpdateCtrl.en
   predRegFile.io.addrR := io.scheduler.warp
@@ -108,6 +109,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   io.instrF.warp := warpReg
   io.instrF.instr := Mux(fetchReg, instr, 0.U)
   io.instrF.pc := pcReg
+  io.instrF.threadMask := activeThreadMask
 
   // Get the instruction from the instruction memory
   io.instrMem.addr := instrPc

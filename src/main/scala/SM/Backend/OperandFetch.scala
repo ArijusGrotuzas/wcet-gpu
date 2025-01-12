@@ -17,7 +17,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val iss = new Bundle {
-      //      val pc = Input(UInt(32.W))
+      val threadMask = Input(UInt(warpSize.W))
       val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
@@ -29,6 +29,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val aluOf = new Bundle {
+      val threadMask = Output(UInt(warpSize.W))
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
@@ -40,6 +41,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val memOf = new Bundle {
+      val threadMask = Output(UInt(warpSize.W))
       val valid = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
@@ -51,7 +53,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
     val ofContainsMemInstr = Output(Bool())
   })
 
-  val vrf = Module(new VectorRegisterFile(warpCount, 32 * warpSize))
+  val vrf = Module(new VectorRegisterFile(warpCount, warpSize, 32 * warpSize))
   val memOrAluSel = WireDefault(true.B)
 
   // Registers to hold values while the operands are fetched from VRF
@@ -82,6 +84,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   vrf.io.readAddr3 := Cat(io.iss.warp, io.iss.rs3)
 
   // To alu pipeline
+  io.aluOf.threadMask := Mux(memOrAluSel, io.iss.threadMask, 0.U)
   io.aluOf.warp := Mux(memOrAluSel, warp, 0.U)
   io.aluOf.opcode := Mux(memOrAluSel, opcode, 0.U)
   io.aluOf.dest := Mux(memOrAluSel, dest, 0.U)
@@ -92,6 +95,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   io.aluOf.imm := Mux(memOrAluSel, imm, 0.S)
 
   // To mem pipeline
+  io.memOf.threadMask := Mux(!memOrAluSel, io.iss.threadMask, 0.U)
   io.memOf.valid := !memOrAluSel
   io.memOf.warp := Mux(!memOrAluSel, warp, 0.U)
   io.memOf.opcode := Mux(!memOrAluSel, opcode, 0.U)

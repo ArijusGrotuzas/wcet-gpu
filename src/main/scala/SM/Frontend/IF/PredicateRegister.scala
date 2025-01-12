@@ -1,4 +1,4 @@
-package SM.Frontend
+package SM.Frontend.IF
 
 import chisel3._
 import chisel3.util._

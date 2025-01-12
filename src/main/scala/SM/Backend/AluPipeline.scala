@@ -4,12 +4,14 @@ import SM.Backend.Alu._
 import chisel3._
 import chisel3.util._
 
+// TODO: Make use of threadMask and predicate value
+// TODO: Add inputs from a predicate register file
 class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
-
   val io = IO(new Bundle {
     val of = new Bundle {
+      val threadMask = Input(UInt(warpSize.W))
       val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
@@ -65,7 +67,6 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
 
   // Block index register
   val blockIdxReg = RegInit(0.U(blockAddrLen.W))
-
   when(io.aluInitCtrl.setBlockIdx) {
     blockIdxReg := io.aluInitCtrl.blockIdx
   }
@@ -74,15 +75,8 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
   val aluCtrl = Module(new AluControl)
   aluCtrl.io.instrOpcode := io.of.opcode
 
-  val we = WireDefault(false.B)
   val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
   val nzp = VecInit(Seq.fill(warpSize)(0.U(3.W)))
-  val done = WireDefault(false.B)
-  val nzpUpdate = WireDefault(false.B)
-
-  we := aluCtrl.io.we
-  done := aluCtrl.io.done
-  nzpUpdate := aluCtrl.io.nzpUpdate
 
   // Generate different ALU lanes
   for (i <- 0 until warpSize) {
@@ -98,11 +92,11 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     val mulProd = rs1 * rs2
 
     // Select the first operand
-    val a = Mux3To1(aluCtrl.io.aSel, rs1, mulProd, srs) // Mux(aluCtrl.io.rs1Sel, srs, rs1)
+    val a = Mux3To1(aluCtrl.io.aSel, rs1, mulProd, srs)
     alu.io.a := a
 
     // Select the second operand
-    val b = Mux3To1(aluCtrl.io.bSel, rs2, io.of.imm, rs3) // Mux(aluCtrl.io.rs2Sel, io.of.imm, rs2)
+    val b = Mux3To1(aluCtrl.io.bSel, rs2, io.of.imm, rs3)
     alu.io.b := b
 
     alu.io.op := aluCtrl.io.aluOp
@@ -114,12 +108,12 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
   // Alu pipeline outputs to write-back
   io.alu.warp := io.of.warp
   io.alu.dest := io.of.dest
-  io.alu.done := done
-  io.alu.we := we
+  io.alu.done := aluCtrl.io.done
+  io.alu.we := aluCtrl.io.we
   io.alu.out := out.asUInt
 
   // Alu pipeline control signals
   io.nzpUpdateCtrl.nzp := nzp.asUInt
-  io.nzpUpdateCtrl.en := nzpUpdate
+  io.nzpUpdateCtrl.en := aluCtrl.io.nzpUpdate
   io.nzpUpdateCtrl.warp := io.of.warp
 }

@@ -9,7 +9,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   val io = IO(new Bundle {
     val id = new Bundle {
       val valid = Input(Bool())
-      val pc = Input(UInt(32.W))
+      val threadMask = Input(UInt(warpSize.W))
       val warp = Input(UInt(warpAddrLen.W))
       val opcode = Input(UInt(5.W))
       val dest = Input(UInt(5.W))
@@ -26,8 +26,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val iss = new Bundle {
-      //      val pc = Output(UInt(32.W))
-      val pending = Output(Bool())
+      val threadMask = Output(UInt(warpSize.W))
       val warp = Output(UInt(warpAddrLen.W))
       val opcode = Output(UInt(5.W))
       val dest = Output(UInt(5.W))
@@ -41,26 +40,6 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
     val setPending = Output(Bool())
     val headInstrType = Output(UInt(warpCount.W))
   })
-
-  private def genNzpRegFile(idx: UInt, addrR: UInt, addrW: UInt, dataW: UInt = 0.U, we: Bool = false.B): UInt = {
-    // Size = (3 * warpSize) * warpCount
-    val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount)(0.U((3 * warpSize).W))))
-    val out = WireDefault(0.U((3 * warpSize).W))
-
-    // Update the correct nzp register
-    when(we) {
-      nzpRegFile(addrW) := dataW
-    }
-
-    // Forward the nzp value if the warp is the same
-    when(addrW === addrR && we) {
-      out := dataW
-    }.otherwise {
-      out := nzpRegFile(addrR)
-    }
-
-    out
-  }
 
   private def genDataQueues[T <: Data](gen: T, dataIn: T, inQueueSel: UInt, outQueueSel: UInt, warp: UInt): T = {
     val queues = Module(new DataQueues(gen, warpCount, 3))
@@ -77,16 +56,14 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
     dataOut
   }
 
-  val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount)(0.U((3 * warpSize).W))))
   val headInstrType = VecInit(Seq.fill(warpCount)(0.U(1.W)))
-
   val inQueueSel = Mux(io.id.valid, (1.U << io.id.warp).asUInt, 0.U)
   val outQueueSel = Mux(!io.scheduler.stall, (1.U << io.scheduler.warp).asUInt, 0.U)
 
   // TODO: Think if all of these queues are necessary maybe one queue for an instruction of each warp is enough
   // TODO: Think if 32 bits is not too much for a PC, this ends up using a lot of LUTs for a queue
   // Generate buffers for decoded instructions
-  val pcCurr = genDataQueues(UInt(32.W), io.id.pc, inQueueSel, outQueueSel, io.scheduler.warp)
+  val threadMaskCurr = genDataQueues(UInt(warpSize.W), io.id.threadMask, inQueueSel, outQueueSel, io.scheduler.warp)
   val destCurr = genDataQueues(UInt(5.W), io.id.dest, inQueueSel, outQueueSel, io.scheduler.warp)
   val rs1Curr = genDataQueues(UInt(5.W), io.id.rs1, inQueueSel, outQueueSel, io.scheduler.warp)
   val rs2Curr = genDataQueues(UInt(5.W), io.id.rs2, inQueueSel, outQueueSel, io.scheduler.warp)
@@ -106,16 +83,13 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
     opcodeCurr := opcodeQueues.io.data(io.scheduler.warp)
   }
 
-  // Forward instruction type if all head instruction types are mem-instr
+  // Send information to warp scheduler if all head instruction types are mem-instr
   for (i <- 0 until warpCount) {
     headInstrType(i) := opcodeQueues.io.data(i) === Opcodes.LD.asUInt(5.W) || opcodeQueues.io.data(i) === Opcodes.ST.asUInt(5.W)
   }
 
-  // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
-  val setPending = opcodeCurr === Opcodes.LD.asUInt(5.W) || opcodeCurr === Opcodes.ST.asUInt(5.W) || opcodeCurr === Opcodes.RET.asUInt(5.W)
-
   // To operand fetch stage
-  io.iss.pending := setPending
+  io.iss.threadMask := threadMaskCurr
   io.iss.warp := io.scheduler.warp
   io.iss.opcode := opcodeCurr
   io.iss.dest := destCurr
@@ -125,7 +99,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   io.iss.srs := srsCurr
   io.iss.imm := immCurr
 
-  // Control signals
-  io.setPending := setPending
+  // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
+  io.setPending := (opcodeCurr === Opcodes.LD.asUInt(5.W) || opcodeCurr === Opcodes.ST.asUInt(5.W) || opcodeCurr === Opcodes.RET.asUInt(5.W))
   io.headInstrType := headInstrType.asUInt
 }

@@ -22,13 +22,13 @@ private object testKernels {
 class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
   def testKernel(dut: InstructionDecode, kernel: Array[String]): Unit = {
     for (i <- kernel.indices) {
-      testInstruction(dut, kernel(i), i)
+      testInstruction(dut, kernel(i))
 
       dut.clock.step(1)
     }
   }
 
-  def testInstruction(dut: InstructionDecode, instruction: String, pc: Int, warp: Int = 0, valid: Boolean = true): Unit = {
+  def testInstruction(dut: InstructionDecode, instruction: String, warp: Int = 0, valid: Boolean = true): Unit = {
     val opcode = "b" + instruction.slice(27, 32)
     val dest = "b" + instruction.slice(22, 27)
     val rs1 = "b" + instruction.slice(17, 22)
@@ -37,13 +37,11 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
 
     // NOTE: parseInt cannot correctly parse signed binary strings
     val immArith = Integer.parseInt(instruction.slice(0, 17), 2)
-    val immBrnzp = Integer.parseInt(instruction.slice(0, 19) + instruction.slice(22, 27), 2)
     val immLui = Integer.parseUnsignedInt(instruction.slice(8, 22) + "00000000000000000", 2)
 
     // Push instruction
     dut.io.instrF.valid.poke(valid.B)
     dut.io.instrF.warp.poke(warp.U)
-    dut.io.instrF.pc.poke(pc.U)
     dut.io.instrF.instr.poke(("b" + instruction).U)
 
     // Expect correct fields to be decoded
@@ -61,16 +59,14 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
 
     // Expect correct control values
     dut.io.id.warp.expect(warp.U)
-    dut.io.id.pc.expect(pc.U)
     dut.io.id.valid.expect(valid.B)
   }
 
   "InstructionDecode" should "work" in {
-    test(new InstructionDecode(2)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+    test(new InstructionDecode(2, 4)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.instrF.valid.poke(false.B)
       dut.io.instrF.warp.poke(0.U)
-      dut.io.instrF.pc.poke(0.U)
       dut.io.instrF.instr.poke(0.U)
 
       dut.clock.step(1)

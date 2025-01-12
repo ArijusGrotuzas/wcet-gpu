@@ -33,7 +33,6 @@ class InstructionIssueTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // Default assignments
       dut.io.id.valid.poke(false.B)
-      dut.io.id.pc.poke(0.U)
       dut.io.id.warp.poke(0.U)
       dut.io.id.opcode.poke(0.U)
       dut.io.id.dest.poke(0.U)
