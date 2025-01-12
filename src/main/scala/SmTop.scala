@@ -2,6 +2,7 @@ import SM.Sm
 import chisel3._
 import chisel3.util._
 
+// TODO: Add a uart to read the values of the memory
 class SmTop(
              blockCount: Int,
              warpCount: Int,
@@ -55,5 +56,5 @@ class SmTop(
 
 object SmTop extends App {
   println("Generating the SM hardware")
-  (new chisel3.stage.ChiselStage).emitVerilog(new SmTop(4, 4, 8, 1024, 1024, 50000000, "bootkernel.hex"), Array("--target-dir", "generated"))
+  (new chisel3.stage.ChiselStage).emitVerilog(new SmTop(4, 4, 8, 1024, 1024, 50000000, "bootkernel.hex", "bootkernel.hex"), Array("--target-dir", "generated"))
 }
