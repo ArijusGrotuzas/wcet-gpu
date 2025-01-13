@@ -3,7 +3,7 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
-class WarpTable(warpCount: Int) extends Module {
+class WarpTable(warpCount: Int, warpSize: Int) extends Module {
   val addrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val reset = Input(Bool())
@@ -44,6 +44,7 @@ class WarpTable(warpCount: Int) extends Module {
     val pending = Output(UInt(warpCount.W))
     val valid = Output(UInt(warpCount.W))
     val pc = Output(Vec(warpCount, UInt(32.W)))
+    val threadMasks = Output(Vec(warpCount, UInt(warpSize.W)))
   })
 
   val doneReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
@@ -51,6 +52,7 @@ class WarpTable(warpCount: Int) extends Module {
   val pendingReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val validReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val pcReg = RegInit(VecInit(Seq.fill(warpCount)(0.U(32.W))))
+  val threadMask = RegInit(VecInit(Seq.fill(warpCount)(0.U(warpSize.W))))
 
   when(io.validCtrl.set) {
     for (i <- 0 until warpCount) {
@@ -96,4 +98,5 @@ class WarpTable(warpCount: Int) extends Module {
   io.pending := pendingReg.asUInt
   io.valid := validReg.asUInt
   io.pc := pcReg
+  io.threadMasks := threadMask
 }

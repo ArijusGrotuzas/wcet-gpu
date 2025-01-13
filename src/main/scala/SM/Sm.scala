@@ -32,6 +32,14 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val frontend = Module(new Front(blockCount, warpCount, warpSize))
   val backend = Module(new Back(blockCount, warpCount, warpSize))
   val lsuArbiter = Module(new LsuArbiter(warpSize, 32))
+  val predicateRegister = Module(new PredicateRegister(warpCount, warpSize))
+
+  // Access to the predicate register file
+  predicateRegister.io.we := backend.io.nzpUpdateCtrl.en
+  predicateRegister.io.dataW := backend.io.nzpUpdateCtrl.nzp
+  predicateRegister.io.addrW := backend.io.nzpUpdateCtrl.warp
+  predicateRegister.io.addrR := frontend.io.ifPredReg.addrR
+  frontend.io.ifPredReg.dataR := predicateRegister.io.dataR
 
   // Control for starting the SM
   frontend.io.start <> io.start
@@ -45,9 +53,9 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   // Control signal connections between frontend and backend
   frontend.io.wbIfCtrl <> backend.io.wbIfCtrl
   frontend.io.memIfCtrl <> backend.io.memIfCtrl
-  frontend.io.nzpUpdateCtrl <> backend.io.nzpUpdateCtrl
   frontend.io.aluInitCtrl <> backend.io.aluInitCtrl
   frontend.io.memStall := backend.io.memStall
+
 
   // Connection to data memory
   lsuArbiter.io.lsu <> backend.io.lsu

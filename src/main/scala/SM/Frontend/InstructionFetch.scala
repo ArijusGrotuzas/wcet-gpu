@@ -5,7 +5,6 @@ import SM.Frontend.IF._
 import chisel3._
 import chisel3.util._
 
-// TODO: Add outputs from predicate register file
 class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -15,12 +14,6 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
       val reset = Input(Bool())
       val setValid = Input(Bool())
       val setValidWarps = Input(UInt(warpCount.W))
-    }
-
-    val nzpUpdateCtrl = new Bundle {
-      val en = Input(Bool())
-      val nzp = Input(UInt((3 * warpSize).W))
-      val warp = Input(UInt(warpAddrLen.W))
     }
 
     val setPending = Input(Bool())
@@ -53,11 +46,15 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
       val addr = Output(UInt(32.W))
       val data = Input(UInt(32.W))
     }
+
+    val ifPredReg = new Bundle{
+      val dataR = Input(UInt((3 * warpSize).W))
+      val addrR = Output(UInt(warpAddrLen.W))
+    }
   })
 
   val brnCtrl = Module(new BranchCtrlUnit(warpSize))
-  val warpTable = Module(new WarpTable(warpCount))
-  val predRegFile = Module(new PredicateRegister(warpCount, warpSize))
+  val warpTable = Module(new WarpTable(warpCount, warpSize))
 
   // Registers to hold values while the instruction is being fetched from the instruction memory
   val pcReg = RegInit(0.U(32.W))
@@ -68,11 +65,8 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val instr = io.instrMem.data
   val opcode = instr(4, 0)
   val instrPc = Mux(brnCtrl.io.jump, brnCtrl.io.jumpAddr, warpTable.io.pc(io.scheduler.warp))
-  val predRegFileData = predRegFile.io.dataR
   val shouldFetchNxtInstr = warpTable.io.done(io.scheduler.warp) === 0.U && !io.scheduler.reset && !io.scheduler.stall && !io.scheduler.setValid && (opcode =/= "b11111".U)
-
-  // Active thread mask
-  val activeThreadMask = RegNext(1.U) //RegNext(Mux(brnCtrl.io.jump, predRegFileData, activeThreadMask), 0.U)
+  val activeThreadMask = warpTable.io.threadMasks(warpReg)
 
   // Update the registers
   pcReg := instrPc
@@ -82,12 +76,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
 
   brnCtrl.io.instr := instr
   brnCtrl.io.pcCurr := pcReg
-  brnCtrl.io.nzpPred := predRegFileData
-
-  predRegFile.io.we := io.nzpUpdateCtrl.en
-  predRegFile.io.addrR := io.scheduler.warp
-  predRegFile.io.addrW := io.nzpUpdateCtrl.warp
-  predRegFile.io.dataW := io.nzpUpdateCtrl.nzp
+  brnCtrl.io.nzpPred := io.ifPredReg.dataR
 
   warpTable.io.reset := io.scheduler.reset
   warpTable.io.validCtrl.set := io.scheduler.setValid
@@ -113,6 +102,9 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
 
   // Get the instruction from the instruction memory
   io.instrMem.addr := instrPc
+
+  // Read address for the predicate register file
+  io.ifPredReg.addrR := io.scheduler.warp
 
   // Warp table outputs to the scheduler
   io.warpTableStatus.valid := warpTable.io.valid

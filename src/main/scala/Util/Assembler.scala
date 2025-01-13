@@ -1,11 +1,11 @@
 package Util
 
-import scala.io._
 import Constants.Opcodes
+
+import scala.io._
 
 // TODO: Add processing of predicate value
 object Assembler {
-  // collect destination addresses in first pass
   private val symbols = collection.mutable.Map[String, Int]()
 
   def assembleProgram(prog: String): Array[Int] = {
@@ -52,7 +52,7 @@ object Assembler {
     val Pattern = "(.*:)".r
 
     val instr = tokens(0) match {
-      case Pattern(l) => if(getSymbols) symbols += (l.substring(0, l.length - 1) -> pc)
+      case Pattern(l) => if (getSymbols) symbols += (l.substring(0, l.length - 1) -> pc)
       case "nop" => Opcodes.NOP
       case "ret" => Opcodes.RET
       case "ld" => (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LD
@@ -70,8 +70,8 @@ object Assembler {
       case "cmp" => (getVecRegNum(tokens(2)) << 15) + (getVecRegNum(tokens(1)) << 10) + Opcodes.CMP
       case "split" => println("Split instruction not yet implemented")
       case "join" => println("Join instruction not yet implemented")
-      case "//" =>  // Comment
-      case "" =>  // Empty line
+      case "//" => // Comment
+      case "" => // Empty line
       case t: String => throw new Exception("Unexpected instruction: " + t)
       case _ => throw new Exception("Unhandled case")
     }
@@ -104,9 +104,12 @@ object Assembler {
   private def getNZP(s: String): Int = {
     assert(s.startsWith("%"), "NZP values must start with a \'%\'")
     val encoding = s.substring(1) match {
-      case "n" => 4
-      case "z" => 2
-      case "p" => 1
+      case "nz" => 6 // Less than or equal
+      case "np" => 5 // Greater than or equal
+      case "n" => 4 // Less than
+      case "zp" => 3 // Not equal
+      case "z" => 2 // Equal
+      case "p" => 1 // Greater than
       case _ => throw new Exception("Invalid NZP value")
     }
 

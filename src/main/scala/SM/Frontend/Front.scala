@@ -17,12 +17,6 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val setNotPending = Input(Bool())
     }
 
-    val nzpUpdateCtrl = new Bundle {
-      val en = Input(Bool())
-      val nzp = Input(UInt((3 * warpSize).W))
-      val warp = Input(UInt(warpAddrLen.W))
-    }
-
     val memStall = Input(Bool())
 
     val instrMem = new Bundle {
@@ -34,6 +28,11 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val valid = Input(Bool())
       val data = Input(UInt((blockAddrLen + warpCount).W))
       val ready = Output(Bool())
+    }
+
+    val ifPredReg = new Bundle{
+      val dataR = Input(UInt((3 * warpSize).W))
+      val addrR = Output(UInt(warpAddrLen.W))
     }
 
     val front = new Bundle {
@@ -71,7 +70,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   instrF.io.instrMem <> io.instrMem
   instrF.io.wbIfCtrl <> io.wbIfCtrl
   instrF.io.memIfCtrl <> io.memIfCtrl
-  instrF.io.nzpUpdateCtrl <> io.nzpUpdateCtrl
+  io.ifPredReg <> instrF.io.ifPredReg
 
   // Pipeline register between IF and ID
   instrD.io.instrF.threadMask := RegNext(instrF.io.instrF.threadMask, 0.U)
