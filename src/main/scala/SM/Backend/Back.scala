@@ -17,6 +17,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Input(UInt(5.W))
       val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
+      val pred = Input(UInt(5.W))
     }
 
     val aluInitCtrl = new Bundle {

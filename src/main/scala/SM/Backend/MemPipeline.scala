@@ -4,7 +4,6 @@ import SM.Backend.Mem._
 import chisel3._
 import chisel3.util._
 
-// TODO: Make use of threadMask and predicate value
 class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -47,9 +46,10 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
     val memStall = Output(Bool())
   })
 
-  val memCtrl = Module(new MemControl())
+  val memCtrl = Module(new MemControl(warpSize))
   memCtrl.io.valid := io.of.valid
   memCtrl.io.opcode := io.of.opcode
+  memCtrl.io.threadMask := io.of.threadMask
 
   val lsuAcks = VecInit(Seq.fill(warpSize)(false.B))
   val lsuOut = VecInit(Seq.fill(warpSize)(0.U(32.W)))
@@ -75,7 +75,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
     lsu.io.mem.readData := lsuMemReadData
 
     lsuOut(i) := lsu.io.dataOut
-    lsuAcks(i) := lsu.io.acknowledge
+    lsuAcks(i) := lsu.io.acknowledge || !io.of.threadMask(i)
     lsuMemAddr(i) := lsu.io.mem.addr
     lsuMemWriteData(i) := lsu.io.mem.writeData
     lsuMemReadReq(i) := lsu.io.mem.readReq

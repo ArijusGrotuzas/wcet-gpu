@@ -45,6 +45,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Output(UInt(5.W))
       val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
+      val pred = Output(UInt(5.W))
     }
 
     val aluInitCtrl = new Bundle {
@@ -89,6 +90,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   instrIss.io.id.rs3 := RegNext(instrD.io.id.rs3, 0.U)
   instrIss.io.id.imm := RegNext(instrD.io.id.imm, 0.S)
   instrIss.io.id.srs := RegNext(instrD.io.id.srs, 0.U)
+  instrIss.io.id.pred := RegNext(instrD.io.id.pred, 0.U)
   instrIss.io.scheduler.warp := warpScheduler.io.scheduler.warp
   instrIss.io.scheduler.stall := warpScheduler.io.scheduler.stall
 
@@ -102,6 +104,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   io.front.rs3 := instrIss.io.iss.rs3
   io.front.srs := instrIss.io.iss.srs
   io.front.imm := instrIss.io.iss.imm
+  io.front.pred := instrIss.io.iss.pred
 
   io.aluInitCtrl <> warpScheduler.io.aluInitCtrl
 }

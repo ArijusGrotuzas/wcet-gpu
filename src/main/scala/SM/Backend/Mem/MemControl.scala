@@ -4,11 +4,12 @@ import Constants.Opcodes
 import chisel3._
 import chisel3.util._
 
-class MemControl extends Module {
+class MemControl(warpSize: Int) extends Module {
   val io = IO(new Bundle {
     val valid = Input(Bool())
     val opcode = Input(UInt(5.W))
     val allLsuDone = Input(Bool())
+    val threadMask = Input(UInt(warpSize.W))
 
     val memReadEn = Output(Bool())
     val memWriteEn = Output(Bool())
@@ -29,7 +30,7 @@ class MemControl extends Module {
   // FSM
   switch(stateReg) {
     is(sIdle) {
-      when(io.valid) {
+      when(io.valid && io.threadMask.orR) {
         memStall := true.B
         when(io.opcode === Opcodes.LD.asUInt(5.W)) {
           stateReg := sLoad

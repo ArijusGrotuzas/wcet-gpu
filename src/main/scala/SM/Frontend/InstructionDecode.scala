@@ -4,7 +4,6 @@ import Constants.Opcodes
 import chisel3._
 import chisel3.util._
 
-// TODO: Decode predicate from instruction
 class InstructionDecode(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -26,6 +25,7 @@ class InstructionDecode(warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Output(UInt(5.W))
       val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
+      val pred = Output(UInt(5.W))
     }
   })
 
@@ -46,5 +46,6 @@ class InstructionDecode(warpCount: Int, warpSize: Int) extends Module {
   io.id.rs2 := io.instrF.instr(19, 15)
   io.id.rs3 := io.instrF.instr(24, 20)
   io.id.srs := io.instrF.instr(12, 10)
+  io.id.pred := io.instrF.instr(29, 25)
   io.id.imm := imm
 }

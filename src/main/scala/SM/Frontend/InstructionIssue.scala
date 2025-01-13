@@ -18,6 +18,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Input(UInt(5.W))
       val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
+      val pred = Input(UInt(5.W))
     }
 
     val scheduler = new Bundle {
@@ -35,6 +36,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Output(UInt(5.W))
       val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
+      val pred = Output(UInt(5.W))
     }
 
     val setPending = Output(Bool())
@@ -70,6 +72,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   val rs3Curr = genDataQueues(UInt(5.W), io.id.rs3, inQueueSel, outQueueSel, io.scheduler.warp)
   val srsCurr = genDataQueues(UInt(3.W), io.id.srs, inQueueSel, outQueueSel, io.scheduler.warp)
   val immCurr = genDataQueues(SInt(32.W), io.id.imm, inQueueSel, outQueueSel, io.scheduler.warp)
+  val predCurr = genDataQueues(UInt(5.W), io.id.pred, inQueueSel, outQueueSel, io.scheduler.warp)
 
   // Since there is a need for getting all warp head instruction opcodes, a queue is generated outside the function
   val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
@@ -98,6 +101,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   io.iss.rs3 := rs3Curr
   io.iss.srs := srsCurr
   io.iss.imm := immCurr
+  io.iss.pred := predCurr
 
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
   io.setPending := (opcodeCurr === Opcodes.LD.asUInt(5.W) || opcodeCurr === Opcodes.ST.asUInt(5.W) || opcodeCurr === Opcodes.RET.asUInt(5.W))
