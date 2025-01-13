@@ -4,7 +4,6 @@ import Constants.Opcodes
 
 import scala.io._
 
-// TODO: Add processing of predicate value
 object Assembler {
   private val symbols = collection.mutable.Map[String, Int]()
 
@@ -59,8 +58,8 @@ object Assembler {
       case "ld" => (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LD
       case "st" => (getVecRegNum(tokens(2)) << 15) + (getVecRegNum(tokens(1)) << 10) + Opcodes.ST
       case "lds" => (getSpRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LDS
-      case "addi" => (getConst(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADDI // TODO: And the immediate value so it doesn't spill into predicate bit field
-      case "lui" => (getConst(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LUI // TODO: And the immediate value so it doesn't spill into predicate bit field
+      case "addi" => ((getConst(tokens(3)) << 15) & 0x07FFFFFF) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADDI
+      case "lui" => ((getConst(tokens(2)) << 10) & 0x3FFFFFFF) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LUI
       case "add" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADD
       case "sub" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.SUB
       case "and" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.AND
@@ -137,7 +136,7 @@ object Assembler {
 }
 
 object Main extends App {
-  private val program = Assembler.assembleProgram("asm/kernel2.asm")
+  private val program = Assembler.assembleProgram("asm/kernel4.asm")
 
   for (i <- program) {
     val instr = f"${i & 0xFFFFFFFF}%08X"
