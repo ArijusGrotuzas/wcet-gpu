@@ -28,6 +28,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     }
 
     val alu = new Bundle {
+      val threadMask = Output(UInt(warpSize.W))
       val warp = Output(UInt(warpAddrLen.W))
       val done = Output(Bool())
       val we = Output(Bool())
@@ -106,6 +107,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
   }
 
   // Alu pipeline outputs to write-back
+  io.alu.threadMask := io.of.threadMask
   io.alu.warp := io.of.warp
   io.alu.dest := io.of.dest
   io.alu.done := aluCtrl.io.done

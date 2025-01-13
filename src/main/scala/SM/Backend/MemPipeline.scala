@@ -5,7 +5,6 @@ import chisel3._
 import chisel3.util._
 
 // TODO: Make use of threadMask and predicate value
-// TODO: Add inputs from a predicate register file
 class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -20,6 +19,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val mem = new Bundle {
+      val threadMask = Output(UInt(warpSize.W))
       val we = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
       val dest = Output(UInt(5.W))
@@ -86,6 +86,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
   val allLsuDone = lsuAcks.asUInt.andR
   memCtrl.io.allLsuDone := allLsuDone
 
+  io.mem.threadMask := io.of.threadMask
   io.mem.warp := io.of.warp
   io.mem.we := (allLsuDone && memCtrl.io.memReadEn)
   io.mem.dest := io.of.dest

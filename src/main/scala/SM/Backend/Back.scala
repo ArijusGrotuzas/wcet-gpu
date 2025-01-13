@@ -106,6 +106,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   mem.io.of.rs2 := rs2MemOfReg
 
   // Pipeline registers between the alu and write-back stages
+  wb.io.alu.threadMask := RegNext(alu.io.alu.threadMask, 0.U)
   wb.io.alu.warp := RegNext(alu.io.alu.warp, 0.U)
   wb.io.alu.done := RegNext(alu.io.alu.done, false.B)
   wb.io.alu.we := RegNext(alu.io.alu.we, false.B)
@@ -113,6 +114,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   wb.io.alu.out := RegNext(alu.io.alu.out, 0.U)
 
   // Pipeline registers between the memory and write-back stages
+  wb.io.mem.threadMask := RegNext(mem.io.mem.threadMask, 0.U)
   wb.io.mem.warp := RegNext(mem.io.mem.warp, 0.U)
   wb.io.mem.we := RegNext(mem.io.mem.we, false.B)
   wb.io.mem.dest := RegNext(mem.io.mem.dest, 0.U)

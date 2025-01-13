@@ -52,7 +52,7 @@ class WarpTable(warpCount: Int, warpSize: Int) extends Module {
   val pendingReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val validReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val pcReg = RegInit(VecInit(Seq.fill(warpCount)(0.U(32.W))))
-  val threadMask = RegInit(VecInit(Seq.fill(warpCount)(0.U(warpSize.W))))
+  val threadMasks = RegInit(VecInit(Seq.fill(warpCount)(1.U(warpSize.W))))
 
   when(io.validCtrl.set) {
     for (i <- 0 until warpCount) {
@@ -98,5 +98,5 @@ class WarpTable(warpCount: Int, warpSize: Int) extends Module {
   io.pending := pendingReg.asUInt
   io.valid := validReg.asUInt
   io.pc := pcReg
-  io.threadMasks := threadMask
+  io.threadMasks := threadMasks
 }

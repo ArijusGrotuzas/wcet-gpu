@@ -16,8 +16,9 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
     val alu = new Bundle {
-      val warp = Input(UInt(warpAddrLen.W))
       val we = Input(Bool())
+      val threadMask = Input(UInt(warpSize.W))
+      val warp = Input(UInt(warpAddrLen.W))
       val done = Input(Bool())
       val dest = Input(UInt(5.W))
       val out = Input(UInt((warpSize * 32).W))
@@ -25,8 +26,9 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
 
     val mem = new Bundle {
       val we = Input(Bool())
-      val dest = Input(UInt(5.W))
+      val threadMask = Input(UInt(warpSize.W))
       val warp = Input(UInt(warpAddrLen.W))
+      val dest = Input(UInt(5.W))
       val out = Input(UInt((warpSize * 32).W))
     }
 
@@ -34,7 +36,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
       val we = Output(Bool())
       val warp = Output(UInt(warpAddrLen.W))
       val writeAddr = Output(UInt(5.W))
-      val writeMask = Output(UInt(4.W))
+      val writeMask = Output(UInt(warpSize.W))
       val writeData = Output(UInt((warpSize * 32).W))
     }
 
@@ -52,6 +54,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val setInactive = WireDefault(false.B)
   val setNotPending = WireDefault(false.B)
 
+  val aluThreadMaskDelay = RegNext(io.alu.threadMask)
   val aluWarpDelay = RegNext(io.alu.warp)
   val aluWeDelay = RegNext(io.alu.we)
   val aluDestDelay = RegNext(io.alu.dest)
@@ -59,6 +62,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val aluDoneDelay = RegNext(io.alu.done)
 
   val outWe = WireDefault(false.B)
+  val outWriteMask = WireDefault(0.U(warpSize.W))
   val outAddr = WireDefault(0.U(5.W))
   val outWarp = WireDefault(0.U(warpAddrLen.W))
   val outData = WireDefault(0.U((warpSize * 32).W))
@@ -80,18 +84,21 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
 
   when(io.mem.we) { // Send the memory result to the register file
     outWe := io.mem.we
+    outWriteMask := io.mem.threadMask
     outAddr := io.mem.dest
     outData := io.mem.out
     outWarp := io.mem.warp
   }.otherwise { // Send the ALU result to the register file
     when(aluDelay === sDelayAlu) { // Take the delayed values of the ALU
       outWe := aluWeDelay
+      outWriteMask := aluThreadMaskDelay
       outAddr := aluDestDelay
       outData := aluOutDelay
       outWarp := aluWarpDelay
       outInactive := aluDoneDelay
     }.otherwise {
       outWe := io.alu.we
+      outWriteMask := io.alu.threadMask
       outAddr := io.alu.dest
       outData := io.alu.out
       outWarp := io.alu.warp
@@ -103,7 +110,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   io.wbOf.warp := outWarp
   io.wbOf.writeAddr := outAddr
   io.wbOf.writeData := outData
-  io.wbOf.writeMask := 0.U
+  io.wbOf.writeMask := outWriteMask
 
   io.wbIfCtrl.warp := outWarp
   io.wbIfCtrl.setInactive := outInactive

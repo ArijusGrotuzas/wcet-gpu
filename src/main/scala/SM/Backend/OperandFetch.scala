@@ -12,7 +12,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
       val we = Input(Bool())
       val warp = Input(UInt(warpAddrLen.W))
       val writeAddr = Input(UInt(5.W))
-      val writeMask = Input(UInt(4.W))
+      val writeMask = Input(UInt(warpSize.W))
       val writeData = Input(UInt((32 * warpSize).W))
     }
 

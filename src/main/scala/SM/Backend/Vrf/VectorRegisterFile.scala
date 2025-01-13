@@ -3,6 +3,7 @@ package SM.Backend.Vrf
 import chisel3._
 import chisel3.util._
 
+// TODO: Make use of the write mask
 class VectorRegisterFile(warpCount: Int, warpSize: Int, bankWidth: Int) extends Module {
   val bankDepth = warpCount * 8
   val addrLen = log2Up(bankDepth) + 2
@@ -22,9 +23,15 @@ class VectorRegisterFile(warpCount: Int, warpSize: Int, bankWidth: Int) extends 
   })
 
   // TODO: If attempting to read 0 register, return 0
-  def genBankWRouter(arbiterSel: UInt, readAddr1: UInt, readAddr2: UInt, readAddr3: UInt, we: UInt, writeData: UInt, writeAddr: UInt): UInt = {
-    val bank = Module(new DualPortedRam(bankDepth, bankWidth, addrLen - 2))
+  def genBankWRouter(arbiterSel: UInt, readAddr1: UInt, readAddr2: UInt, readAddr3: UInt, we: UInt, writeData: UInt, writeAddr: UInt, writeMask: UInt): UInt = {
+    val writeDataVec = VecInit(Seq.fill(warpSize)(0.U(32.W)))
+    val bank = Module(new VrfBank(bankDepth, warpSize))
     val bankReadAddr = WireDefault(0.U((addrLen - 2).W))
+
+    // Split up the Uint to a Vec of UInts
+    for (i <- 0 until warpSize) {
+      writeDataVec(i) := writeData(((i + 1) * 32) - 1, i * 32)
+    }
 
     switch(arbiterSel) {
       is(0.U) {
@@ -45,9 +52,10 @@ class VectorRegisterFile(warpCount: Int, warpSize: Int, bankWidth: Int) extends 
 
     bank.io.we := we
     bank.io.writeAddr := writeAddr(addrLen - 1, 2)
-    bank.io.writeData := writeData
+    bank.io.writeData := writeDataVec
+    bank.io.writeMask := writeMask.asBools
 
-    bank.io.readData
+    bank.io.readData.asUInt
   }
 
   def readDataMux(outOpSel: UInt, bank1Data: UInt, bank2Data: UInt, bank3Data: UInt, bank4Data: UInt): UInt = {
@@ -103,10 +111,10 @@ class VectorRegisterFile(warpCount: Int, warpSize: Int, bankWidth: Int) extends 
   // Prevent writing to the x0 register
   val writeToZeroReg = io.writeAddr(4, 2) === 0.U
 
-  val bank1ReadData = genBankWRouter(requestArbiter.io.out_sel(0), io.readAddr1, io.readAddr2, io.readAddr3, Mux(writeToZeroReg, false.B, b1We), io.writeData, io.writeAddr)
-  val bank2ReadData = genBankWRouter(requestArbiter.io.out_sel(1), io.readAddr1, io.readAddr2, io.readAddr3, b2We, io.writeData, io.writeAddr)
-  val bank3ReadData = genBankWRouter(requestArbiter.io.out_sel(2), io.readAddr1, io.readAddr2, io.readAddr3, b3We, io.writeData, io.writeAddr)
-  val bank4ReadData = genBankWRouter(requestArbiter.io.out_sel(3), io.readAddr1, io.readAddr2, io.readAddr3, b4We, io.writeData, io.writeAddr)
+  val bank1ReadData = genBankWRouter(requestArbiter.io.out_sel(0), io.readAddr1, io.readAddr2, io.readAddr3, Mux(writeToZeroReg, false.B, b1We), io.writeData, io.writeAddr, io.writeMask)
+  val bank2ReadData = genBankWRouter(requestArbiter.io.out_sel(1), io.readAddr1, io.readAddr2, io.readAddr3, b2We, io.writeData, io.writeAddr, io.writeMask)
+  val bank3ReadData = genBankWRouter(requestArbiter.io.out_sel(2), io.readAddr1, io.readAddr2, io.readAddr3, b3We, io.writeData, io.writeAddr, io.writeMask)
+  val bank4ReadData = genBankWRouter(requestArbiter.io.out_sel(3), io.readAddr1, io.readAddr2, io.readAddr3, b4We, io.writeData, io.writeAddr, io.writeMask)
 
   // Update the output data multiplexer select signal registers
   outOpSel1 := io.readAddr1(1, 0)

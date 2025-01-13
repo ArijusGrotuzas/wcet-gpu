@@ -11,7 +11,7 @@ class VectorRegisterFileTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.we.poke(1.B)
       dut.io.writeAddr.poke("b0001010".U) // w0, r10
       dut.io.writeData.poke("hdeadbeef".U)
-      dut.io.writeMask.poke(0.U)
+      dut.io.writeMask.poke(1.U)
 
       dut.clock.step(1)
 
