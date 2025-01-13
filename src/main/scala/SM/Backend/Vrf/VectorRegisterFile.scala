@@ -3,7 +3,6 @@ package SM.Backend.Vrf
 import chisel3._
 import chisel3.util._
 
-// TODO: Make use of the write mask
 class VectorRegisterFile(warpCount: Int, warpSize: Int, bankWidth: Int) extends Module {
   val bankDepth = warpCount * 8
   val addrLen = log2Up(bankDepth) + 2

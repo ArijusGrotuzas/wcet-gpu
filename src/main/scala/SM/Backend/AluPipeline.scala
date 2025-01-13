@@ -4,8 +4,6 @@ import SM.Backend.Alu._
 import chisel3._
 import chisel3.util._
 
-// TODO: Make use of threadMask and predicate value
-// TODO: Add inputs from a predicate register file
 class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)

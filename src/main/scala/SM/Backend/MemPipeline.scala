@@ -65,7 +65,7 @@ class MemPipeline(warpCount: Int, warpSize: Int) extends Module {
     val rs2 = io.of.rs2(((i + 1) * 32) - 1, i * 32)
     val lsuMemReadData = io.lsu.readData(((i + 1) * 32) - 1, i * 32)
 
-    lsu.io.request := memCtrl.io.request
+    lsu.io.request := memCtrl.io.request && io.of.threadMask(i) // Disable the LSUs whose threads are not active
     lsu.io.dataIn.memReadEn := memCtrl.io.memReadEn
     lsu.io.dataIn.memWriteEn := memCtrl.io.memWriteEn
     lsu.io.dataIn.rs1 := rs1

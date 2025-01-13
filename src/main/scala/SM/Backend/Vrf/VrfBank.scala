@@ -3,7 +3,6 @@ package SM.Backend.Vrf
 import chisel3._
 import chisel3.util._
 
-// TODO: Add write mask if possible
 class VrfBank(depth: Int, warpSize: Int) extends Module {
   val width = 32 * warpSize
   val addrLen = log2Up(depth)
