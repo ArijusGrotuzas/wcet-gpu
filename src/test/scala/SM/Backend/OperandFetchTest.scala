@@ -19,6 +19,7 @@ class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.iss.rs2.poke(0.U)
       dut.io.iss.rs3.poke(0.U)
       dut.io.iss.imm.poke(0.S)
+      dut.io.ofPredReg.dataR.poke(1.U)
 
       dut.clock.step(1)
 
@@ -26,7 +27,7 @@ class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.wb.we.poke(true.B)
       dut.io.wb.warp.poke(1.U)
       dut.io.wb.writeAddr.poke(4.U)
-      dut.io.wb.writeMask.poke(0.U)
+      dut.io.wb.writeMask.poke(1.U)
       dut.io.wb.writeData.poke("hdeadbeef".U)
 
       dut.clock.step(1)
@@ -35,7 +36,7 @@ class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.wb.we.poke(true.B)
       dut.io.wb.warp.poke(1.U)
       dut.io.wb.writeAddr.poke(17.U)
-      dut.io.wb.writeMask.poke(0.U)
+      dut.io.wb.writeMask.poke(1.U)
       dut.io.wb.writeData.poke("hcafebabe".U)
 
       dut.clock.step(1)
@@ -44,7 +45,7 @@ class OperandFetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.wb.we.poke(true.B)
       dut.io.wb.warp.poke(1.U)
       dut.io.wb.writeAddr.poke(23.U)
-      dut.io.wb.writeMask.poke(0.U)
+      dut.io.wb.writeMask.poke(1.U)
       dut.io.wb.writeData.poke("hdeadbabe".U)
 
       dut.clock.step(1)

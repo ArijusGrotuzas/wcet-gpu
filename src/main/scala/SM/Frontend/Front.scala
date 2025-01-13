@@ -31,7 +31,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
     }
 
     val ifPredReg = new Bundle{
-      val dataR = Input(UInt((3 * warpSize).W))
+      val dataR = Input(UInt(warpSize.W))
       val addrR = Output(UInt(warpAddrLen.W))
     }
 
@@ -45,7 +45,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Output(UInt(5.W))
       val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
-      val pred = Output(UInt(5.W))
+      val pred = Output(UInt(2.W))
     }
 
     val aluInitCtrl = new Bundle {

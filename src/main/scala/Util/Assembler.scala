@@ -18,7 +18,8 @@ object Assembler {
     var pc = 0
 
     for (line <- source.getLines()) {
-      val instr = assembleInstruction(line, pc, getSymbols = true)
+      val tokens = line.trim.split("[,\\s]+")
+      val instr = assembleInstruction(tokens, pc, getSymbols = true)
 
       instr match {
         case _: Int =>
@@ -34,7 +35,8 @@ object Assembler {
     var pc = 0
 
     for (line <- source.getLines()) {
-      val instr = assembleInstruction(line, pc, getSymbols = false)
+      val tokens = line.trim.split("[,\\s]+")
+      val instr = assembleInstruction(tokens, pc, getSymbols = false)
 
       instr match {
         case a: Int =>
@@ -47,8 +49,7 @@ object Assembler {
     program.reverse.toArray
   }
 
-  private def assembleInstruction(line: String, pc: Int, getSymbols: Boolean): Any = {
-    val tokens = line.trim.split("[,\\s]+")
+  private def assembleInstruction(tokens: Array[String], pc: Int, getSymbols: Boolean): Any = {
     val Pattern = "(.*:)".r
 
     val instr = tokens(0) match {
@@ -58,18 +59,19 @@ object Assembler {
       case "ld" => (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LD
       case "st" => (getVecRegNum(tokens(2)) << 15) + (getVecRegNum(tokens(1)) << 10) + Opcodes.ST
       case "lds" => (getSpRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LDS
-      case "addi" => (getConst(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADDI
-      case "lui" => (getConst(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LUI
+      case "addi" => (getConst(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADDI // TODO: And the immediate value so it doesn't spill into predicate bit field
+      case "lui" => (getConst(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LUI // TODO: And the immediate value so it doesn't spill into predicate bit field
       case "add" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADD
       case "sub" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.SUB
       case "and" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.AND
       case "or" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.OR
       case "mul" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.MUL
       case "mad" => (getVecRegNum(tokens(4)) << 20) + (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.MAD
-      case "brnzp" => ((getBrnOff(tokens(2), pc) & 0xFFFFFE0) << 8) + (getNZP(tokens(1)) << 10) + ((getBrnOff(tokens(2), pc) & 0x1F) << 5) + Opcodes.BNZP
-      case "cmp" => (getVecRegNum(tokens(2)) << 15) + (getVecRegNum(tokens(1)) << 10) + Opcodes.CMP
+      case "br" => ((getBrnOff(tokens(1), pc) << 5) & 0x3FFFFFFF) + Opcodes.BR
+      case "cmp" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getNZP(tokens(1)) << 5) + Opcodes.CMP
       case "split" => println("Split instruction not yet implemented")
       case "join" => println("Join instruction not yet implemented")
+      case s if s.startsWith("@") => (getPredicateReg(tokens(0)) << 30) + convertToInt(assembleInstruction(tokens.drop(1), pc, getSymbols)) // Predicate
       case "//" => // Comment
       case "" => // Empty line
       case t: String => throw new Exception("Unexpected instruction: " + t)
@@ -77,6 +79,13 @@ object Assembler {
     }
 
     instr
+  }
+
+  def convertToInt(value: Any): Int = {
+    value match {
+      case i: Int => i
+      case _ => 0
+    }
   }
 
   private def getConst(s: String): Int = {
@@ -101,6 +110,11 @@ object Assembler {
     s.substring(1).toInt
   }
 
+  private def getPredicateReg(s: String): Int = {
+    assert(s.startsWith("@p"), "Predicate register number must start with an \'@p\'")
+    s.substring(2).toInt
+  }
+
   private def getNZP(s: String): Int = {
     assert(s.startsWith("%"), "NZP values must start with a \'%\'")
     val encoding = s.substring(1) match {
@@ -123,7 +137,7 @@ object Assembler {
 }
 
 object Main extends App {
-  private val program = Assembler.assembleProgram("asm/kernel5.asm")
+  private val program = Assembler.assembleProgram("asm/kernel2.asm")
 
   for (i <- program) {
     val instr = f"${i & 0xFFFFFFFF}%08X"

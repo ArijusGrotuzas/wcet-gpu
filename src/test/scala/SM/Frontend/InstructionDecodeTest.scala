@@ -13,7 +13,6 @@ private object testKernels {
     "00000000000000100000110011101011", // (AND, x7, x3, x4)
     "00000000000000001001000100001111", // (OR, x8, x4, x5)
     "00000000000000010001000000000110", // (CMP, x4, x2) i < j
-    "00011111111111111111001101100010", // (BRNZP, NZP=100, 2097147)
     "00000000000000000000000000000000", // (NOP)
     "00000000000000000000000000011111" // (RET)
   )
@@ -36,8 +35,8 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
     val rs3 = "b" + instruction.slice(7, 12)
 
     // NOTE: parseInt cannot correctly parse signed binary strings
-    val immArith = Integer.parseInt(instruction.slice(0, 17), 2)
-    val immLui = Integer.parseUnsignedInt(instruction.slice(8, 22) + "00000000000000000", 2)
+    val immArith = Integer.parseInt(instruction.slice(5, 17), 2)
+    val immLui = Integer.parseUnsignedInt(instruction.slice(2, 22) + "000000000000", 2)
 
     // Push instruction
     dut.io.instrF.valid.poke(valid.B)
@@ -62,7 +61,7 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.id.valid.expect(valid.B)
   }
 
-  "InstructionDecode" should "work" in {
+  "InstructionDecode" should "decode correct bitfields" in {
     test(new InstructionDecode(2, 4)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
       dut.io.instrF.valid.poke(false.B)

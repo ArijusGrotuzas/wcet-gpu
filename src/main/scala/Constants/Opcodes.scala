@@ -19,7 +19,7 @@ object Opcodes {
   // Large Arithmetic
   val MAD = 0x17 // 10111
   // Control
-  val BNZP = 0x02 // 00010
+  val BR = 0x02 // 00010
   val CMP = 0x06 // 00110
   val SPLIT = 0x0A // 01010 TODO: Implement this
   val JOIN = 0x0E // 01110 TODO: Implement this

@@ -8,7 +8,7 @@ import Constants.AluOps
 class AluControl extends Module {
   val io = IO(new Bundle {
     val instrOpcode = Input(UInt(5.W))
-
+    val func3 = Input(UInt(3.W))
     val we = Output(Bool())
     val done = Output(Bool())
     val aluOp = Output(UInt(4.W))
@@ -68,7 +68,7 @@ class AluControl extends Module {
     }
     is(Opcodes.CMP.asUInt(5.W)) {
       aluOp := AluOps.SUB.asUInt(3.W)
-      nzpUpdate := true.B
+      nzpUpdate := io.func3 =/= "b000".U && io.func3 =/= "b111".U
     }
     is(Opcodes.LDS.asUInt(5.W)) {
       aluOp := AluOps.FORA.asUInt(3.W)

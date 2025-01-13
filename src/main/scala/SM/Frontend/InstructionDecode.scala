@@ -25,16 +25,16 @@ class InstructionDecode(warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Output(UInt(5.W))
       val srs = Output(UInt(3.W))
       val imm = Output(SInt(32.W))
-      val pred = Output(UInt(5.W))
+      val pred = Output(UInt(2.W))
     }
   })
 
   val imm = WireDefault(0.S(32.W))
 
   when(io.id.opcode === Opcodes.LUI.asUInt(5.W)) {
-    imm := (io.instrF.instr(24, 10) << 17).asSInt // Load the upper 15 bits as an immediate
+    imm := (io.instrF.instr(29, 10) << 12).asSInt // Load the upper 20 bits as an immediate
   }.otherwise {
-    imm := io.instrF.instr(31, 15).asSInt // Load the 17 bit immediate
+    imm := io.instrF.instr(26, 15).asSInt // Load the 12 bit immediate
   }
 
   io.id.valid := io.instrF.valid
@@ -46,6 +46,6 @@ class InstructionDecode(warpCount: Int, warpSize: Int) extends Module {
   io.id.rs2 := io.instrF.instr(19, 15)
   io.id.rs3 := io.instrF.instr(24, 20)
   io.id.srs := io.instrF.instr(12, 10)
-  io.id.pred := io.instrF.instr(29, 25)
+  io.id.pred := io.instrF.instr(31, 30)
   io.id.imm := imm
 }

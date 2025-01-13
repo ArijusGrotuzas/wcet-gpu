@@ -48,8 +48,8 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val ifPredReg = new Bundle{
-      val dataR = Input(UInt((3 * warpSize).W))
-      val addrR = Output(UInt(warpAddrLen.W))
+      val dataR = Input(UInt(warpSize.W))
+      val addrR = Output(UInt((warpAddrLen + 2).W))
     }
   })
 
@@ -104,7 +104,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   io.instrMem.addr := instrPc
 
   // Read address for the predicate register file
-  io.ifPredReg.addrR := io.scheduler.warp
+  io.ifPredReg.addrR := io.scheduler.warp ## instr(31, 30)
 
   // Warp table outputs to the scheduler
   io.warpTableStatus.valid := warpTable.io.valid

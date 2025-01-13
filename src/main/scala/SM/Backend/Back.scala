@@ -38,6 +38,11 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val addr = Output(UInt((32 * warpSize).W))
     }
 
+    val ofPredReg = new Bundle {
+      val addrR = Output(UInt(warpAddrLen.W))
+      val dataR = Input(UInt(warpSize.W))
+    }
+
     val wbIfCtrl = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
       val setInactive = Output(Bool())
@@ -48,10 +53,10 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val setNotPending = Output(Bool())
     }
 
-    val nzpUpdateCtrl = new Bundle {
+    val predUpdateCtrl = new Bundle {
       val en = Output(Bool())
-      val nzp = Output(UInt((3 * warpSize).W))
-      val warp = Output(UInt(warpAddrLen.W))
+      val pred = Output(UInt(warpSize.W))
+      val addr = Output(UInt((warpAddrLen + 2).W))
     }
 
     val memStall = Output(Bool())
@@ -84,6 +89,8 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   rs2MemOfReg := Mux(mem.io.memStall, rs2MemOfReg, of.io.memOf.rs2)
 
   of.io.iss <> io.front
+  of.io.wb <> wb.io.wbOf
+  of.io.ofPredReg <> io.ofPredReg
 
   // Pipeline registers between the operand fetch and alu stages
   alu.io.of.threadMask := RegNext(of.io.aluOf.threadMask, 0.U)
@@ -95,6 +102,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   alu.io.of.rs3 := RegNext(of.io.aluOf.rs3, 0.U)
   alu.io.of.srs := RegNext(of.io.aluOf.srs, 0.U)
   alu.io.of.imm := RegNext(of.io.aluOf.imm, 0.S)
+  alu.io.of.pred := RegNext(of.io.aluOf.pred, 0.U)
   alu.io.aluInitCtrl <> io.aluInitCtrl
 
   // Pipeline registers between the operand fetch and memory stages
@@ -121,14 +129,11 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   wb.io.mem.dest := RegNext(mem.io.mem.dest, 0.U)
   wb.io.mem.out := RegNext(mem.io.mem.out, 0.U)
 
-  // Connect operand fetch with write-back
-  of.io.wb <> wb.io.wbOf
-
   // backend control signals
   io.lsu <> mem.io.lsu
   io.wbIfCtrl <> wb.io.wbIfCtrl
   io.memIfCtrl <> mem.io.memIfCtrl
-  io.nzpUpdateCtrl <> alu.io.nzpUpdateCtrl
+  io.predUpdateCtrl <> alu.io.predUpdateCtrl
   io.memStall := (mem.io.memStall || of.io.ofContainsMemInstr)
   io.wbOutTest := wb.io.outTest
 }

@@ -32,14 +32,18 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val frontend = Module(new Front(blockCount, warpCount, warpSize))
   val backend = Module(new Back(blockCount, warpCount, warpSize))
   val lsuArbiter = Module(new LsuArbiter(warpSize, 32))
-  val predicateRegister = Module(new PredicateRegister(warpCount, warpSize))
+  val predicateRegister = Module(new PredicateRegisterFile(warpCount, warpSize))
 
   // Access to the predicate register file
-  predicateRegister.io.we := backend.io.nzpUpdateCtrl.en
-  predicateRegister.io.dataW := backend.io.nzpUpdateCtrl.nzp
-  predicateRegister.io.addrW := backend.io.nzpUpdateCtrl.warp
-  predicateRegister.io.addrR := frontend.io.ifPredReg.addrR
-  frontend.io.ifPredReg.dataR := predicateRegister.io.dataR
+  predicateRegister.io.we := backend.io.predUpdateCtrl.en
+  predicateRegister.io.dataW := backend.io.predUpdateCtrl.pred
+  predicateRegister.io.addrW := backend.io.predUpdateCtrl.addr
+  // First read port dedicated to instruction fetch stage
+  predicateRegister.io.addr1R := frontend.io.ifPredReg.addrR
+  frontend.io.ifPredReg.dataR := predicateRegister.io.data1R
+  // Second read port dedicated to operand fetch stage
+  predicateRegister.io.addr2R := backend.io.ofPredReg.addrR
+  backend.io.ofPredReg.dataR := predicateRegister.io.data2R
 
   // Control for starting the SM
   frontend.io.start <> io.start
@@ -55,7 +59,6 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   frontend.io.memIfCtrl <> backend.io.memIfCtrl
   frontend.io.aluInitCtrl <> backend.io.aluInitCtrl
   frontend.io.memStall := backend.io.memStall
-
 
   // Connection to data memory
   lsuArbiter.io.lsu <> backend.io.lsu

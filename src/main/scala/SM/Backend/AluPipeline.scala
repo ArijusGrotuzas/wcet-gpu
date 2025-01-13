@@ -18,6 +18,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
       val rs3 = Input(UInt((32 * warpSize).W))
       val srs = Input(UInt(3.W))
       val imm = Input(SInt(32.W))
+      val pred = Input(UInt(2.W))
     }
 
     val aluInitCtrl = new Bundle {
@@ -34,10 +35,10 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
       val out = Output(UInt((32 * warpSize).W))
     }
 
-    val nzpUpdateCtrl = new Bundle {
+    val predUpdateCtrl = new Bundle {
       val en = Output(Bool())
-      val nzp = Output(UInt((3 * warpSize).W))
-      val warp = Output(UInt(warpAddrLen.W))
+      val pred = Output(UInt(warpSize.W))
+      val addr = Output(UInt((warpAddrLen + 2).W))
     }
   })
 
@@ -72,10 +73,12 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
 
   // ALU lane control unit
   val aluCtrl = Module(new AluControl)
+  val func3 = io.of.dest(2, 0)
   aluCtrl.io.instrOpcode := io.of.opcode
+  aluCtrl.io.func3 := func3
 
   val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
-  val nzp = VecInit(Seq.fill(warpSize)(0.U(3.W)))
+  val cmpOut = VecInit(Seq.fill(warpSize)(false.B))
 
   // Generate different ALU lanes
   for (i <- 0 until warpSize) {
@@ -101,7 +104,15 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     alu.io.op := aluCtrl.io.aluOp
 
     out(i) := alu.io.out
-    nzp(i) := alu.io.neg ## alu.io.zero ## !alu.io.neg
+
+    switch(func3) {
+      is("b001".U) { cmpOut(i) := !alu.io.neg } // Greater than
+      is("b010".U) { cmpOut(i) := alu.io.zero } // Equal
+      is("b011".U) { cmpOut(i) := alu.io.zero || !alu.io.neg } // Greater or equal than
+      is("b100".U) { cmpOut(i) := alu.io.neg  } // Less than
+      is("b101".U) { cmpOut(i) := (alu.io.neg || !alu.io.neg) & !alu.io.zero } // Not equal
+      is("b110".U) { cmpOut(i) := alu.io.neg || !alu.io.neg  } // Less or equal than
+    }
   }
 
   // Alu pipeline outputs to write-back
@@ -113,7 +124,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
   io.alu.out := out.asUInt
 
   // Alu pipeline control signals
-  io.nzpUpdateCtrl.nzp := nzp.asUInt
-  io.nzpUpdateCtrl.en := aluCtrl.io.nzpUpdate
-  io.nzpUpdateCtrl.warp := io.of.warp
+  io.predUpdateCtrl.pred := cmpOut.asUInt
+  io.predUpdateCtrl.en := aluCtrl.io.nzpUpdate
+  io.predUpdateCtrl.addr := io.of.warp ## io.of.pred
 }

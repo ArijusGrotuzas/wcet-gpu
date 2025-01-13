@@ -16,6 +16,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
                        source3: Int = 0,
                        immediate: Int = 0
                      ): Unit = {
+    dut.io.front.threadMask.poke("b11111111".U)
     dut.io.front.warp.poke(warp.U)
     dut.io.front.opcode.poke(opcode)
     dut.io.front.dest.poke(dest.U)
@@ -23,6 +24,7 @@ class BackTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.front.rs2.poke(source2.U)
     dut.io.front.rs3.poke(source3.U)
     dut.io.front.imm.poke(immediate.S)
+    dut.io.ofPredReg.dataR.poke("b11111111".U)
   }
 
   def generateBinaryString(count: Int, value: Int): String = {

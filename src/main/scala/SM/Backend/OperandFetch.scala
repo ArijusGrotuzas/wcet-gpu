@@ -5,7 +5,6 @@ import SM.Backend.Vrf.VectorRegisterFile
 import chisel3._
 import chisel3.util._
 
-// TODO: And the active thread mask with the predicate value if predicate is enabled for an instruction
 class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
@@ -27,7 +26,12 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
       val rs1 = Input(UInt(5.W))
       val rs2 = Input(UInt(5.W))
       val rs3 = Input(UInt(5.W))
-      val pred = Input(UInt(5.W))
+      val pred = Input(UInt(2.W))
+    }
+
+    val ofPredReg = new Bundle {
+      val addrR = Output(UInt(warpAddrLen.W))
+      val dataR = Input(UInt(warpSize.W))
     }
 
     val aluOf = new Bundle {
@@ -40,6 +44,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
       val rs3 = Output(UInt((32 * warpSize).W))
       val imm = Output(SInt(32.W))
       val srs = Output(UInt(3.W))
+      val pred = Output(UInt(2.W))
     }
 
     val memOf = new Bundle {
@@ -56,32 +61,21 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   })
 
   val vrf = Module(new VectorRegisterFile(warpCount, warpSize, 32 * warpSize))
-  val memOrAluSel = WireDefault(true.B)
 
   // Registers to hold values while the operands are fetched from VRF
-  val threadMask = RegInit(0.U(warpSize.W))
-  val warp = RegInit(0.U(warpAddrLen.W))
-  val opcode = RegInit(0.U(5.W))
-  val dest = RegInit(0.U(5.W))
-  val imm = RegInit(0.S(32.W))
-  val srs = RegInit(0.U(3.W))
-  val pred = RegInit(0.U(5.W))
-
-  warp := io.iss.warp
-  opcode := io.iss.opcode
-  dest := io.iss.dest
-  imm := io.iss.imm
-  srs := io.iss.srs
-  threadMask := io.iss.threadMask
-  pred := io.iss.pred
+  val currThreadMask = RegNext(io.iss.threadMask, 0.U(warpSize.W))
+  val currWarp = RegNext(io.iss.warp, 0.U(warpAddrLen.W))
+  val currOpcode = RegNext(io.iss.opcode, 0.U(5.W))
+  val currDest = RegNext(io.iss.dest, 0.U(5.W))
+  val currImm = RegNext(io.iss.imm, 0.S(32.W))
+  val currSrs = RegNext(io.iss.srs, 0.U(3.W))
+  val currPred = RegNext(io.iss.pred, 0.U(5.W))
 
   // Select the one of the functional units based on the opcode
-  when(opcode === Opcodes.LD.asUInt(5.W) || opcode === Opcodes.ST.asUInt(5.W)) {
-    memOrAluSel := false.B
-  }
+  val memOrAluSel = currOpcode =/= Opcodes.LD.asUInt(5.W) && currOpcode =/= Opcodes.ST.asUInt(5.W)
 
-  // TODO: Fetch the correct predicate value,
-  //  evaluate it and combine it with the active thread mask and send it of to one the functional units
+  // When predicate is enabled, combine the active thread mask with the evaluated predicate mask
+  val combinedThreadMask = currThreadMask & io.ofPredReg.dataR
 
   vrf.io.we := io.wb.we
   vrf.io.writeAddr := Cat(io.wb.warp, io.wb.writeAddr)
@@ -93,24 +87,26 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   vrf.io.readAddr3 := Cat(io.iss.warp, io.iss.rs3)
 
   // To alu pipeline
-  io.aluOf.threadMask := Mux(memOrAluSel, threadMask, 0.U)
-  io.aluOf.warp := Mux(memOrAluSel, warp, 0.U)
-  io.aluOf.opcode := Mux(memOrAluSel, opcode, 0.U)
-  io.aluOf.dest := Mux(memOrAluSel, dest, 0.U)
+  io.aluOf.threadMask := Mux(memOrAluSel, combinedThreadMask, 0.U)
+  io.aluOf.warp := Mux(memOrAluSel, currWarp, 0.U)
+  io.aluOf.opcode := Mux(memOrAluSel, currOpcode, 0.U)
+  io.aluOf.dest := Mux(memOrAluSel, currDest, 0.U)
   io.aluOf.rs1 := Mux(memOrAluSel, vrf.io.readData1, 0.U)
   io.aluOf.rs2 := Mux(memOrAluSel, vrf.io.readData2, 0.U)
   io.aluOf.rs3 := Mux(memOrAluSel, vrf.io.readData3, 0.U)
-  io.aluOf.srs := Mux(memOrAluSel, srs, 0.U)
-  io.aluOf.imm := Mux(memOrAluSel, imm, 0.S)
+  io.aluOf.srs := Mux(memOrAluSel, currSrs, 0.U)
+  io.aluOf.imm := Mux(memOrAluSel, currImm, 0.S)
+  io.aluOf.pred := Mux(memOrAluSel, currPred, 0.U)
 
   // To mem pipeline
-  io.memOf.threadMask := Mux(!memOrAluSel, threadMask, 0.U)
+  io.memOf.threadMask := Mux(!memOrAluSel, combinedThreadMask, 0.U)
   io.memOf.valid := !memOrAluSel
-  io.memOf.warp := Mux(!memOrAluSel, warp, 0.U)
-  io.memOf.opcode := Mux(!memOrAluSel, opcode, 0.U)
-  io.memOf.dest := Mux(!memOrAluSel, dest, 0.U)
+  io.memOf.warp := Mux(!memOrAluSel, currWarp, 0.U)
+  io.memOf.opcode := Mux(!memOrAluSel, currOpcode, 0.U)
+  io.memOf.dest := Mux(!memOrAluSel, currDest, 0.U)
   io.memOf.rs1 := Mux(!memOrAluSel, vrf.io.readData1, 0.U)
   io.memOf.rs2 := Mux(!memOrAluSel, vrf.io.readData2, 0.U)
 
   io.ofContainsMemInstr := !memOrAluSel
+  io.ofPredReg.addrR := currWarp ## currPred
 }
