@@ -1,13 +1,14 @@
 lds x1, s0 // load thread ID to register 1
-addi x2, x0, 4 // load 4 to register 2
+addi x2, x0, 10 // j = 10
+nop
+add x3, x0, x1 // i = threadID
 nop
 nop
-cmp x1, x2 // if thread ID < 4
-nop
-nop
-nop
-nop
-split %n // split either n z or p
-addi x3, x0, 5 // j = 10
-join
+LOOP:
+    @p1 cmp %nz x3, x2 // threadID < j
+    @p1 addi x3, x3, 1 // threadID += 1
+    @p1 addi x5, x5, 1 // x5 += 1
+    @p1 nop
+    @p1 nop
+    @p1 br LOOP
 ret

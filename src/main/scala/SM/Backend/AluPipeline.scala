@@ -108,10 +108,10 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     switch(func3) {
       is("b001".U) { cmpOut(i) := !alu.io.neg } // Greater than
       is("b010".U) { cmpOut(i) := alu.io.zero } // Equal
-      is("b011".U) { cmpOut(i) := alu.io.zero || !alu.io.neg } // Greater or equal than
+      is("b011".U) { cmpOut(i) := alu.io.zero || !alu.io.neg } // Greater than or equal to
       is("b100".U) { cmpOut(i) := alu.io.neg  } // Less than
       is("b101".U) { cmpOut(i) := (alu.io.neg || !alu.io.neg) & !alu.io.zero } // Not equal
-      is("b110".U) { cmpOut(i) := alu.io.neg || !alu.io.neg  } // Less or equal than
+      is("b110".U) { cmpOut(i) := alu.io.neg || !alu.io.zero  } // Less than or equal to
     }
   }
 

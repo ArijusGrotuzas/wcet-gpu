@@ -136,7 +136,7 @@ object Assembler {
 }
 
 object Main extends App {
-  private val program = Assembler.assembleProgram("asm/kernel4.asm")
+  private val program = Assembler.assembleProgram("asm/kernel5.asm")
 
   for (i <- program) {
     val instr = f"${i & 0xFFFFFFFF}%08X"

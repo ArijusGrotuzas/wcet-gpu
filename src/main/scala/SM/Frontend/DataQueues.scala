@@ -17,7 +17,6 @@ class DataQueues[T <: Data](gen: T, queueCount: Int, queueDepth: Int) extends Mo
   val outBits = VecInit(queues.toSeq.map(_.io.deq.bits))
   val notEmpty = VecInit(queues.toSeq.map(_.io.deq.valid))
 
-  // Opcode queues
   for (i <- 0 until queueCount) {
     queues(i).io.enq.bits := io.dataIn
     queues(i).io.enq.valid := io.inQueueSel(i)

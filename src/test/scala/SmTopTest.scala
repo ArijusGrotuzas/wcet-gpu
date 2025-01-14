@@ -2,7 +2,6 @@ import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
-// TODO: Add a way to assert correct output
 class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
   "Sm" should "execute program 1" in {
     test(new SmTop(
@@ -127,6 +126,41 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       // Start the SM
       dut.io.valid.poke(true.B)
       dut.io.data.poke("b100110".U)
+      dut.io.ready.expect(true.B)
+
+      // Step for a few clock cycles to allow the debounced signals to propagate
+      dut.clock.step(20)
+
+      // Reset the start signals
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+      dut.io.ready.expect(false.B)
+
+      dut.clock.step(150)
+
+      // Expect the SM to be done
+      dut.io.ready.expect(true.B)
+    }
+  }
+
+  "Sm" should "execute program 5" in {
+    test(new SmTop(
+      blockCount = 4,
+      warpCount = 4,
+      warpSize = 8,
+      instrMemDepth = 1024,
+      dataMemDepth = 1024,
+      freq = 100,
+      instructionFile = "hex/kernel5.hex"
+    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+
+      dut.clock.step(1)
+
+      // Start the SM
+      dut.io.valid.poke(true.B)
+      dut.io.data.poke(1.U) // Single active warp and zero as block idx
       dut.io.ready.expect(true.B)
 
       // Step for a few clock cycles to allow the debounced signals to propagate

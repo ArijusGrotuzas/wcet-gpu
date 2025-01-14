@@ -55,7 +55,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
       dataOut := queues.io.data(warp)
     }
 
-    dataOut
+    Mux(outQueueSel.orR, dataOut, 0.U.asTypeOf(gen))
   }
 
   val headInstrType = VecInit(Seq.fill(warpCount)(0.U(1.W)))
@@ -83,7 +83,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   opcodeQueues.io.outQueueSel := outQueueSel
 
   when(opcodeQueues.io.notEmpty(io.scheduler.warp)) {
-    opcodeCurr := opcodeQueues.io.data(io.scheduler.warp)
+    opcodeCurr := Mux(outQueueSel.orR, opcodeQueues.io.data(io.scheduler.warp), 0.U)
   }
 
   // Send information to warp scheduler if all head instruction types are mem-instr
