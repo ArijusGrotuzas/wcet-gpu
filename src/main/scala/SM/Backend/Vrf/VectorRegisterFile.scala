@@ -21,7 +21,6 @@ class VectorRegisterFile(warpCount: Int, warpSize: Int, bankWidth: Int) extends 
     val readData3 = Output(UInt(bankWidth.W))
   })
 
-  // TODO: If attempting to read 0 register, return 0
   def genBankWRouter(arbiterSel: UInt, readAddr1: UInt, readAddr2: UInt, readAddr3: UInt, we: UInt, writeData: UInt, writeAddr: UInt, writeMask: UInt): UInt = {
     val writeDataVec = VecInit(Seq.fill(warpSize)(0.U(32.W)))
     val bank = Module(new VrfBank(bankDepth, warpSize))

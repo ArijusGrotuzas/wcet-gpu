@@ -19,7 +19,6 @@ class PredicateRegisterFile(warpCount: Int, warpSize: Int) extends Module {
     val data2R = Output(UInt(dataWidth.W))
   })
 
-  // TODO: Prevent writing to the zero register
   def readPort(readAddr: UInt, writeAddr: UInt, writeData: UInt): UInt = {
     val isZeroReg = readAddr(1, 0).asUInt === 0.U
     val dataOut = WireDefault(0.U(dataWidth.W))
@@ -32,8 +31,8 @@ class PredicateRegisterFile(warpCount: Int, warpSize: Int) extends Module {
 
   val nzpRegFile = RegInit(VecInit(Seq.fill(warpCount * 4)(0.U(dataWidth.W))))
 
-  // Update the correct nzp register
-  when(io.we) {
+  // Update the correct nzp register and prevent writing to the zero register
+  when(io.we && io.addrW(1, 0).asUInt =/= 0.U) {
     nzpRegFile(io.addrW) := io.dataW
   }
 
