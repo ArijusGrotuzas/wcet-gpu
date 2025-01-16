@@ -8,10 +8,8 @@ class DataMem(width: Int, depth: Int, dataFile: String = "") extends Module {
     val we = Input(Bool())
     val dataW = Input(UInt(width.W))
     val addr = Input(UInt(addrLen.W))
-    val addrR2 = Input(UInt(addrLen.W))
 
     val dataR = Output(UInt(width.W))
-    val dataR2 = Output(UInt(width.W))
   })
 
   val dataR = WireDefault(0.U(width.W))
@@ -30,5 +28,4 @@ class DataMem(width: Int, depth: Int, dataFile: String = "") extends Module {
   }
 
   io.dataR := dataR
-  io.dataR2 := mem(io.addrR2)
 }

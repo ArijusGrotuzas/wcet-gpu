@@ -3,6 +3,12 @@ package SM.Frontend
 import chisel3._
 import chisel3.util._
 
+/**
+ * Loose round-robin warp scheduler. The scheduler will output which warp should an instruction be fetched and issued for
+ *
+ * @param blockCount Number of blocks the GPU can support
+ * @param warpCount Number of warps the SM can support
+ */
 class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
   val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
@@ -36,7 +42,8 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
     }
   })
 
-  val sIdle :: sDone :: s0 :: s1 :: s2 :: s3 :: Nil = Enum(6)
+  val sIdle :: sScheduling :: sDone :: Nil = Enum(3)
+  val previousWarp = RegInit(0.U(warpAddrLen.W))
   val stateReg = RegInit(sIdle)
 
   val availableWarps = WireDefault(0.U(warpCount.W))
@@ -65,7 +72,11 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
 
   allDone := !(io.warpTableStatus.valid & io.warpTableStatus.active).orR
 
-  // TODO: Make the scheduler configurable to support any number of warps
+  // Signals for selecting correct warps
+  val encoderValid = WireDefault(false.B)
+  val encoderSel = WireDefault(false.B)
+  val upperMaskedAvailWarps = availableWarps & (~((1.U << previousWarp).asUInt - 1.U)).asUInt
+
   // Scheduler FSM
   switch(stateReg) {
     is(sIdle) {
@@ -77,74 +88,19 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
         setBlockIdx := io.start.data(true.B)
         setValidWarps := io.start.data(warpCount - 1, 0)
         blockIdx := io.start.data((blockAddrLen + warpCount) - 1, warpCount)
-        stateReg := s0
+        stateReg := sScheduling
       }
     }
-    is(s0) {
-      when(availableWarps(0) === 1.U) {
-        warp := 0.U
-        stateReg := s0
-      }.elsewhen(availableWarps(1) === 1.U) {
-        warp := 1.U
-        stateReg := s1
-      }.elsewhen(availableWarps(2) === 1.U) {
-        warp := 2.U
-        stateReg := s2
-      }.elsewhen(availableWarps(3) === 1.U) {
-        warp := 3.U
-        stateReg := s3
-      }.elsewhen(allDone) {
-        stateReg := sDone
-      }
-    }
-    is(s1) {
-      when(availableWarps(1) === 1.U) {
-        warp := 1.U
-        stateReg := s1
-      }.elsewhen(availableWarps(2) === 1.U) {
-        warp := 2.U
-        stateReg := s2
-      }.elsewhen(availableWarps(3) === 1.U) {
-        warp := 3.U
-        stateReg := s3
-      }.elsewhen(availableWarps(0) === 1.U) {
-        warp := 0.U
-        stateReg := s0
-      }.elsewhen(allDone) {
-        stateReg := sDone
-      }
-    }
-    is(s2) {
-      when(availableWarps(2) === 1.U) {
-        warp := 2.U
-        stateReg := s2
-      }.elsewhen(availableWarps(3) === 1.U) {
-        warp := 3.U
-        stateReg := s3
-      }.elsewhen(availableWarps(0) === 1.U) {
-        warp := 0.U
-        stateReg := s0
-      }.elsewhen(availableWarps(1) === 1.U) {
-        warp := 1.U
-        stateReg := s1
-      }.elsewhen(allDone) {
-        stateReg := sDone
-      }
-    }
-    is(s3) {
-      when(availableWarps(3) === 1.U) {
-        warp := 3.U
-        stateReg := s3
-      }.elsewhen(availableWarps(0) === 1.U) {
-        warp := 0.U
-        stateReg := s0
-      }.elsewhen(availableWarps(1) === 1.U) {
-        warp := 1.U
-        stateReg := s1
-      }.elsewhen(availableWarps(2) === 1.U) {
-        warp := 2.U
-        stateReg := s2
-      }.elsewhen(allDone) {
+    is(sScheduling) {
+      when(upperMaskedAvailWarps.orR) {
+        encoderValid := true.B
+        encoderSel := true.B
+        previousWarp := warp
+      } .elsewhen(availableWarps.orR) {
+        encoderValid := true.B
+        encoderSel := false.B
+        previousWarp := warp
+      } .elsewhen(allDone) {
         stateReg := sDone
       }
     }
@@ -157,6 +113,8 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
       }
     }
   }
+
+  warp := Mux(encoderValid, PriorityEncoder(Mux(encoderSel, upperMaskedAvailWarps, availableWarps)), 0.U)
 
   io.start.ready := ready
   io.scheduler.warp := warp

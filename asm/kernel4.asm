@@ -1,18 +1,19 @@
-// Tests the ability of the SM to load and store instructions
+// Tests the ability of the SM to load and store data
 
-lds x4, s3 // Load warp width to register 4
-lds x2, s1 // Load warp ID to register 2
-lds x1, s0 // load thread ID to register 1
-lds x5, s4 // load block width to register 5
-lds x6, s2 // load block ID to register 3
-mad x7, x4, x2, x1 // x7 = (warpWidth * warpID) + threadID (local thread ID)
-addi x9, x0, 5
-addi x10, x0, 10
-mad x8, x5, x6, x7 // x8 = (blockWidth * blockID) + x7 (global thread ID)
-nop
-add x11, x9, x10
+lds x1, s0 // thread id
+lds x2, s1 // warp id
+lds x3, s3 // warp width
+lds x5, s4 // block width
+lds x6, s2 // block id
+mad x4, x3, x2, x1 // x4 = (warpWidth * warpID) + threadID = (local thread ID)
 nop
 nop
-st x8, x11
-ld x12, x8
+mad x7, x5, x6, x4 // x7 = (blockWidth * blockID) + localThreadId = (global thread ID)
+nop
+nop
+add x12, x0, x7
+nop
+nop
+st x7, x12
+ld x13, x7
 ret

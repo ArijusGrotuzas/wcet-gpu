@@ -2,7 +2,7 @@ import chisel3._
 import chisel3.util._
 import chisel3.util.experimental.loadMemoryFromFileInline
 
-class InstrMem(width: Int, depth: Int, dataFile: String = "") extends Module {
+class SyncMem(width: Int, depth: Int, dataFile: String = "") extends Module {
   val addrLen = log2Up(depth)
   val io = IO(new Bundle {
     val we = Input(Bool())

@@ -4,6 +4,18 @@ import chisel3._
 import chisel3.util._
 import scala.math.pow
 
+/**
+ * Warp table contains entries for each warp, where each entry holds the following information:
+ * - Done: Whether the warp has fetched a ret instruction
+ * - Active: Whether the warp still has some fetched and not yet finished instructions or un-fetched instructions
+ * - Pending: Whether the warp is pending, i.e. if variable latency instruction has been issued and this warp is waiting for its completion
+ * - Valid: Whether the warp was set valid by a block scheduler
+ * - PC: Current program counter of the warp
+ * - Thread masks: Active thread masks of the warp
+ *
+ * @param warpCount Number of warp entries the table should hold
+ * @param warpSize Number of threads in a warp, used to initialize the thread masks
+ */
 class WarpTable(warpCount: Int, warpSize: Int) extends Module {
   val addrLen = log2Up(warpCount)
   val io = IO(new Bundle {
