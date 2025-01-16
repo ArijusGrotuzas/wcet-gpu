@@ -1,3 +1,5 @@
+// Tests the ability of the SM to perform basic arithmetic and immediate operations
+
 lui x1, 2330
 lui x2, 10982
 nop

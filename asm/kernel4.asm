@@ -1,3 +1,5 @@
+// Tests the ability of the SM to load and store instructions
+
 lds x4, s3 // Load warp width to register 4
 lds x2, s1 // Load warp ID to register 2
 lds x1, s0 // load thread ID to register 1

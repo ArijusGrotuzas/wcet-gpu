@@ -1,3 +1,5 @@
+// Tests the ability of the SM to handle diverging loop paths
+
 lds x1, s0 // load thread ID to register 1
 addi x2, x0, 10 // j = 10
 nop

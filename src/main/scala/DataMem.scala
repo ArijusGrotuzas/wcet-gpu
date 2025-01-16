@@ -1,22 +1,22 @@
-import chisel3._
-import chisel3.util._
 import chisel3.util.experimental.loadMemoryFromFileInline
+import chisel3.util._
+import chisel3._
 
-class SyncMem(width: Int, depth: Int, dataFile: String = "") extends Module {
+class DataMem(width: Int, depth: Int, dataFile: String = "") extends Module {
   val addrLen = log2Up(depth)
   val io = IO(new Bundle {
     val we = Input(Bool())
     val dataW = Input(UInt(width.W))
     val addr = Input(UInt(addrLen.W))
+    val addrR2 = Input(UInt(addrLen.W))
 
     val dataR = Output(UInt(width.W))
+    val dataR2 = Output(UInt(width.W))
   })
 
   val dataR = WireDefault(0.U(width.W))
   val mem = SyncReadMem(depth, UInt(width.W))
   val rdwrPort = mem(io.addr)
-
-  dataR := 0.U
 
   // Initialize memory from a file
   if (dataFile.trim().nonEmpty) {
@@ -30,4 +30,5 @@ class SyncMem(width: Int, depth: Int, dataFile: String = "") extends Module {
   }
 
   io.dataR := dataR
+  io.dataR2 := mem(io.addrR2)
 }

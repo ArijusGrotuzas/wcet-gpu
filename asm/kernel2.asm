@@ -1,3 +1,5 @@
+// Tests the ability of the SM to execute non-diverging loops
+
 addi x2, x0, 3 // j = 3
 addi x3, x0, 5 // a = 5
 nop

@@ -65,6 +65,7 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
 
   allDone := !(io.warpTableStatus.valid & io.warpTableStatus.active).orR
 
+  // TODO: Make the scheduler configurable to support any number of warps
   // Scheduler FSM
   switch(stateReg) {
     is(sIdle) {
