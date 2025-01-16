@@ -3,16 +3,6 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
-  def dump(dut: SmTop): Unit = {
-    dut.io.dump.poke(true.B)
-
-    dut.clock.step(1)
-
-    dut.io.dump.poke(false.B)
-
-    dut.clock.step(200)
-  }
-
   "Sm" should "execute program 1" in {
     test(new SmTop(
       blockCount = 4,
@@ -34,8 +24,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.data.poke("b00001111".U)
       dut.io.ready.expect(true.B)
 
-      // Step for a few clock cycles to allow the debounced signals to propagate
-      dut.clock.step(20)
+      dut.clock.step(1)
 
       // Reset the start signals
       dut.io.valid.poke(false.B)
@@ -70,8 +59,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.data.poke(1.U)
       dut.io.ready.expect(true.B)
 
-      // Step for a few clock cycles to allow the debounced signals to propagate
-      dut.clock.step(20)
+      dut.clock.step(1)
 
       // Reset the start signals
       dut.io.valid.poke(false.B)
@@ -106,8 +94,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.data.poke("b100110".U)
       dut.io.ready.expect(true.B)
 
-      // Step for a few clock cycles to allow the debounced signals to propagate
-      dut.clock.step(20)
+      dut.clock.step(1)
 
       // Reset the start signals
       dut.io.valid.poke(false.B)
@@ -153,10 +140,6 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // Expect the SM to be done
       dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      dump(dut)
     }
   }
 
@@ -181,8 +164,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.data.poke(1.U) // Single active warp and zero as block idx
       dut.io.ready.expect(true.B)
 
-      // Step for a few clock cycles to allow the debounced signals to propagate
-      dut.clock.step(20)
+      dut.clock.step(1)
 
       // Reset the start signals
       dut.io.valid.poke(false.B)
@@ -190,6 +172,42 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.ready.expect(false.B)
 
       dut.clock.step(150)
+
+      // Expect the SM to be done
+      dut.io.ready.expect(true.B)
+    }
+  }
+
+  "Sm" should "execute saxpy" in {
+    test(new SmTop(
+      blockCount = 4,
+      warpCount = 4,
+      warpSize = 8,
+      instrMemDepth = 1024,
+      dataMemDepth = 1024,
+      freq = 100,
+      baud = 50,
+      instructionFile = "hex/instructions/saxpy.hex",
+      dataFile = "hex/data/saxpy.hex"
+    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+
+      dut.clock.step(1)
+
+      // Start the SM
+      dut.io.valid.poke(true.B)
+      dut.io.data.poke("b001111".U) // Single active warp and zero as block idx
+      dut.io.ready.expect(true.B)
+
+      dut.clock.step(1)
+
+      // Reset the start signals
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+      dut.io.ready.expect(false.B)
+
+      dut.clock.step(400)
 
       // Expect the SM to be done
       dut.io.ready.expect(true.B)
