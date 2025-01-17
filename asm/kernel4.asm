@@ -7,17 +7,14 @@ lds x5, s4              // block width
 lds x6, s2              // block id
 
 mad x4, x3, x2, x1      // x4 = (warpWidth * warpID) + threadID = (local thread ID)
-
 nop
 nop
 
 mad x7, x5, x6, x4      // x7 = (blockWidth * blockID) + localThreadId = (global thread ID)
-
 nop
 nop
 
 add x12, x0, x7
-
 nop
 nop
 

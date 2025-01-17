@@ -18,6 +18,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
     }
 
     val memStall = Input(Bool())
+    val wbStall = Input(Bool())
 
     val instrMem = new Bundle {
       val data = Input(UInt(32.W))
@@ -32,7 +33,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
 
     val ifPredReg = new Bundle{
       val dataR = Input(UInt(warpSize.W))
-      val addrR = Output(UInt(warpAddrLen.W))
+      val addrR = Output(UInt((warpAddrLen + 2).W))
     }
 
     val front = new Bundle {
@@ -65,6 +66,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   warpScheduler.io.scheduler <> instrF.io.scheduler
   warpScheduler.io.warpTableStatus <> instrF.io.warpTableStatus
   warpScheduler.io.headInstrType := instrIss.io.headInstrType
+  warpScheduler.io.wbStall := io.wbStall
 
   // Control signals to and from the instruction fetch stage
   instrF.io.setPending := instrIss.io.setPending

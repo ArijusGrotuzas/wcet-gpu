@@ -43,6 +43,7 @@ class MemControl(warpSize: Int) extends Module {
       memWriteEn := true.B
       request := true.B
       memStall := true.B
+
       when(io.allLsuDone) {
         stateReg := sDone
       }
@@ -51,6 +52,7 @@ class MemControl(warpSize: Int) extends Module {
       memReadEn := true.B
       request := true.B
       memStall := true.B
+
       when(io.allLsuDone) {
         stateReg := sDone
       }

@@ -4,12 +4,14 @@ object Opcodes {
   val NOP = 0x00 // 00000
   val RET = 0x1F // 11111
   // Loads/Stores
-  val ST = 0x05 // 00101
   val LD = 0x01 // 00001
-  val LDS = 0x11 // 01001
+  val ST = 0x05 // 00101
+  val LDS = 0x09 // 01001
   // Immediate instructions
-  val ADDI = 0x09 // 01001
-  val LUI = 0x0D // 01101
+  val ADDI = 0x0D // 01101
+  val LUI = 0x11 // 10001
+  val SRLI = 0x15 // 10101
+  val SLLI = 0x19 // 11001
   // Arithmetic
   val ADD = 0x03 // 00011
   val SUB = 0x07 // 00111
@@ -23,5 +25,4 @@ object Opcodes {
   val CMP = 0x06 // 00110
   val SPLIT = 0x0A // 01010 TODO: Implement this
   val JOIN = 0x0E // 01110 TODO: Implement this
-  val PBS = 0x12 // 10010 TODO: Implement this
 }

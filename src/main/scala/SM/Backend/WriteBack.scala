@@ -45,6 +45,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
       val setInactive = Output(Bool())
     }
 
+    val wbStall = Output(Bool())
     val outTest = Output(UInt((warpSize * 32).W))
   })
 
@@ -67,6 +68,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   val outWarp = WireDefault(0.U(warpAddrLen.W))
   val outData = WireDefault(0.U((warpSize * 32).W))
   val outInactive = WireDefault(false.B)
+  val stallScheduler = WireDefault(false.B)
 
   // Update the alu output delay state register
   switch(aluDelay) {
@@ -88,6 +90,7 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
     outAddr := io.mem.dest
     outData := io.mem.out
     outWarp := io.mem.warp
+    stallScheduler := true.B
   }.otherwise { // Send the ALU result to the register file
     when(aluDelay === sDelayAlu) { // Take the delayed values of the ALU
       outWe := aluWeDelay
@@ -116,4 +119,5 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   io.wbIfCtrl.setInactive := outInactive
 
   io.outTest := outData
+  io.wbStall := stallScheduler
 }

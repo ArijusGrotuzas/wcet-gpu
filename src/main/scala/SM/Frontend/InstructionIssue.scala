@@ -44,7 +44,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   })
 
   private def genDataQueues[T <: Data](gen: T, dataIn: T, inQueueSel: UInt, outQueueSel: UInt, warp: UInt): T = {
-    val queues = Module(new DataQueues(gen, warpCount, 3))
+    val queues = Module(new DataQueues(gen, warpCount, 4))
     val dataOut = WireDefault(0.U.asTypeOf(gen))
 
     queues.io.dataIn := dataIn
@@ -75,7 +75,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   val predCurr = genDataQueues(UInt(2.W), io.id.pred, inQueueSel, outQueueSel, io.scheduler.warp)
 
   // Since there is a need for getting all warp head instruction opcodes, a queue is generated outside the function
-  val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 3))
+  val opcodeQueues = Module(new DataQueues(UInt(5.W), warpCount, 4))
   val opcodeCurr = WireDefault(0.U(5.W))
 
   opcodeQueues.io.dataIn := io.id.opcode

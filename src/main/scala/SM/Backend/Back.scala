@@ -39,7 +39,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
     }
 
     val ofPredReg = new Bundle {
-      val addrR = Output(UInt(warpAddrLen.W))
+      val addrR = Output(UInt((warpAddrLen + 2).W))
       val dataR = Input(UInt(warpSize.W))
     }
 
@@ -61,6 +61,7 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
 
     val memStall = Output(Bool())
     val wbOutTest = Output(UInt((warpSize * 32).W))
+    val wbStall = Output(Bool())
   })
 
   val of = Module(new OperandFetch(warpCount, warpSize))
@@ -136,4 +137,5 @@ class Back(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   io.predUpdateCtrl <> alu.io.predUpdateCtrl
   io.memStall := (mem.io.memStall || of.io.ofContainsMemInstr)
   io.wbOutTest := wb.io.outTest
+  io.wbStall := wb.io.wbStall
 }

@@ -1,24 +1,26 @@
 package Util
 
 import Constants.Opcodes
-
 import scala.io._
+import java.io.File
+import java.io.PrintWriter
+
 
 object Assembler {
   private val symbols = collection.mutable.Map[String, Int]()
 
-  def assembleProgram(prog: String): Array[Int] = {
-    findSymbols(prog)
-    assemble(prog)
+  def assembleProgram(file: String): Array[Int] = {
+    findSymbols(file)
+    assemble(file)
   }
 
-  private def findSymbols(prog: String): Unit = {
-    val source = Source.fromFile(prog)
+  private def findSymbols(file: String): Unit = {
+    val source = Source.fromFile(file)
     var pc = 0
 
     for (line <- source.getLines()) {
       val tokens = line.trim.split("[,\\s]+")
-      val instr = assembleInstruction(tokens, pc, getSymbols = true)
+      val instr = assembleInstruction(tokens, pc, file, getSymbols = true)
 
       instr match {
         case _: Int =>
@@ -28,14 +30,14 @@ object Assembler {
     }
   }
 
-  private def assemble(prog: String): Array[Int] = {
-    val source = Source.fromFile(prog)
+  private def assemble(file: String): Array[Int] = {
+    val source = Source.fromFile(file)
     var program = List[Int]()
     var pc = 0
 
     for (line <- source.getLines()) {
       val tokens = line.trim.split("[,\\s]+")
-      val instr = assembleInstruction(tokens, pc, getSymbols = false)
+      val instr = assembleInstruction(tokens, pc, file, getSymbols = false)
 
       instr match {
         case a: Int =>
@@ -48,32 +50,33 @@ object Assembler {
     program.reverse.toArray
   }
 
-  private def assembleInstruction(tokens: Array[String], pc: Int, getSymbols: Boolean): Any = {
+  private def assembleInstruction(tokens: Array[String], pc: Int, file: String, getSymbols: Boolean): Any = {
     val Pattern = "(.*:)".r
 
     val instr = tokens(0) match {
       case Pattern(l) => if (getSymbols) symbols += (l.substring(0, l.length - 1) -> pc)
       case "nop" => Opcodes.NOP
       case "ret" => Opcodes.RET
-      case "ld" => (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LD
-      case "st" => (getVecRegNum(tokens(2)) << 15) + (getVecRegNum(tokens(1)) << 10) + Opcodes.ST
-      case "lds" => (getSpRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LDS
-      case "addi" => ((getConst(tokens(3)) << 15) & 0x07FFFFFF) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADDI
-      case "lui" => ((getConst(tokens(2)) << 10) & 0x3FFFFFFF) + (getVecRegNum(tokens(1)) << 5) + Opcodes.LUI
-      case "add" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.ADD
-      case "sub" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.SUB
-      case "and" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.AND
-      case "or" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.OR
-      case "mul" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.MUL
-      case "mad" => (getVecRegNum(tokens(4)) << 20) + (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1)) << 5) + Opcodes.MAD
+      case "ld" => (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.LD
+      case "st" => (getVecRegNum(tokens(2), pc) << 15) + (getVecRegNum(tokens(1), pc) << 10) + Opcodes.ST
+      case "lds" => (getSpRegNum(tokens(2)) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.LDS
+      case "addi" => ((getConst(tokens(3)) << 15) & 0x07FFFFFF) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.ADDI
+      case "lui" => ((getConst(tokens(2)) << 10) & 0x3FFFFFFF) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.LUI
+      case "srli" => ((getConst(tokens(3)) << 15) & 0x07FFFFFF) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.SRLI
+      case "add" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.ADD
+      case "sub" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.SUB
+      case "and" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.AND
+      case "or" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.OR
+      case "mul" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.MUL
+      case "mad" => (getVecRegNum(tokens(4), pc) << 20) + (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.MAD
       case "br" => ((getBrnOff(tokens(1), pc) << 5) & 0x3FFFFFFF) + Opcodes.BR
-      case "cmp" => (getVecRegNum(tokens(3)) << 15) + (getVecRegNum(tokens(2)) << 10) + (getNZP(tokens(1)) << 5) + Opcodes.CMP
+      case "cmp" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getNZP(tokens(1)) << 5) + Opcodes.CMP
       case "split" => println("Split instruction not yet implemented")
       case "join" => println("Join instruction not yet implemented")
-      case s if s.startsWith("@") => (getPredicateReg(tokens(0)) << 30) + convertToInt(assembleInstruction(tokens.drop(1), pc, getSymbols)) // Predicate
+      case s if s.startsWith("@") => (getPredicateReg(tokens(0)) << 30) + convertToInt(assembleInstruction(tokens.drop(1), pc, file, getSymbols)) // Predicate
       case "//" => // Comment
       case "" => // Empty line
-      case t: String => throw new Exception("Unexpected instruction: " + t)
+      case t: String => throw new Exception("Unexpected instruction: " + t + " in file" + file)
       case _ => throw new Exception("Unhandled case")
     }
 
@@ -99,8 +102,8 @@ object Assembler {
     }
   }
 
-  private def getVecRegNum(s: String): Int = {
-    assert(s.startsWith("x"), "Vector register number must start with an \'x\'")
+  private def getVecRegNum(s: String, pc: Int): Int = {
+    assert(s.startsWith("x"), "Vector register number must start with an \'x\' :" + pc )
     s.substring(1).toInt
   }
 
@@ -133,13 +136,34 @@ object Assembler {
     val brnOff = symbols(s) - pc
     brnOff
   }
+
+  private def vrfBankConflicts(registers: List[Int], pc: Int): Int = {
+    val banks = registers.map(i => i % 4).distinct
+    val noConflict = banks.diff(banks.distinct).distinct.isEmpty
+
+    if (noConflict) { 0 } else { throw new Exception("Bank conflicts for instruction at : " + pc) }
+  }
 }
 
+// TODO: Add checking if any instruction attempts to read two or more operands from the same bank
 object Main extends App {
-  private val program = Assembler.assembleProgram("asm/saxpy.asm")
+  def getListOfFiles(dir: String): List[String] = {
+    val file = new File(dir)
+    file.listFiles.filter(_.isFile)
+      .filter(_.getName.endsWith(".asm"))
+      .map(_.getPath).toList
+  }
 
-  for (i <- program) {
-    val instr = f"${i & 0xFFFFFFFF}%08X"
-    println(instr)
+  val files = getListOfFiles("asm")
+
+  // Assemble all the programs contained in the asm directory
+  for (file <- files) {
+    val program = Assembler.assembleProgram(file).map(i => f"${i & 0xFFFFFFFF}%08X").mkString("\n")
+
+    println(file + ":")
+    println(program)
+    println("")
+
+    new PrintWriter(file.replace(".asm", ".hex").replace("asm/", "hex/instructions/")) { write(program); close() }
   }
 }

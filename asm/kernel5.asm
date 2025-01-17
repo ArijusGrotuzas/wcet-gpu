@@ -2,11 +2,9 @@
 
 lds x1, s0                  // load thread ID to register 1
 addi x2, x0, 10             // j = 10
-
 nop
 
 add x3, x0, x1              // i = threadID
-
 nop
 nop
 

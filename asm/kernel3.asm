@@ -7,11 +7,9 @@ lds x5, s4          // load block width to register 5
 lds x6, s2          // load block ID to register 3
 
 mad x7, x4, x2, x1  // x7 = (warpWidth * warpID) + threadID
-
 nop
 nop
 
 mad x8, x5, x6, x7  // x8 = (blockWidth * blockID) + x7
-
 ret
 

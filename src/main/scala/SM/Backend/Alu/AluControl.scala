@@ -34,6 +34,16 @@ class AluControl extends Module {
       bSel := "b10".U
       we := true.B
     }
+    is(Opcodes.SRLI.asUInt(5.W)) {
+      aluOp := AluOps.SRL.asUInt(3.W)
+      bSel := "b10".U
+      we := true.B
+    }
+    is(Opcodes.SLLI.asUInt(5.W)) {
+      aluOp := AluOps.SLL.asUInt(3.W)
+      bSel := "b10".U
+      we := true.B
+    }
     is(Opcodes.LUI.asUInt(5.W)) {
       aluOp := AluOps.FORB.asUInt(3.W)
       bSel := "b10".U

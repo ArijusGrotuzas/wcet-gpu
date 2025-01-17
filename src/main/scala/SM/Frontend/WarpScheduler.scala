@@ -27,6 +27,7 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
 
     val headInstrType = Input(UInt(warpCount.W))
     val memStall = Input(Bool())
+    val wbStall = Input(Bool())
 
     val scheduler = new Bundle {
       val warp = Output(UInt(warpAddrLen.W))
@@ -66,7 +67,7 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
   )
 
   // If there are no available warps, stall the pipeline
-  when(availableWarps.orR === 0.B) {
+  when(availableWarps.orR === 0.B || io.wbStall) {
     stall := true.B
   }
 

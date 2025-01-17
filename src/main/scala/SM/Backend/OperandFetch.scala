@@ -30,7 +30,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
     }
 
     val ofPredReg = new Bundle {
-      val addrR = Output(UInt(warpAddrLen.W))
+      val addrR = Output(UInt((warpAddrLen + 2).W))
       val dataR = Input(UInt(warpSize.W))
     }
 
@@ -69,7 +69,7 @@ class OperandFetch(warpCount: Int, warpSize: Int) extends Module {
   val currDest = RegNext(io.iss.dest, 0.U(5.W))
   val currImm = RegNext(io.iss.imm, 0.S(32.W))
   val currSrs = RegNext(io.iss.srs, 0.U(3.W))
-  val currPred = RegNext(io.iss.pred, 0.U(5.W))
+  val currPred = RegNext(io.iss.pred, 0.U(2.W))
 
   // Select the one of the functional units based on the opcode
   val memOrAluSel = currOpcode =/= Opcodes.LD.asUInt(5.W) && currOpcode =/= Opcodes.ST.asUInt(5.W)

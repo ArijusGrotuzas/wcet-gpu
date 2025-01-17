@@ -59,6 +59,7 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   frontend.io.memIfCtrl <> backend.io.memIfCtrl
   frontend.io.aluInitCtrl <> backend.io.aluInitCtrl
   frontend.io.memStall := backend.io.memStall
+  frontend.io.wbStall := backend.io.wbStall
 
   // Connection to data memory
   lsuArbiter.io.lsu <> backend.io.lsu

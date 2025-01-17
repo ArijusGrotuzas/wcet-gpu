@@ -65,7 +65,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val instr = io.instrMem.data
   val opcode = instr(4, 0)
   val instrPc = Mux(brnCtrl.io.jump, brnCtrl.io.jumpAddr, warpTable.io.pc(io.scheduler.warp))
-  val shouldFetchNxtInstr = warpTable.io.done(io.scheduler.warp) === 0.U && !io.scheduler.reset && !io.scheduler.stall && !io.scheduler.setValid && (opcode =/= "b11111".U)
+  val shouldFetchNxtInstr = warpTable.io.done(io.scheduler.warp) === 0.U && !io.scheduler.reset && !io.scheduler.stall && !io.scheduler.setValid
   val activeThreadMask = warpTable.io.threadMasks(warpReg)
 
   // Update the registers
@@ -84,7 +84,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   warpTable.io.pcCtrl.set := shouldFetchNxtInstr
   warpTable.io.pcCtrl.idx := io.scheduler.warp
   warpTable.io.pcCtrl.data := Mux(shouldFetchNxtInstr, instrPc + 1.U, instrPc)
-  warpTable.io.doneCtrl.set := (opcode === Opcodes.RET.asUInt(5.W))
+  warpTable.io.doneCtrl.set := Mux(fetchReg, opcode === Opcodes.RET.asUInt(5.W), false.B)
   warpTable.io.doneCtrl.idx := warpReg
   warpTable.io.setPendingCtrl.set := io.setPending
   warpTable.io.setPendingCtrl.idx := io.scheduler.warp

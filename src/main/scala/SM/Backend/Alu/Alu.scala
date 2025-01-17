@@ -26,6 +26,8 @@ class Alu(operandWidth: Int) extends Module {
     is(AluOps.SUB.asUInt(3.W)) {out := io.a - io.b}
     is(AluOps.AND.asUInt(3.W)) {out := io.a & io.b}
     is(AluOps.OR.asUInt(3.W)) {out := io.a | io.b}
+    is(AluOps.SRL.asUInt(3.W)) {out := (io.a >> io.b.asUInt).asSInt}
+    is(AluOps.SLL.asUInt(3.W)) {out := (io.a << io.b.asUInt(18, 0)).asSInt}
     is(AluOps.FORA.asUInt(3.W)) {out := io.a}
     is(AluOps.FORB.asUInt(3.W)) {out := io.b}
   }
