@@ -1,20 +1,22 @@
 package SM.Frontend
 
+import Constants.Opcodes
 import chisel3._
 import chiseltest._
+import Constants.Opcodes._
 import org.scalatest.flatspec.AnyFlatSpec
 
 private object testKernels {
   val testKernel1 = Array(
-    "00000000001001000110100000101101", // (LUI, x1, 2330)
-    "00000000000001010000000001001001", // (ADDI, x2, x0, 10): j = 10
+    "00000000001001000110100000110001", // (LUI, x1, 2330)
+    "00000000000001010000000001001101", // (ADDI, x2, x0, 10): j = 10
     "00000000000000011001010010100011", // (ADD, x5, x5, x3): b += a
     "00000000000000101001000011000111", // (SUB, x6, x4, x5)
     "00000000000000100000110011101011", // (AND, x7, x3, x4)
     "00000000000000001001000100001111", // (OR, x8, x4, x5)
     "00000000000000010001000000000110", // (CMP, x4, x2) i < j
     "00000000000000000000000000000000", // (NOP)
-    "00000000000000000000000000011111" // (RET)
+    "00000000000000000000000000011111"  // (RET)
   )
 }
 
@@ -52,7 +54,7 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
 
     // Expect a different type of immediate to be decoded based on opcode
     opcode match {
-      case "b01101" => dut.io.id.imm.expect(immLui.S)
+      case "b10001" => dut.io.id.imm.expect(immLui.S)
       case _ => dut.io.id.imm.expect(immArith.S)
     }
 
