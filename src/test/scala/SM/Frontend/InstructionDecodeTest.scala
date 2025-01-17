@@ -1,9 +1,7 @@
 package SM.Frontend
 
-import Constants.Opcodes
 import chisel3._
 import chiseltest._
-import Constants.Opcodes._
 import org.scalatest.flatspec.AnyFlatSpec
 
 private object testKernels {
@@ -16,7 +14,7 @@ private object testKernels {
     "00000000000000001001000100001111", // (OR, x8, x4, x5)
     "00000000000000010001000000000110", // (CMP, x4, x2) i < j
     "00000000000000000000000000000000", // (NOP)
-    "00000000000000000000000000011111"  // (RET)
+    "00000000000000000000000000011111" // (RET)
   )
 }
 

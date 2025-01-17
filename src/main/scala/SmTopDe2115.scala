@@ -1,5 +1,5 @@
 import chisel3._
-import chisel3.util.log2Up
+import chisel3.util._
 
 class SmTopDe2115(
                    blockCount: Int,
@@ -21,7 +21,33 @@ class SmTopDe2115(
     // Outputs
     val tx = Output(Bool())
     val ready = Output(Bool())
+    val cycles = Output(UInt(18.W))
   })
+
+  def cycleCounter(count: Bool): UInt = {
+    val sIdle :: sCount :: Nil = Enum(2)
+    val stateReg = RegInit(sIdle)
+
+    val cycleCount = RegInit(0.U(18.W))
+
+    switch(stateReg) {
+      is(sIdle) {
+        when(count) {
+          stateReg := sCount
+          cycleCount := 0.U
+        }
+      }
+      is(sCount) {
+        cycleCount := cycleCount + 1.U
+
+        when(!count) {
+          stateReg := sIdle
+        }
+      }
+    }
+
+    cycleCount
+  }
 
   val debSw = Module(new DebounceSw(blockAddrLen + warpCount, freq))
   val smTop = Module(new SmTop(blockCount, warpCount, warpSize, instrMemDepth, dataMemDepth, freq, baud, instructionFile, dataFile))
@@ -33,8 +59,12 @@ class SmTopDe2115(
   smTop.io.valid := !io.valid
   smTop.io.data := debSw.io.swDb
 
+  // Cycle counter
+  val cycleCount = cycleCounter(smTop.io.ready)
+
   io.tx := smTop.io.tx
   io.ready := smTop.io.ready
+  io.cycles := cycleCount
 }
 
 /**
