@@ -1,4 +1,4 @@
-// Hamming weight algorithm
+// Compute Hamming weight
 
 lds x1, s0                  // thread id
 lds x2, s1                  // warp id
@@ -10,11 +10,10 @@ mad x4, x3, x2, x1          // x4 = (warpWidth * warpID) + threadID = (local thr
 
 addi x9, x0, 0              // number array base address
 addi x10, x0, 64            // output array base address
-addi x11, x0, 0             // count = 0
 
 mad x7, x5, x6, x4          // x7 = (blockWidth * blockID) + localThreadId = (global thread ID)
 addi x15, x0, 1             // load 1 for AND operation
-nop
+addi x11, x0, 0             // count = 0
 
 add x12, x9, x7             // addr(number[i]) = baseNumber + i
 add x13, x10, x7            // addr(output[i]) = baseOutput + i

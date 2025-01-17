@@ -12,7 +12,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = 1024,
       freq = 100,
       baud = 50,
-      instructionFile = "hex/kernel1.hex"
+      instructionFile = "hex/instructions/kernel1.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
@@ -47,7 +47,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = 1024,
       freq = 100,
       baud = 50,
-      instructionFile = "hex/kernel2.hex"
+      instructionFile = "hex/instructions/kernel2.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
@@ -82,7 +82,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = 1024,
       freq = 100,
       baud = 50,
-      instructionFile = "hex/kernel3.hex"
+      instructionFile = "hex/instructions/kernel3.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
@@ -117,7 +117,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = 1024,
       freq = 100,
       baud = 50,
-      instructionFile = "hex/kernel4.hex"
+      instructionFile = "hex/instructions/kernel4.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
@@ -152,7 +152,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = 1024,
       freq = 100,
       baud = 50,
-      instructionFile = "hex/kernel5.hex"
+      instructionFile = "hex/instructions/kernel5.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
@@ -244,6 +244,41 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.ready.expect(false.B)
 
       dut.clock.step(500)
+
+      // Expect the SM to be done
+      dut.io.ready.expect(true.B)
+    }
+  }
+
+  "Sm" should "execute fibonacci" in {
+    test(new SmTop(
+      blockCount = 4,
+      warpCount = 4,
+      warpSize = 8,
+      instrMemDepth = 1024,
+      dataMemDepth = 1024,
+      freq = 100,
+      baud = 50,
+      instructionFile = "hex/instructions/fibonacci.hex"
+    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+
+      dut.clock.step(1)
+
+      // Start the SM
+      dut.io.valid.poke(true.B)
+      dut.io.data.poke("b001111".U)
+      dut.io.ready.expect(true.B)
+
+      dut.clock.step(1)
+
+      // Reset the start signals
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+      dut.io.ready.expect(false.B)
+
+      dut.clock.step(600)
 
       // Expect the SM to be done
       dut.io.ready.expect(true.B)
