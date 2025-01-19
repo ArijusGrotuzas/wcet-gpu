@@ -24,15 +24,16 @@ class SmTopDe2115(
     val cycles = Output(UInt(18.W))
   })
 
-  def cycleCounter(count: Bool): UInt = {
+  def cycleCounter(ready: Bool, done: Bool): UInt = {
     val sIdle :: sCount :: Nil = Enum(2)
     val stateReg = RegInit(sIdle)
 
     val cycleCount = RegInit(0.U(18.W))
+    val startCount = !ready & RegNext(ready)
 
     switch(stateReg) {
       is(sIdle) {
-        when(count) {
+        when(startCount) {
           stateReg := sCount
           cycleCount := 0.U
         }
@@ -40,7 +41,7 @@ class SmTopDe2115(
       is(sCount) {
         cycleCount := cycleCount + 1.U
 
-        when(!count) {
+        when(done) {
           stateReg := sIdle
         }
       }
@@ -60,7 +61,7 @@ class SmTopDe2115(
   smTop.io.data := debSw.io.swDb
 
   // Cycle counter
-  val cycleCount = cycleCounter(smTop.io.ready)
+  val cycleCount = cycleCounter(smTop.io.ready, smTop.io.done)
 
   io.tx := smTop.io.tx
   io.ready := smTop.io.ready
@@ -72,5 +73,5 @@ class SmTopDe2115(
  */
 object SmTopDe2115 extends App {
   println("Generating the SM hardware for the DE2-115 board")
-  (new chisel3.stage.ChiselStage).emitVerilog(new SmTopDe2115(4, 4, 8, 64, 64, 50000000, 115200, "bootkernel.hex", ""), Array("--target-dir", "generated", "--no-dedup"))
+  (new chisel3.stage.ChiselStage).emitVerilog(new SmTopDe2115(4, 4, 8, 128, 128, 50000000, 115200, "bootkernel.hex", "bootdata.hex"), Array("--target-dir", "generated", "--no-dedup"))
 }

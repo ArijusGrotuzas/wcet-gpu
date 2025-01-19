@@ -53,6 +53,8 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val setBlockIdx = Output(Bool())
       val blockIdx = Output(UInt(blockAddrLen.W))
     }
+
+    val done = Output(Bool())
   })
 
   val instrF = Module(new InstructionFetch(warpCount, warpSize))
@@ -109,4 +111,5 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   io.front.pred := instrIss.io.iss.pred
 
   io.aluInitCtrl <> warpScheduler.io.aluInitCtrl
+  io.done := warpScheduler.io.done
 }

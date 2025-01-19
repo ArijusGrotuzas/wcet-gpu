@@ -23,6 +23,7 @@ class SmTop(
     val tx = Output(Bool())
     val ready = Output(Bool())
     val wbOutTest = Output(UInt((warpSize * 32).W))
+    val done = Output(Bool())
   })
 
   // Need two separate data modules, since it seems that chisel does not allow initializing
@@ -56,4 +57,5 @@ class SmTop(
   io.tx := serialPort.io.tx
   io.ready := sm.io.start.ready
   io.wbOutTest := sm.io.wbOutTest
+  io.done := sm.io.done
 }

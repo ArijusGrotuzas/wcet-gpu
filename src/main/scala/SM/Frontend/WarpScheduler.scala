@@ -41,6 +41,8 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
       val setBlockIdx = Output(Bool())
       val blockIdx = Output(UInt(blockAddrLen.W))
     }
+
+    val done = Output(Bool())
   })
 
   val sIdle :: sScheduling :: sDone :: Nil = Enum(3)
@@ -125,4 +127,5 @@ class WarpScheduler(blockCount: Int, warpCount: Int) extends Module {
   io.scheduler.setValidWarps := setValidWarps
   io.aluInitCtrl.setBlockIdx := setBlockIdx
   io.aluInitCtrl.blockIdx := blockIdx
+  io.done := stateReg === sDone
 }
