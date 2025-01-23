@@ -111,7 +111,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
   "Sm" should "execute program 4" in {
     test(new SmTop(
       blockCount = 4,
-      warpCount = 4,
+      warpCount = 6,
       warpSize = 8,
       instrMemDepth = 1024,
       dataMemDepth = 1024,
@@ -126,7 +126,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // Start the SM
       dut.io.valid.poke(true.B)
-      dut.io.data.poke("b000011".U)
+      dut.io.data.poke("b00111111".U)
       dut.io.ready.expect(true.B)
 
       dut.clock.step(1)
@@ -136,7 +136,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.data.poke(0.U)
       dut.io.ready.expect(false.B)
 
-      dut.clock.step(150)
+      dut.clock.step(500)
 
       // Expect the SM to be done
       dut.io.ready.expect(true.B)
@@ -187,8 +187,8 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = 1024,
       freq = 100,
       baud = 50,
-      instructionFile = "hex/instructions/saxpy.hex",
-      dataFile = "hex/data/saxpy.hex"
+      instructionFile = "hex/instructions/sequential.hex",
+      dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)
@@ -224,7 +224,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       freq = 100,
       baud = 50,
       instructionFile = "hex/instructions/hamming.hex",
-      dataFile = "hex/data/hamming.hex"
+      dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       dut.io.valid.poke(false.B)
       dut.io.data.poke(0.U)

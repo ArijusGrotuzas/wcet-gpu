@@ -5,7 +5,9 @@ import scala.io._
 import java.io.File
 import java.io.PrintWriter
 
-
+/**
+ *
+ */
 object Assembler {
   private val symbols = collection.mutable.Map[String, Int]()
 

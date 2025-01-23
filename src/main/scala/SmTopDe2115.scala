@@ -73,5 +73,5 @@ class SmTopDe2115(
  */
 object SmTopDe2115 extends App {
   println("Generating the SM hardware for the DE2-115 board")
-  (new chisel3.stage.ChiselStage).emitVerilog(new SmTopDe2115(4, 4, 8, 128, 128, 50000000, 115200, "bootkernel.hex", "bootdata.hex"), Array("--target-dir", "generated", "--no-dedup"))
+  (new chisel3.stage.ChiselStage).emitVerilog(new SmTopDe2115(4, 8, 8, 64, 1024, 50000000, 115200, "bootkernel.hex", "bootdata.hex"), Array("--target-dir", "generated", "--no-dedup"))
 }
