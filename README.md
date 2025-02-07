@@ -1,12 +1,53 @@
 # Time-predictable GPU
 
+A time-predictable GPU core for real-time systems. A GPU core is often referred to as a streaming multiprocessor (SM).
+
 ## Microarchitecture
+
+The SM is an in-order SIMD processor with an 8-stage pipeline.
+The pipeline consists of 6 logical pipeline stages: IF, ID, ISS, OF, EX, and WB.
 
 ![ISA](/images/SM_Overview.png)
 
 ## Assembler
 
+The project includes an assembler that converts assembly code to machine code of SM.
+For instance, the following assembly code:
+
+```asm
+addi x2, x0, 3              // j = 3
+addi x3, x0, 5              // a = 5
+nop
+
+LOOP:
+    @p1 cmp %nz x4, x2      // i =< j
+    @p1 addi x4, x4, 1      // i += 1
+    @p1 add x5, x5, x3      // b += a
+    @p1 nop
+    @p1 nop
+    @p1 br LOOP
+
+ret
+```
+
+is converted to the following machine code:
+
+```hex
+0001804D
+0002806D
+00000000
+400110C6
+4000908D
+400194A3
+40000000
+40000000
+7FFFFF62
+0000001F
+```
+
 ## ISA
+
+The SM supports the following instructions:
 
 | Mnemonic | Opcode | Description                               |
 |----------|--------|-------------------------------------------|
@@ -29,5 +70,7 @@
 | CMP      | 00110  | Compare two operands                      |
 
 ## Instruction encoding
+
+The instruction encoding is as follows:
 
 ![ISA](/images/isa.png)
