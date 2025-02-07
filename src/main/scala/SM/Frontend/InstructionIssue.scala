@@ -63,7 +63,6 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   val outQueueSel = Mux(!io.scheduler.stall, (1.U << io.scheduler.warp).asUInt, 0.U)
 
   // TODO: Think if all of these queues are necessary maybe one queue for an instruction of each warp is enough
-  // TODO: Think if 32 bits is not too much for a PC, this ends up using a lot of LUTs for a queue
   // Generate buffers for decoded instructions
   val threadMaskCurr = genDataQueues(UInt(warpSize.W), io.id.threadMask, inQueueSel, outQueueSel, io.scheduler.warp)
   val destCurr = genDataQueues(UInt(5.W), io.id.dest, inQueueSel, outQueueSel, io.scheduler.warp)

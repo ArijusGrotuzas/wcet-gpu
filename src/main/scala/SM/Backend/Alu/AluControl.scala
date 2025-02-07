@@ -12,17 +12,19 @@ class AluControl extends Module {
     val we = Output(Bool())
     val done = Output(Bool())
     val aluOp = Output(UInt(4.W))
-    val aSel = Output(UInt(2.W))
-    val bSel = Output(UInt(2.W))
+    val aSel = Output(Bool())
+    val bSel = Output(Bool())
     val nzpUpdate = Output(Bool())
+    val resSel = Output(UInt(2.W))
   })
 
-  val we = WireDefault(false.B)
+  val we = WireDefault(true.B)
   val aluOp = WireDefault(0.U(4.W))
-  val aSel = WireDefault(0.U(2.W))
-  val bSel = WireDefault(0.U(2.W))
+  val aSel = WireDefault(false.B)
+  val bSel = WireDefault(false.B)
   val done = WireDefault(false.B)
   val nzpUpdate = WireDefault(false.B)
+  val resSel = WireDefault(0.U(2.W))
 
   when(io.instrOpcode === Opcodes.RET.asUInt(5.W)) {
     done := true.B
@@ -31,22 +33,22 @@ class AluControl extends Module {
   switch (io.instrOpcode) {
     is(Opcodes.ADDI.asUInt(5.W)) {
       aluOp := AluOps.ADD.asUInt(3.W)
-      bSel := "b10".U
+      bSel := true.B
       we := true.B
     }
     is(Opcodes.SRLI.asUInt(5.W)) {
       aluOp := AluOps.SRL.asUInt(3.W)
-      bSel := "b10".U
+      bSel := true.B
       we := true.B
     }
     is(Opcodes.SLLI.asUInt(5.W)) {
       aluOp := AluOps.SLL.asUInt(3.W)
-      bSel := "b10".U
+      bSel := true.B
       we := true.B
     }
     is(Opcodes.LUI.asUInt(5.W)) {
       aluOp := AluOps.FORB.asUInt(3.W)
-      bSel := "b10".U
+      bSel := true.B
       we := true.B
     }
     is(Opcodes.ADD.asUInt(5.W)) {
@@ -67,13 +69,12 @@ class AluControl extends Module {
     }
     is(Opcodes.MUL.asUInt(5.W)) {
       aluOp := AluOps.FORA.asUInt(3.W)
-      aSel := "b10".U
+      resSel := "b01".U
       we := true.B
     }
     is(Opcodes.MAD.asUInt(5.W)) {
       aluOp := AluOps.ADD.asUInt(3.W)
-      aSel := "b10".U
-      bSel := "b01".U
+      resSel := "b11".U
       we := true.B
     }
     is(Opcodes.CMP.asUInt(5.W)) {
@@ -82,7 +83,7 @@ class AluControl extends Module {
     }
     is(Opcodes.LDS.asUInt(5.W)) {
       aluOp := AluOps.FORA.asUInt(3.W)
-      aSel := "b01".U
+      aSel := true.B
       we := true.B
     }
   }
@@ -93,4 +94,5 @@ class AluControl extends Module {
   io.aSel := aSel
   io.bSel := bSel
   io.nzpUpdate := nzpUpdate
+  io.resSel := resSel
 }

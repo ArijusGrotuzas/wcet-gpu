@@ -59,26 +59,26 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
   private def Mux3To1(sel: UInt, in1: SInt, in2: SInt, in3: SInt): SInt = {
     val out = WireDefault(0.S(32.W))
 
-    val intermediate = Mux(sel(1), in2, in1)
-    out := Mux(sel(0), in3, intermediate)
+    val intermediate = Mux(sel(1), in3, in2)
+    out := Mux(sel(0), intermediate, in1)
 
     out
   }
 
-  // Block index register
+  val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
+  val cmpOut = VecInit(Seq.fill(warpSize)(false.B))
   val blockIdxReg = RegInit(0.U(blockAddrLen.W))
+
   when(io.aluInitCtrl.setBlockIdx) {
     blockIdxReg := io.aluInitCtrl.blockIdx
   }
 
   // ALU lane control unit
-  val aluCtrl = Module(new AluControl)
+  val aluLaneCtrl = Module(new AluControl)
   val func3 = io.of.dest(2, 0)
-  aluCtrl.io.instrOpcode := io.of.opcode
-  aluCtrl.io.func3 := func3
 
-  val out = VecInit(Seq.fill(warpSize)(0.S(32.W)))
-  val cmpOut = VecInit(Seq.fill(warpSize)(false.B))
+  aluLaneCtrl.io.instrOpcode := io.of.opcode
+  aluLaneCtrl.io.func3 := func3
 
   // Generate different ALU lanes
   for (i <- 0 until warpSize) {
@@ -88,30 +88,34 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     val rs2 = io.of.rs2(((i + 1) * 32) - 1, i * 32).asSInt
     val rs3 = io.of.rs3(((i + 1) * 32) - 1, i * 32).asSInt
 
+    // Special register file output
     val srs = getSpecialValue(io.of.srs, i, blockIdxReg)
 
     // Multiplier
     val mulProd = rs1 * rs2
+    val mac = mulProd + rs3
 
     // Select the first operand
-    val a = Mux3To1(aluCtrl.io.aSel, rs1, mulProd, srs)
+    val a = Mux(aluLaneCtrl.io.aSel, srs, rs1)
     alu.io.a := a
 
     // Select the second operand
-    val b = Mux3To1(aluCtrl.io.bSel, rs2, io.of.imm, rs3)
+    val b = Mux(aluLaneCtrl.io.bSel, io.of.imm, rs2)
     alu.io.b := b
 
-    alu.io.op := aluCtrl.io.aluOp
+    // Set the alu operation
+    alu.io.op := aluLaneCtrl.io.aluOp
 
-    out(i) := alu.io.out
+    out(i) := Mux3To1(aluLaneCtrl.io.resSel, alu.io.out, mulProd, mac)
 
+    // Comparison results
     switch(func3) {
       is("b001".U) { cmpOut(i) := alu.io.pos } // Greater than
       is("b010".U) { cmpOut(i) := alu.io.zero } // Equal
       is("b011".U) { cmpOut(i) := alu.io.zero || alu.io.pos } // Greater than or equal to
-      is("b100".U) { cmpOut(i) := alu.io.neg  } // Less than
+      is("b100".U) { cmpOut(i) := alu.io.neg } // Less than
       is("b101".U) { cmpOut(i) := (alu.io.neg || alu.io.pos) & !alu.io.zero } // Not equal
-      is("b110".U) { cmpOut(i) := alu.io.neg || !alu.io.zero  } // Less than or equal to
+      is("b110".U) { cmpOut(i) := alu.io.neg || !alu.io.zero } // Less than or equal to
     }
   }
 
@@ -119,12 +123,12 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
   io.alu.threadMask := io.of.threadMask
   io.alu.warp := io.of.warp
   io.alu.dest := io.of.dest
-  io.alu.done := aluCtrl.io.done
-  io.alu.we := aluCtrl.io.we
+  io.alu.done := aluLaneCtrl.io.done
+  io.alu.we := aluLaneCtrl.io.we
   io.alu.out := out.asUInt
 
   // Alu pipeline control signals
   io.predUpdateCtrl.pred := cmpOut.asUInt
-  io.predUpdateCtrl.en := aluCtrl.io.nzpUpdate
+  io.predUpdateCtrl.en := aluLaneCtrl.io.nzpUpdate
   io.predUpdateCtrl.addr := io.of.warp ## io.of.pred
 }

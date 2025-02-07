@@ -9,7 +9,7 @@ class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
     val lsuCount = 4
     val addrLen = 4
     test(new LsuArbiter(lsuCount, addrLen)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      val allCombinations = (0 until math.pow(2, lsuCount).toInt)
+      val allCombinations = 0 until math.pow(2, lsuCount).toInt
       val addr = (0 until lsuCount).map(i => i << (addrLen * i)).sum
       val writeData = (0 until math.pow(2, lsuCount).toInt).map(i => i << 32).sum
 
@@ -22,7 +22,7 @@ class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // Read request
       for(comb <- allCombinations) {
-        println(s"Read request combination: ${comb.toBinaryString}")
+        // println(s"Read request combination: ${comb.toBinaryString}")
 
         dut.io.lsu.addr.poke(addr.U)
         dut.io.lsu.readReq.poke(comb.U)
@@ -31,7 +31,7 @@ class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
         dut.clock.step(1)
 
         // Read Arbitrate state
-        println ("Read address: " + dut.io.dataMem.addr.peekInt())
+        // println ("Read address: " + dut.io.dataMem.addr.peekInt())
 
         // Step for one clock cycle to enter read done state
         dut.clock.step(1)
@@ -48,13 +48,13 @@ class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
         dut.clock.step(2)
       }
 
-      println("--------------------")
+      // println("--------------------")
 
       dut.clock.step(1)
 
       // Write request
       for(comb <- allCombinations) {
-        println(s"Write request combination: ${comb.toBinaryString}")
+        // println(s"Write request combination: ${comb.toBinaryString}")
 
         dut.io.lsu.addr.poke(addr.U)
         dut.io.lsu.writeReq.poke(comb.U)
@@ -64,7 +64,7 @@ class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
         dut.clock.step(1)
 
         // Write Arbitrate state
-        println ("Read address: " + dut.io.dataMem.addr.peekInt())
+        // println ("Read address: " + dut.io.dataMem.addr.peekInt())
 
         // Step for one clock cycle to enter read done state
         dut.clock.step(1)
