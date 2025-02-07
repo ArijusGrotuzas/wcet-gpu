@@ -7,7 +7,11 @@ A time-predictable GPU core for real-time systems. A GPU core is often referred 
 The SM is an in-order SIMD processor with an 8-stage pipeline.
 The pipeline consists of 6 logical pipeline stages: IF, ID, ISS, OF, EX, and WB.
 
+A high-level overview of the SM is shown below:
+
 ![ISA](/images/SM_Overview.png)
+
+The blocks marked in red are not implemented in the current version of the SM.
 
 ## Assembler
 
