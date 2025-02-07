@@ -1,4 +1,4 @@
-name: Scala CI
+name: Sbt Test
 
 on:
   push:
@@ -13,10 +13,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: setup-scala
+      # Checkout the repository so that sbt can find your build files.
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up Scala and sbt.
+      - name: Setup Scala
         uses: olafurpg/setup-scala@v14
 
-      # Run the sbt test command to execute your Scala tests
+      # Run the sbt test command to execute your Scala tests.
       - name: Run sbt tests
         run: sbt test
-

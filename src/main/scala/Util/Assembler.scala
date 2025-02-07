@@ -1,9 +1,9 @@
 package Util
 
 import Constants.Opcodes
+
+import java.io.{File, PrintWriter}
 import scala.io._
-import java.io.File
-import java.io.PrintWriter
 
 /**
  *
@@ -14,6 +14,13 @@ object Assembler {
   def assembleProgram(file: String): Array[Int] = {
     findSymbols(file)
     assemble(file)
+  }
+
+  def convertToInt(value: Any): Int = {
+    value match {
+      case i: Int => i
+      case _ => 0
+    }
   }
 
   private def findSymbols(file: String): Unit = {
@@ -73,23 +80,14 @@ object Assembler {
       case "mad" => (getVecRegNum(tokens(4), pc) << 20) + (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.MAD
       case "br" => ((getBrnOff(tokens(1), pc) << 5) & 0x3FFFFFFF) + Opcodes.BR
       case "cmp" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getNZP(tokens(1)) << 5) + Opcodes.CMP
-      case "split" => println("Split instruction not yet implemented")
-      case "join" => println("Join instruction not yet implemented")
       case s if s.startsWith("@") => (getPredicateReg(tokens(0)) << 30) + convertToInt(assembleInstruction(tokens.drop(1), pc, file, getSymbols)) // Predicate
       case "//" => // Comment
       case "" => // Empty line
-      case t: String => throw new Exception("Unexpected instruction: " + t + " in file" + file)
-      case _ => throw new Exception("Unhandled case")
+      case t: String => throw new Exception("Unexpected instruction: " + t + " in file: " + file + ", at line: " + pc)
+      case _ => throw new Exception("Unhandled case in file: " + file + ", at line: " + pc)
     }
 
     instr
-  }
-
-  def convertToInt(value: Any): Int = {
-    value match {
-      case i: Int => i
-      case _ => 0
-    }
   }
 
   private def getConst(s: String): Int = {
@@ -105,7 +103,7 @@ object Assembler {
   }
 
   private def getVecRegNum(s: String, pc: Int): Int = {
-    assert(s.startsWith("x"), "Vector register number must start with an \'x\' :" + pc )
+    assert(s.startsWith("x"), "Vector register number must start with an \'x\' :" + pc)
     s.substring(1).toInt
   }
 
@@ -143,20 +141,24 @@ object Assembler {
     val banks = registers.map(i => i % 4).distinct
     val noConflict = banks.diff(banks.distinct).distinct.isEmpty
 
-    if (noConflict) { 0 } else { throw new Exception("Bank conflicts for instruction at : " + pc) }
+    if (! noConflict) {
+      throw new Exception("Bank conflicts at line: " + pc)
+    }
+
+    0
   }
 }
 
 // TODO: Add checking if any instruction attempts to read two or more operands from the same bank
 object Main extends App {
+  val files = getListOfFiles("asm")
+
   def getListOfFiles(dir: String): List[String] = {
     val file = new File(dir)
     file.listFiles.filter(_.isFile)
       .filter(_.getName.endsWith(".asm"))
       .map(_.getPath).toList
   }
-
-  val files = getListOfFiles("asm")
 
   // Assemble all the programs contained in the asm directory
   for (file <- files) {
@@ -166,6 +168,8 @@ object Main extends App {
     println(program)
     println("")
 
-    new PrintWriter(file.replace(".asm", ".hex").replace("asm/", "hex/instructions/")) { write(program); close() }
+    new PrintWriter(file.replace(".asm", ".hex").replace("asm/", "hex/instructions/")) {
+      write(program); close()
+    }
   }
 }
