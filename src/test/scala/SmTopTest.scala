@@ -319,4 +319,40 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.ready.expect(true.B)
     }
   }
+
+  "Sm" should "execute program under analysis" in {
+    test(new SmTop(
+      blockCount = 4,
+      warpCount = 4,
+      warpSize = 4,
+      instrMemDepth = 64,
+      dataMemDepth = 64,
+      freq = 100,
+      baud = 50,
+      instructionFile = "hex/instructions/pua.hex",
+      dataFile = "hex/data/pua.hex"
+    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+
+      dut.clock.step(1)
+
+      // Start the SM
+      dut.io.valid.poke(true.B)
+      dut.io.data.poke("b00000011".U)
+      dut.io.ready.expect(true.B)
+
+      dut.clock.step(1)
+
+      // Reset the start signals
+      dut.io.valid.poke(false.B)
+      dut.io.data.poke(0.U)
+      dut.io.ready.expect(false.B)
+
+      dut.clock.step(100)
+
+      // Expect the SM to be done
+      dut.io.ready.expect(true.B)
+    }
+  }
 }
