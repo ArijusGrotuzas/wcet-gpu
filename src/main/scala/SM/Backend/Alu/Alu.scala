@@ -21,16 +21,17 @@ class Alu(operandWidth: Int) extends Module {
 
   // Default value
   val out = WireDefault(0.S(operandWidth.W))
+  val shiftAmount = log2Up(operandWidth) - 1
 
   switch (io.op) {
-    is(AluOps.ADD.asUInt(3.W)) {out := io.a + io.b}
-    is(AluOps.SUB.asUInt(3.W)) {out := io.a - io.b}
-    is(AluOps.AND.asUInt(3.W)) {out := io.a & io.b}
-    is(AluOps.OR.asUInt(3.W)) {out := io.a | io.b}
-    is(AluOps.SRL.asUInt(3.W)) {out := (io.a >> io.b.asUInt(4, 0)).asSInt}
-    is(AluOps.SLL.asUInt(3.W)) {out := (io.a.asUInt << io.b.asUInt(4, 0)).asSInt}
-    is(AluOps.FORA.asUInt(3.W)) {out := io.a}
-    is(AluOps.FORB.asUInt(3.W)) {out := io.b}
+    is(AluOps.ADD.asUInt(3.W))  { out := io.a + io.b }
+    is(AluOps.SUB.asUInt(3.W))  { out := io.a - io.b }
+    is(AluOps.AND.asUInt(3.W))  { out := io.a & io.b }
+    is(AluOps.OR.asUInt(3.W))   { out := io.a | io.b }
+    is(AluOps.SRL.asUInt(3.W))  { out := (io.a >> io.b.asUInt(shiftAmount, 0)).asSInt }
+    is(AluOps.SLL.asUInt(3.W))  { out := (io.a.asUInt << io.b.asUInt(shiftAmount, 0)).asSInt }
+    is(AluOps.FORA.asUInt(3.W)) { out := io.a }
+    is(AluOps.FORB.asUInt(3.W)) { out := io.b }
   }
 
   io.zero := !out.asUInt.orR

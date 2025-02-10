@@ -50,7 +50,7 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  "Alu" should "perform SRL operation" in {
+  "Alu" should "perform logical right shift operation" in {
     test(new Alu(32)) { dut =>
       dut.io.a.poke(4.S)
       dut.io.b.poke(1.S)
@@ -61,7 +61,7 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
-  "Alu" should "perform SLL operation" in {
+  "Alu" should "perform logical left shift operation" in {
     test(new Alu(32)) { dut =>
       dut.io.a.poke(4.S)
       dut.io.b.poke(1.S)
