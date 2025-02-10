@@ -5,6 +5,7 @@ import chiseltest._
 import Constants.AluOps
 import org.scalatest.flatspec.AnyFlatSpec
 
+
 class AluTest extends AnyFlatSpec with ChiselScalatestTester {
   "Alu" should "add two numbers" in {
     test(new Alu(32)) { dut =>

@@ -1,12 +1,12 @@
 package Constants
 
 object AluOps {
-  val ADD = 0x0
-  val SUB = 0x1
-  val AND = 0x2
-  val OR = 0x3
-  val SRL = 0x4
-  val SLL = 0x5
-  val FORA = 0x6
-  val FORB = 0x7
+  val ADD = 0x0   // Add two operands
+  val SUB = 0x1   // Subtract two operands
+  val AND = 0x2   // Bitwise AND operation
+  val OR = 0x3    // Bitwise OR operation
+  val SRL = 0x4   // Logical right shift operation
+  val SLL = 0x5   // Logical left shift operation
+  val FORA = 0x6  // Forward operand A
+  val FORB = 0x7  // Forward operand B
 }
