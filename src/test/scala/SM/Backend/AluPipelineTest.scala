@@ -81,6 +81,13 @@ class AluPipelineTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.of.opcode.poke("b01001".U)
 
       dut.io.alu.out.expect("h0000000200000002".U)
+
+      // Perform a SRLI operation
+      dut.io.of.rs1.poke("h0000000500000001".U)
+      dut.io.of.imm.poke(1.S)
+      dut.io.of.opcode.poke("b10101".U)
+
+      dut.io.alu.out.expect("h0000000200000000".U)
     }
   }
 }

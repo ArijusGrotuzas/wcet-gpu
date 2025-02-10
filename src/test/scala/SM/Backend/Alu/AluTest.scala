@@ -49,4 +49,26 @@ class AluTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.zero.expect(false.B)
     }
   }
+
+  "Alu" should "perform SRL operation" in {
+    test(new Alu(32)) { dut =>
+      dut.io.a.poke(4.S)
+      dut.io.b.poke(1.S)
+      dut.io.op.poke(AluOps.SRL.asUInt(5.W))
+
+      dut.io.out.expect(2.S)
+      dut.io.zero.expect(false.B)
+    }
+  }
+
+  "Alu" should "perform SLL operation" in {
+    test(new Alu(32)) { dut =>
+      dut.io.a.poke(4.S)
+      dut.io.b.poke(1.S)
+      dut.io.op.poke(AluOps.SLL.asUInt(5.W))
+
+      dut.io.out.expect(8.S)
+      dut.io.zero.expect(false.B)
+    }
+  }
 }
