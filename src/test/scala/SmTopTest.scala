@@ -313,7 +313,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.data.poke(0.U)
       dut.io.ready.expect(false.B)
 
-      dut.clock.step(600)
+      dut.clock.step(700)
 
       // Expect the SM to be done
       dut.io.ready.expect(true.B)

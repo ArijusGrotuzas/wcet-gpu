@@ -14,6 +14,7 @@ LOOP:
     @p1 addi x5, x5, 1      // x5 += 1
     @p1 nop
     @p1 nop
+    @p1 nop
     @p1 br LOOP
 
 ret

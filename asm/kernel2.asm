@@ -10,6 +10,7 @@ LOOP:
     @p1 add x5, x5, x3      // b += a
     @p1 nop
     @p1 nop
+    @p1 nop
     @p1 br LOOP
 
 ret

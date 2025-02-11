@@ -27,6 +27,7 @@ LOOP:
     @p1 nop
     @p1 srli x14, x14, 1    // number[i] >>= 1
     @p1 add x11, x11, x16   // count += number[i] & 1
+    @p1 nop
     @p1 br LOOP
 
 st x13, x11                 // store count to global memory

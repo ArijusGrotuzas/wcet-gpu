@@ -5,7 +5,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
-  "SM.LsuArbiter" should "execute program 1" in {
+  "LsuArbiter" should "route arbitrate LSUs correctly" in {
     val lsuCount = 4
     val addrLen = 4
     test(new LsuArbiter(lsuCount, addrLen)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
@@ -21,7 +21,7 @@ class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.dataMem.dataR.poke(0.U)
 
       // Read request
-      for(comb <- allCombinations) {
+      for (comb <- allCombinations) {
         // println(s"Read request combination: ${comb.toBinaryString}")
 
         dut.io.lsu.addr.poke(addr.U)
@@ -53,7 +53,7 @@ class LsuArbiterTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       // Write request
-      for(comb <- allCombinations) {
+      for (comb <- allCombinations) {
         // println(s"Write request combination: ${comb.toBinaryString}")
 
         dut.io.lsu.addr.poke(addr.U)

@@ -23,6 +23,7 @@ LOOP:
     @p1 addi x9, x9, 1      // i += 1
     @p1 addi x13, x14, 0    // a = b
     @p1 addi x14, x15, 0    // b = ith_val
+    @p1 nop
     @p1 br LOOP
 
 st x16, x14                 // output[i] = b
