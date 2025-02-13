@@ -18,7 +18,7 @@ class AluControl extends Module {
     val resSel = Output(UInt(2.W))
   })
 
-  val we = WireDefault(true.B)
+  val we = WireDefault(false.B)
   val aluOp = WireDefault(0.U(4.W))
   val aSel = WireDefault(false.B)
   val bSel = WireDefault(false.B)
