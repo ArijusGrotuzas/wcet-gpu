@@ -253,7 +253,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new SmTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 8,
+      warpSize = 32,
       instrMemDepth = 1024,
       dataMemDepth = 1024,
       freq = 100,
@@ -268,7 +268,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
 
       // Start the SM
       dut.io.valid.poke(true.B)
-      dut.io.data.poke("b001111".U)
+      dut.io.data.poke("b000001".U)
       dut.io.ready.expect(true.B)
 
       dut.clock.step(1)

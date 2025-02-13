@@ -2,7 +2,7 @@ package SM.Frontend
 
 import chisel3._
 import chisel3.util._
-import scala.math.pow
+import math.pow
 
 /**
  * Warp table contains entries for each warp, where each entry holds the following information:
@@ -65,7 +65,7 @@ class WarpTable(warpCount: Int, warpSize: Int) extends Module {
   val pendingReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val validReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val pcReg = RegInit(VecInit(Seq.fill(warpCount)(0.U(32.W))))
-  val threadMasks = RegInit(VecInit(Seq.fill(warpCount)((pow(2.toDouble, warpSize.toDouble).toInt - 1).U(warpSize.W))))
+  val threadMasks = RegInit(VecInit(Seq.fill(warpCount)((pow(2, warpSize).toLong - 1).U(warpSize.W))))
 
   when(io.validCtrl.set) {
     for (i <- 0 until warpCount) {

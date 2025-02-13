@@ -19,7 +19,7 @@ class PredicateRegisterFile(warpCount: Int, warpSize: Int) extends Module {
     val data2R = Output(UInt(dataWidth.W))
   })
 
-  val regFileContents = (0 until warpCount * 4).map(i => if (i % 4 == 0) (pow(2, dataWidth).toInt - 1).U else 0.U(dataWidth.W))
+  val regFileContents = (0 until warpCount * 4).map(i => if (i % 4 == 0) (pow(2, warpSize).toLong - 1).U else 0.U(dataWidth.W))
   val nzpRegFile = RegInit(VecInit(regFileContents))
 
   // Update the correct nzp register and prevent writing to the zero register

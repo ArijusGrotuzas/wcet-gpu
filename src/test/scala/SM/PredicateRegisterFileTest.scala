@@ -8,7 +8,7 @@ import scala.math.pow
 
 class PredicateRegisterFileTest extends AnyFlatSpec with ChiselScalatestTester {
   "PredicateRegisterFile" should "output always true predicate" in {
-    val warpSize = 8
+    val warpSize = 32
     val warpCount = 4
     test(new PredicateRegisterFile(warpCount, warpSize)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       // Default assignments
@@ -23,8 +23,8 @@ class PredicateRegisterFileTest extends AnyFlatSpec with ChiselScalatestTester {
       // Read the first predicate register
       dut.io.addr1R.poke(0.U)
       dut.io.addr2R.poke(0.U)
-      dut.io.data1R.expect((pow(2, warpSize).toInt - 1).U)
-      dut.io.data2R.expect((pow(2, warpSize).toInt - 1).U)
+      dut.io.data1R.expect((pow(2, warpSize).toLong - 1).U)
+      dut.io.data2R.expect((pow(2, warpSize).toLong - 1).U)
     }
   }
 }
