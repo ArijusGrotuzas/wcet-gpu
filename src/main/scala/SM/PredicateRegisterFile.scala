@@ -20,14 +20,14 @@ class PredicateRegisterFile(warpCount: Int, warpSize: Int) extends Module {
   })
 
   val regFileContents = (0 until warpCount * 4).map(i => if (i % 4 == 0) (pow(2, warpSize).toLong - 1).U else 0.U(dataWidth.W))
-  val nzpRegFile = RegInit(VecInit(regFileContents))
+  val predRegFile = RegInit(VecInit(regFileContents))
 
-  // Update the correct nzp register and prevent writing to the zero register
+  // Update the correct predicate register and prevent writing to the zero register
   when(io.we && io.addrW(1, 0).asUInt =/= 0.U) {
-    nzpRegFile(io.addrW) := io.dataW
+    predRegFile(io.addrW) := io.dataW
   }
 
   // Two read ports
-  io.data1R := nzpRegFile(io.addr1R)
-  io.data2R := Mux((io.addr2R === io.addrW) && io.we, io.dataW, nzpRegFile(io.addr2R))
+  io.data1R := predRegFile(io.addr1R)
+  io.data2R := Mux((io.addr2R === io.addrW) && io.we, io.dataW, predRegFile(io.addr2R))
 }

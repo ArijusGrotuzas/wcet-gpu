@@ -114,10 +114,9 @@ class WriteBack(warpCount: Int, warpSize: Int) extends Module {
   io.wbOf.writeAddr := outAddr
   io.wbOf.writeData := outData
   io.wbOf.writeMask := outWriteMask
-
   io.wbIfCtrl.warp := outWarp
   io.wbIfCtrl.setInactive := outInactive
-
-  io.outTest := outData
   io.wbStall := stallScheduler
+  // Test Output
+  io.outTest := outData
 }

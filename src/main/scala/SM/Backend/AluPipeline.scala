@@ -129,6 +129,6 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
 
   // Alu pipeline control signals
   io.predUpdateCtrl.pred := cmpOut.asUInt
-  io.predUpdateCtrl.en := aluLaneCtrl.io.nzpUpdate
+  io.predUpdateCtrl.en := aluLaneCtrl.io.predUpdate
   io.predUpdateCtrl.addr := io.of.warp ## io.of.pred
 }

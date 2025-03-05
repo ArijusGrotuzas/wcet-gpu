@@ -1,4 +1,4 @@
-// SAXPY
+// Integer AXPY
 
 lds x1, s0              // thread id
 lds x2, s1              // warp id

@@ -14,7 +14,7 @@ class AluControl extends Module {
     val aluOp = Output(UInt(4.W))
     val aSel = Output(Bool())
     val bSel = Output(Bool())
-    val nzpUpdate = Output(Bool())
+    val predUpdate = Output(Bool())
     val resSel = Output(UInt(2.W))
   })
 
@@ -23,14 +23,13 @@ class AluControl extends Module {
   val aSel = WireDefault(false.B)
   val bSel = WireDefault(false.B)
   val done = WireDefault(false.B)
-  val nzpUpdate = WireDefault(false.B)
+  val predUpdate = WireDefault(false.B)
   val resSel = WireDefault(0.U(2.W))
 
-  when(io.instrOpcode === Opcodes.RET.asUInt(5.W)) {
-    done := true.B
-  }
-
   switch (io.instrOpcode) {
+    is(Opcodes.RET.asUInt(5.W)) {
+      done := true.B
+    }
     is(Opcodes.ADDI.asUInt(5.W)) {
       aluOp := AluOps.ADD.asUInt(3.W)
       bSel := true.B
@@ -79,7 +78,7 @@ class AluControl extends Module {
     }
     is(Opcodes.CMP.asUInt(5.W)) {
       aluOp := AluOps.SUB.asUInt(3.W)
-      nzpUpdate := io.func3 =/= "b000".U && io.func3 =/= "b111".U
+      predUpdate := io.func3 =/= "b000".U && io.func3 =/= "b111".U
     }
     is(Opcodes.LDS.asUInt(5.W)) {
       aluOp := AluOps.FORA.asUInt(3.W)
@@ -93,6 +92,6 @@ class AluControl extends Module {
   io.aluOp := aluOp
   io.aSel := aSel
   io.bSel := bSel
-  io.nzpUpdate := nzpUpdate
+  io.predUpdate := predUpdate
   io.resSel := resSel
 }

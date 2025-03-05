@@ -72,7 +72,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   pcReg := instrPc
   warpReg := io.scheduler.warp
   fetchReg := shouldFetchNxtInstr
-  validReg := !io.scheduler.stall
+  validReg := !io.scheduler.stall && warpTable.io.done(io.scheduler.warp) === 0.U
 
   brnCtrl.io.instr := instr
   brnCtrl.io.pcCurr := pcReg

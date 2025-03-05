@@ -1,7 +1,7 @@
 import chisel3._
 import chisel3.util._
 
-class SmTopDe2115(
+class SmDe2115Top(
                    blockCount: Int,
                    warpCount: Int,
                    warpSize: Int,
@@ -50,20 +50,24 @@ class SmTopDe2115(
     cycleCount
   }
 
+  val serialPort = Module(new SerialPort(freq, baud, dataMemDepth))
   val debSw = Module(new DebounceSw(blockAddrLen + warpCount, freq))
-  val smTop = Module(new SmTop(blockCount, warpCount, warpSize, instrMemDepth, dataMemDepth, freq, baud, instructionFile, dataFile))
+  val smTop = Module(new SmTop(blockCount, warpCount, warpSize, instrMemDepth, dataMemDepth, instructionFile, dataFile))
 
   debSw.io.sw := io.sw
 
-  // Must invert the signals since the debounced buttons on the DE2-115 board are high when not pressed
-  smTop.io.dump := !io.dump
   smTop.io.valid := !io.valid
   smTop.io.data := debSw.io.swDb
+  smTop.io.memDump.dumpAddr := serialPort.io.addrR
+
+  // Must invert the signals since the debounced buttons on the DE2-115 board are high when not pressed
+  serialPort.io.dump := !io.dump
+  serialPort.io.dataR := smTop.io.memDump.dumpData
 
   // Cycle counter
   val cycleCount = cycleCounter(smTop.io.ready, smTop.io.done)
 
-  io.tx := smTop.io.tx
+  io.tx := serialPort.io.tx
   io.ready := smTop.io.ready
   io.cycles := cycleCount
 }
@@ -71,7 +75,7 @@ class SmTopDe2115(
 /**
  * @see https://github.com/chipsalliance/firrtl/issues/2168
  */
-object SmTopDe2115 extends App {
+object SmDe2115Top extends App {
   println("Generating the SM hardware for the DE2-115 board")
-  (new chisel3.stage.ChiselStage).emitVerilog(new SmTopDe2115(4, 8, 32, 64, 1024, 50000000, 115200, "bootkernel.hex", "bootdata.hex"), Array("--target-dir", "generated", "--no-dedup"))
+  (new chisel3.stage.ChiselStage).emitVerilog(new SmDe2115Top(4, 4, 8, 64, 1024, 50000000, 115200, "bootkernel.hex", "bootdata.hex"), Array("--target-dir", "generated", "--no-dedup"))
 }

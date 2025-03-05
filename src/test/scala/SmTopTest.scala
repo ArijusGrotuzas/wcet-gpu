@@ -3,356 +3,201 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
+  def testProgram(dut: SmTestTop, blockConfig: String, memDepth: Int, dumpMem: Boolean = false): Unit = {
+    // Default DUT assignments
+    dut.io.valid.poke(false.B)
+    dut.io.data.poke(0.U)
+
+    dut.clock.step(1)
+
+    // Start the SM
+    dut.io.valid.poke(true.B)
+    dut.io.data.poke(blockConfig.U)
+    dut.io.ready.expect(true.B, "The SM is not ready upon initialization.\n")
+
+    dut.clock.step(1)
+
+    // Reset the start signals
+    dut.io.valid.poke(false.B)
+    dut.io.data.poke(0.U)
+    dut.io.ready.expect(false.B, "The SM did not start processing.\n")
+
+    val maxCycles = 1000
+    var run = true
+    var executionCycles = 0
+
+    while (run && executionCycles < maxCycles) {
+      val pc = dut.io.dbg.pc.peekInt()
+      val warp = dut.io.dbg.warp.peekInt()
+      val instr = dut.io.dbg.instr.peekInt()
+      val valid = dut.io.dbg.valid.peekBoolean()
+//      Predef.printf("warp: %d, pc: 0x%08x, instr: 0x%08x, valid: %b\n", warp, pc, instr, valid)
+
+      dut.clock.step(1)
+
+      executionCycles += 1
+      run = dut.io.ready.peekInt() == 0 && maxCycles > 0
+
+      assert(maxCycles > 0, "Ran out of cycles")
+    }
+
+    if (dumpMem) {
+      Predef.printf("Dumping data memory contents:\n")
+
+      for (i <- 0 until memDepth) {
+        dut.io.memDump.dumpAddr.poke(i.U)
+        dut.clock.step(1)
+
+        Predef.printf("%d: 0x%08x\n", i, dut.io.memDump.dumpData.peekInt())
+      }
+    }
+
+    Predef.printf("Execution cycles: %d\n", executionCycles)
+
+    // Expect the SM to be done
+    dut.io.ready.expect(true.B, "SM did not finish in time.\n")
+  }
+
   "Sm" should "execute program 1" in {
-    test(new SmTop(
+    val dataMemDepth = 32
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
       warpSize = 8,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
+      instrMemDepth = 32,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel1.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke("b00001111".U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(100)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b001111", dataMemDepth)
     }
   }
 
   "Sm" should "execute program 2" in {
-    test(new SmTop(
+    val dataMemDepth = 32
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
       warpSize = 8,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
+      instrMemDepth = 32,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel2.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke(1.U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(150)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b001111", dataMemDepth)
     }
   }
 
   "Sm" should "execute program 3" in {
-    test(new SmTop(
+    val dataMemDepth = 32
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
       warpSize = 8,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
+      instrMemDepth = 32,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel3.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke("b100110".U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(150)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b100110", dataMemDepth)
     }
   }
 
   "Sm" should "execute program 4" in {
-    test(new SmTop(
+    val dataMemDepth = 32
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 6,
       warpSize = 8,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
+      instrMemDepth = 32,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel4.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke("b00111111".U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(500)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b111111", dataMemDepth)
     }
   }
 
   "Sm" should "execute program 5" in {
-    test(new SmTop(
+    val dataMemDepth = 32
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
       warpSize = 8,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
+      instrMemDepth = 32,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel5.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke(1.U) // Single active warp and zero as block idx
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(150)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b001111", dataMemDepth)
     }
   }
 
   "Sm" should "execute program 6" in {
-    test(new SmTop(
+    val dataMemDepth = 32
+    test(new SmTestTop(
+      blockCount = 4,
+      warpCount = 4,
+      warpSize = 8,
+      instrMemDepth = 32,
+      dataMemDepth = dataMemDepth,
+      instructionFile = "hex/instructions/kernel6.hex"
+    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      testProgram(dut, "b001111", dataMemDepth)
+    }
+  }
+
+  "Sm" should "execute axpy" in {
+    val dataMemDepth = 1024
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
       warpSize = 8,
       instrMemDepth = 64,
-      dataMemDepth = 64,
-      freq = 100,
-      baud = 50,
-      instructionFile = "hex/instructions/kernel6.hex"
-    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke(1.U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(100)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
-    }
-  }
-
-  "Sm" should "execute saxpy" in {
-    test(new SmTop(
-      blockCount = 4,
-      warpCount = 4,
-      warpSize = 8,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
-      instructionFile = "hex/instructions/saxpy.hex",
+      dataMemDepth = dataMemDepth,
+      instructionFile = "hex/instructions/axpy.hex",
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke("b001111".U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(500)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
     }
   }
 
   "Sm" should "execute hamming" in {
-    test(new SmTop(
+    val dataMemDepth = 1024
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 32,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
+      warpSize = 8,
+      instrMemDepth = 64,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/hamming.hex",
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke("b000001".U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(500)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
     }
   }
 
   "Sm" should "execute fibonacci" in {
-    test(new SmTop(
+    val dataMemDepth = 32
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
       warpSize = 8,
-      instrMemDepth = 1024,
-      dataMemDepth = 1024,
-      freq = 100,
-      baud = 50,
+      instrMemDepth = 32,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/fibonacci.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke("b001111".U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(700)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
     }
   }
 
   "Sm" should "execute program under analysis" in {
-    test(new SmTop(
+    val dataMemDepth = 64
+    test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 4,
+      warpSize = 8,
       instrMemDepth = 64,
-      dataMemDepth = 64,
-      freq = 100,
-      baud = 50,
+      dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/pua.hex",
       dataFile = "hex/data/pua.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-
-      dut.clock.step(1)
-
-      // Start the SM
-      dut.io.valid.poke(true.B)
-      dut.io.data.poke("b00000011".U)
-      dut.io.ready.expect(true.B)
-
-      dut.clock.step(1)
-
-      // Reset the start signals
-      dut.io.valid.poke(false.B)
-      dut.io.data.poke(0.U)
-      dut.io.ready.expect(false.B)
-
-      dut.clock.step(100)
-
-      // Expect the SM to be done
-      dut.io.ready.expect(true.B)
+      testProgram(dut, "b001111", dataMemDepth)
     }
   }
 }

@@ -1,7 +1,7 @@
 package SM.Backend
 
 import Constants.Opcodes
-import SM.Backend.Vrf.VectorRegisterFile
+import SM.Backend.RegisterFile.Vrf.VectorRegisterFile
 import chisel3._
 import chisel3.util._
 

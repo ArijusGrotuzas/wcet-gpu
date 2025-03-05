@@ -26,7 +26,6 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
       val ready = Output(Bool())
     }
 
-    val wbOutTest = Output(UInt((warpSize * 32).W))
     val done = Output(Bool())
   })
 
@@ -67,6 +66,5 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   io.dataMem <> lsuArbiter.io.dataMem
 
   // Test signal
-  io.wbOutTest := backend.io.wbOutTest
   io.done := frontend.io.done
 }
