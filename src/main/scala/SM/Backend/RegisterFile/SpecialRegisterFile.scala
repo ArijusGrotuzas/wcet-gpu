@@ -3,6 +3,7 @@ package SM.Backend.RegisterFile
 import chisel3._
 import chisel3.util._
 
+// TODO: Add this to a larger register file module
 class SpecialRegisterFile(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val blockAddrLen = log2Up(blockCount)
   val io = IO(new Bundle {
@@ -12,6 +13,8 @@ class SpecialRegisterFile(blockCount: Int, warpCount: Int, warpSize: Int) extend
     val readData = Output(UInt((warpSize * 32).W))
   })
 
+  // TODO: Add warp ID as an output in a higher level module
+  // TODO: Think if zero register can be just zero and if other indexes can be filled with other relevant values
   val srfContents = RegInit(VecInit(
     VecInit((0 until warpSize).map(i => i.U(32.W))),        // 0: thread ID
     VecInit(Seq.fill(warpSize)(0.U(32.W))),                       // 1: block ID

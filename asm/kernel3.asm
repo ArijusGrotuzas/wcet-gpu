@@ -1,5 +1,6 @@
 // Tests the ability of the SM to compute the threads global index
 
+// TODO: Change ordering of SRF indexes, i.e. warp id is now 5 and
 lds x4, s3          // Load warp width to register 4
 lds x2, s1          // Load warp ID to register 2
 lds x1, s0          // load thread ID to register 1

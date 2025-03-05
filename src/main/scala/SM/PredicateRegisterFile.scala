@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util._
 import math.pow
 
+// TODO: Move this to a larger register file module
 class PredicateRegisterFile(warpCount: Int, warpSize: Int) extends Module {
   val dataWidth = warpSize
   val addrLen = log2Up(warpCount) + 2

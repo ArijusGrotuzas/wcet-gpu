@@ -5,6 +5,7 @@ import SM.Frontend.IF._
 import chisel3._
 import chisel3.util._
 
+// TODO: Add IPDOM stack
 class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {

@@ -16,7 +16,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
       val rs1 = Input(UInt((32 * warpSize).W))
       val rs2 = Input(UInt((32 * warpSize).W))
       val rs3 = Input(UInt((32 * warpSize).W))
-      val srs = Input(UInt(3.W))
+      val srs = Input(UInt(3.W)) // TODO: Turn this into an already ready operand
       val imm = Input(SInt(32.W))
       val pred = Input(UInt(2.W))
     }
@@ -88,6 +88,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
     val rs2 = io.of.rs2(((i + 1) * 32) - 1, i * 32).asSInt
     val rs3 = io.of.rs3(((i + 1) * 32) - 1, i * 32).asSInt
 
+    // TODO: Move srf to register file to avoid having MUXes to depend on this combinational path
     // Special register file output
     val srs = getSpecialValue(io.of.srs, i, blockIdxReg)
 
@@ -108,6 +109,7 @@ class AluPipeline(blockCount: Int, warpCount: Int, warpSize: Int) extends Module
 
     out(i) := Mux3To1(aluLaneCtrl.io.resSel, alu.io.out, mulProd, mac)
 
+    // TODO: Perform comparisons in parallel with ALU operations to avoid having long critical paths
     // Comparison results
     switch(func3) {
       is("b001".U) { cmpOut(i) := alu.io.pos } // Greater than
