@@ -1,16 +1,16 @@
 import chisel3._
 import chisel3.util._
 
-class SmDe2115Top(
+class SmTopDe2115(
                    blockCount: Int,
                    warpCount: Int,
                    warpSize: Int,
                    instrMemDepth: Int,
                    dataMemDepth: Int,
-                   freq: Int,
-                   baud: Int,
                    instructionFile: String = "",
-                   dataFile: String = ""
+                   dataFile: String = "",
+                   freq: Int = 50000000,
+                   baud: Int = 115200
                  ) extends Module {
   private val blockAddrLen = log2Up(blockCount)
   val io = IO(new Bundle {
@@ -75,7 +75,17 @@ class SmDe2115Top(
 /**
  * @see https://github.com/chipsalliance/firrtl/issues/2168
  */
-object SmDe2115Top extends App {
+object SmTopDe2115 extends App {
   println("Generating the SM hardware for the DE2-115 board")
-  (new chisel3.stage.ChiselStage).emitVerilog(new SmDe2115Top(4, 4, 8, 64, 1024, 50000000, 115200, "bootkernel.hex", "bootdata.hex"), Array("--target-dir", "generated", "--no-dedup"))
+  (new chisel3.stage.ChiselStage).emitVerilog(new SmTopDe2115(
+    blockCount = 4,
+    warpCount = 8,
+    warpSize = 16,
+    instrMemDepth = 64,
+    dataMemDepth = 1024,
+    instructionFile = "bootkernel.hex",
+    dataFile = "bootdata.hex",
+    freq = 50000000,
+    baud = 115200,
+  ), Array("--target-dir", "generated", "--no-dedup"))
 }

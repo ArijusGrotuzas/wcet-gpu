@@ -7,6 +7,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     // Default DUT assignments
     dut.io.valid.poke(false.B)
     dut.io.data.poke(0.U)
+    dut.clock.setTimeout(1500)
 
     dut.clock.step(1)
 
@@ -17,12 +18,12 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
 
     dut.clock.step(1)
 
-    // Reset the start signals
+    // Unset the start signals
     dut.io.valid.poke(false.B)
     dut.io.data.poke(0.U)
     dut.io.ready.expect(false.B, "The SM did not start processing.\n")
 
-    val maxCycles = 1000
+    val maxCycles = 1500
     var run = true
     var executionCycles = 0
 
@@ -36,7 +37,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.clock.step(1)
 
       executionCycles += 1
-      run = dut.io.ready.peekInt() == 0 && maxCycles > 0
+      run = dut.io.ready.peekInt() == 0
 
       assert(maxCycles > 0, "Ran out of cycles")
     }
@@ -147,7 +148,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 8,
+      warpSize = 16,
       instrMemDepth = 64,
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/axpy.hex",
@@ -162,7 +163,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 8,
+      warpSize = 16,
       instrMemDepth = 64,
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/hamming.hex",
@@ -173,11 +174,11 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
   }
 
   "Sm" should "execute fibonacci" in {
-    val dataMemDepth = 32
+    val dataMemDepth = 1024
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 8,
+      warpSize = 16,
       instrMemDepth = 32,
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/fibonacci.hex"
