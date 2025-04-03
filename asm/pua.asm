@@ -1,5 +1,6 @@
 // Program Under Analysis
 
+// -------- C1 --------
 lds x1, s0                  // thread id
 lds x2, s1                  // warp id
 lds x3, s3                  // warp width
@@ -17,8 +18,11 @@ mad x7, x5, x6, x4          // x7 = (blockWidth * blockID) + localThreadId = (gl
 
 addi x13, x0, 14            // res[4] base address
 add x16, x13, x7            // res[threadIdx];
+
+// -------- A1 --------
 ld x12, x7                  // data[threadIdx];
 
+// -------- C2 --------
 @p1 cmp %p x12, x10         // data[threadIdx] > 20;
 @p3 cmp %n x12, x10         // data[threadIdx] < 20;
 @p2 cmp %p x12, x11         // data[threadIdx] > 30;
@@ -28,8 +32,11 @@ ld x12, x7                  // data[threadIdx];
 
 // BB3
 @p2 add x15, x12, x14       // a + data[threadIdx];
+
+// -------- A2 --------
 @p2 st x16, x15             // res[threadIdx] = a + data[threadIdx];
 
+// -------- C3 --------
 // BB4
 @p1 add x9, x0, x14         // i = a;
 

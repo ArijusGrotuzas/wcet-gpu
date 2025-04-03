@@ -1,5 +1,7 @@
 // Compute Hamming weight
 
+// -------- C1 --------
+
 lds x1, s0                  // thread id
 lds x2, s1                  // warp id
 lds x3, s3                  // warp width
@@ -19,10 +21,14 @@ add x12, x9, x7             // addr(number[i]) = baseNumber + i
 add x13, x10, x7            // addr(output[i]) = baseOutput + i
 nop
 
+// -------- A1 --------
+
 ld x14, x12                 // load number[i] from global memory
 
+// -------- C2 --------
+
 LOOP:
-    @p1 cmp %nz x14, x0     // number[i] =< 0
+    @p1 cmp %nz x14, x0     // number[i] >= 0
     @p1 and x16, x14, x15   // number[i] & 1
     @p1 nop
     @p1 srli x14, x14, 1    // number[i] >>= 1
@@ -30,5 +36,7 @@ LOOP:
     @p1 nop
     @p1 br LOOP
 
+// -------- A2 --------
 st x13, x11                 // store count to global memory
+
 ret

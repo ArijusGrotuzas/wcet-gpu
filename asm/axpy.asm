@@ -1,5 +1,7 @@
 // Integer AXPY
 
+// -------- C1 --------
+
 lds x1, s0              // thread id
 lds x2, s1              // warp id
 lds x3, s3              // warp width
@@ -20,12 +22,20 @@ add x12, x9, x7         // addr(X[i]) = baseX + i
 add x13, x10, x7        // addr(Y[i]) = baseY + i
 add x21, x8, x7         // addr(output[i]) = baseOutput + i
 
+// -------- A1 --------
+
 ld x18, x12             // load X[i] from global memory
+
+// -------- A2 --------
 ld x19, x13             // load Y[i] from global memory
+
+// -------- C2 --------
 
 mad x20, x17, x18, x19  // a * X[i] + Y[i]
 nop
 nop
+
+// -------- A3 --------
 
 st x21, x20             // store output[i] to global memory
 ret

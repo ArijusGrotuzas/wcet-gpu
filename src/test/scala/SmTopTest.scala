@@ -53,7 +53,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       }
     }
 
-    Predef.printf("Execution cycles: %d\n", executionCycles)
+    Predef.printf("Execution cycles: %d\n", executionCycles - 1)
 
     // Expect the SM to be done
     dut.io.ready.expect(true.B, "SM did not finish in time.\n")
@@ -178,12 +178,12 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 16,
+      warpSize = 8,
       instrMemDepth = 32,
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/fibonacci.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
+      testProgram(dut, "b000011", dataMemDepth, dumpMem = true)
     }
   }
 

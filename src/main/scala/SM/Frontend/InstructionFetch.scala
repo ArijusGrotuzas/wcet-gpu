@@ -58,35 +58,36 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val warpTable = Module(new WarpTable(warpCount, warpSize))
 
   // Registers to hold values while the instruction is being fetched from the instruction memory
-  val pcReg = RegInit(0.U(32.W))
+  val currentPcReg = RegInit(0.U(32.W))
   val warpReg = RegInit(0.U(warpAddrLen.W))
   val fetchReg = RegInit(false.B)
   val validReg = RegInit(false.B)
 
   val instr = io.instrMem.data
   val opcode = instr(4, 0)
-  val instrPc = Mux(brnCtrl.io.jump, brnCtrl.io.jumpAddr, warpTable.io.pc(io.scheduler.warp))
+  val nextPc = Mux(brnCtrl.io.jump, brnCtrl.io.jumpAddr, warpTable.io.pc(io.scheduler.warp))
   val shouldFetchNxtInstr = warpTable.io.done(io.scheduler.warp) === 0.U && !io.scheduler.reset && !io.scheduler.stall && !io.scheduler.setValid
-  val activeThreadMask = warpTable.io.threadMasks(warpReg)
+  val activeThreadMask = warpTable.io.threadMasks(warpReg) // Branch control
 
   // Update the registers
-  pcReg := instrPc
+  currentPcReg := nextPc
   warpReg := io.scheduler.warp
   fetchReg := shouldFetchNxtInstr
   validReg := !io.scheduler.stall && warpTable.io.done(io.scheduler.warp) === 0.U
 
   brnCtrl.io.instr := instr
-  brnCtrl.io.pcCurr := pcReg
+  brnCtrl.io.pcCurr := currentPcReg
   brnCtrl.io.nzpPred := io.ifPredReg.dataR
 
+  // TODO: Move warp table outside of the IF stage
+  warpTable.io.pcCtrl.set := shouldFetchNxtInstr
+  warpTable.io.pcCtrl.idx := io.scheduler.warp
+  warpTable.io.pcCtrl.data := Mux(shouldFetchNxtInstr, nextPc + 1.U, nextPc)
+  warpTable.io.doneCtrl.set := Mux(fetchReg, opcode === Opcodes.RET.asUInt(5.W), false.B)
+  warpTable.io.doneCtrl.idx := warpReg
   warpTable.io.reset := io.scheduler.reset
   warpTable.io.validCtrl.set := io.scheduler.setValid
   warpTable.io.validCtrl.data := io.scheduler.setValidWarps
-  warpTable.io.pcCtrl.set := shouldFetchNxtInstr
-  warpTable.io.pcCtrl.idx := io.scheduler.warp
-  warpTable.io.pcCtrl.data := Mux(shouldFetchNxtInstr, instrPc + 1.U, instrPc)
-  warpTable.io.doneCtrl.set := Mux(fetchReg, opcode === Opcodes.RET.asUInt(5.W), false.B)
-  warpTable.io.doneCtrl.idx := warpReg
   warpTable.io.setPendingCtrl.set := io.setPending
   warpTable.io.setPendingCtrl.idx := io.scheduler.warp
   warpTable.io.activeCtrl.set := io.wbIfCtrl.setInactive
@@ -94,15 +95,17 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   warpTable.io.setNotPendingCtrl.set := io.memIfCtrl.setNotPending
   warpTable.io.setNotPendingCtrl.idx := io.memIfCtrl.warp
 
+  // -------------------------- Outputs --------------------------
+
   // Outputs of the instruction fetch stage
   io.instrF.valid := validReg
   io.instrF.warp := warpReg
   io.instrF.instr := Mux(fetchReg, instr, 0.U)
-  io.instrF.pc := pcReg
+  io.instrF.pc := currentPcReg
   io.instrF.threadMask := activeThreadMask
 
   // Get the instruction from the instruction memory
-  io.instrMem.addr := instrPc
+  io.instrMem.addr := nextPc
 
   // Read address for the predicate register file
   io.ifPredReg.addrR := io.scheduler.warp ## instr(31, 30)

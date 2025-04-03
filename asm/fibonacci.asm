@@ -1,5 +1,7 @@
 // Compute fibonacci sequence
 
+// -------- C1 --------
+
 lds x1, s0                  // thread id
 lds x2, s1                  // warp id
 lds x3, s3                  // warp width
@@ -17,6 +19,8 @@ addi x13, x0, 0             // a = 0
 addi x14, x0, 1             // b = 1
 add x16, x10, x7            // addr(output[i]) = baseOutput + i
 
+// -------- C2 --------
+
 LOOP:
     @p1 cmp %nz x9, x7      // i =< j
     @p1 add x15, x13, x14   // ith_val = a + b
@@ -25,6 +29,8 @@ LOOP:
     @p1 addi x14, x15, 0    // b = ith_val
     @p1 nop
     @p1 br LOOP
+
+// -------- A1 --------
 
 st x16, x14                 // output[i] = b
 ret

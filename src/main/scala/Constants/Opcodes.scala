@@ -23,4 +23,7 @@ object Opcodes {
   // Control
   val BR = 0x02 // 00010
   val CMP = 0x06 // 00110
+  val PREPARE = 0x0A // 01010
+  val SPlIT = 0x0E // 01110
+  val JOIN = 0x12 // 10010
 }

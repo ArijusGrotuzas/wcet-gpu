@@ -40,7 +40,7 @@ class SmTestTop(
   io.dbg.warp := DontCare
   io.dbg.instr := DontCare
   io.dbg.valid := DontCare
-  BoringUtils.bore(smTop.sm.frontend.instrF.pcReg, Seq(io.dbg.pc))
+  BoringUtils.bore(smTop.sm.frontend.instrF.currentPcReg, Seq(io.dbg.pc))
   BoringUtils.bore(smTop.sm.frontend.instrF.warpReg, Seq(io.dbg.warp))
   BoringUtils.bore(smTop.sm.frontend.instrF.io.instrF.instr, Seq(io.dbg.instr))
   BoringUtils.bore(smTop.sm.frontend.instrF.validReg, Seq(io.dbg.valid))

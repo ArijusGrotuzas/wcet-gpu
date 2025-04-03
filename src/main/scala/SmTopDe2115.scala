@@ -80,7 +80,7 @@ object SmTopDe2115 extends App {
   (new chisel3.stage.ChiselStage).emitVerilog(new SmTopDe2115(
     blockCount = 4,
     warpCount = 8,
-    warpSize = 16,
+    warpSize = 32,
     instrMemDepth = 64,
     dataMemDepth = 1024,
     instructionFile = "bootkernel.hex",
