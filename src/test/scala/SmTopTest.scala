@@ -178,12 +178,12 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
-      warpSize = 8,
+      warpSize = 16,
       instrMemDepth = 32,
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/fibonacci.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b000011", dataMemDepth, dumpMem = true)
+      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
     }
   }
 
