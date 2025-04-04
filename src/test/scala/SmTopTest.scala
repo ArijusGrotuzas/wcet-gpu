@@ -31,7 +31,6 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       val pc = dut.io.dbg.pc.peekInt()
       val warp = dut.io.dbg.warp.peekInt()
       val instr = dut.io.dbg.instr.peekInt()
-      val valid = dut.io.dbg.valid.peekBoolean()
 //      Predef.printf("warp: %d, pc: 0x%08x, instr: 0x%08x, valid: %b\n", warp, pc, instr, valid)
 
       dut.clock.step(1)
@@ -143,8 +142,23 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     }
   }
 
+  "Sm" should "execute program 7" in {
+    val dataMemDepth = 64
+    test(new SmTestTop(
+      blockCount = 4,
+      warpCount = 4,
+      warpSize = 16,
+      instrMemDepth = 64,
+      dataMemDepth = dataMemDepth,
+      instructionFile = "hex/instructions/kernel7.hex",
+      dataFile = "hex/data/sequential.hex"
+    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      testProgram(dut, "b001111", dataMemDepth)
+    }
+  }
+
   "Sm" should "execute axpy" in {
-    val dataMemDepth = 1024
+    val dataMemDepth = 256
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
@@ -154,12 +168,12 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       instructionFile = "hex/instructions/axpy.hex",
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
+      testProgram(dut, "b001111", dataMemDepth, dumpMem = true)
     }
   }
 
   "Sm" should "execute hamming" in {
-    val dataMemDepth = 1024
+    val dataMemDepth = 256
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
@@ -169,12 +183,12 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       instructionFile = "hex/instructions/hamming.hex",
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
+      testProgram(dut, "b001111", dataMemDepth, dumpMem = true)
     }
   }
 
   "Sm" should "execute fibonacci" in {
-    val dataMemDepth = 1024
+    val dataMemDepth = 256
     test(new SmTestTop(
       blockCount = 4,
       warpCount = 4,
@@ -183,22 +197,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/fibonacci.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth, dumpMem = false)
-    }
-  }
-
-  "Sm" should "execute program under analysis" in {
-    val dataMemDepth = 64
-    test(new SmTestTop(
-      blockCount = 4,
-      warpCount = 4,
-      warpSize = 8,
-      instrMemDepth = 64,
-      dataMemDepth = dataMemDepth,
-      instructionFile = "hex/instructions/pua.hex",
-      dataFile = "hex/data/pua.hex"
-    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth)
+      testProgram(dut, "b001111", dataMemDepth, dumpMem = true)
     }
   }
 }

@@ -4,6 +4,7 @@ import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
+// TODO: Load from hex file instead
 private object testKernels {
   val testKernel1 = Array(
     "00000000001001000110100000110001", // (LUI, x1, 2330)

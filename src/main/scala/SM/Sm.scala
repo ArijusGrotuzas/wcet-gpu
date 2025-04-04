@@ -55,8 +55,8 @@ class Sm(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   frontend.io.front <> backend.io.front
 
   // Control signal connections between frontend and backend
-  frontend.io.wbIfCtrl <> backend.io.wbIfCtrl
-  frontend.io.memIfCtrl <> backend.io.memIfCtrl
+  frontend.io.wbCtrl <> backend.io.wbIfCtrl
+  frontend.io.memCtrl <> backend.io.memIfCtrl
   frontend.io.aluInitCtrl <> backend.io.aluInitCtrl
   frontend.io.memStall := backend.io.memStall
   frontend.io.wbStall := backend.io.wbStall

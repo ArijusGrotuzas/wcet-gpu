@@ -11,11 +11,11 @@ lds x6, s2              // block id
 mad x4, x3, x2, x1      // x4 = (warpWidth * warpID) + threadID = (local thread ID)
 
 addi x9, x0, 0          // x base address
-addi x10, x0, 256       // y base address
+addi x10, x0, 64        // y base address
 
 mad x7, x5, x6, x4      // x7 = (blockWidth * blockID) + localThreadId = (global thread ID)
 
-addi x8, x0, 512        // output base address
+addi x8, x0, 128        // output base address
 addi x17, x0, 5         // load constant a = 5
 
 add x12, x9, x7         // addr(X[i]) = baseX + i

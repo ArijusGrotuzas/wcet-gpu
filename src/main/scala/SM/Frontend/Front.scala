@@ -7,12 +7,12 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val blockAddrLen = log2Up(blockCount)
   val warpAddrLen = log2Up(warpCount)
   val io = IO(new Bundle {
-    val wbIfCtrl = new Bundle {
+    val wbCtrl = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
       val setInactive = Input(Bool())
     }
 
-    val memIfCtrl = new Bundle {
+    val memCtrl = new Bundle {
       val warp = Input(UInt(warpAddrLen.W))
       val setNotPending = Input(Bool())
     }
@@ -61,21 +61,41 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   val instrD = Module(new InstructionDecode(warpCount, warpSize))
   val instrIss = Module(new InstructionIssue(warpCount, warpSize))
   val warpScheduler = Module(new WarpScheduler(blockCount, warpCount))
+  val warpTable = Module(new WarpTable(warpCount, warpSize))
 
   // Control signals to and from warp scheduler
   warpScheduler.io.start <> io.start
   warpScheduler.io.memStall := io.memStall
-  warpScheduler.io.scheduler <> instrF.io.scheduler
-  warpScheduler.io.warpTableStatus <> instrF.io.warpTableStatus
+  warpScheduler.io.warpTableStatus.valid := warpTable.io.valid
+  warpScheduler.io.warpTableStatus.active := warpTable.io.active
+  warpScheduler.io.warpTableStatus.pending := warpTable.io.pending
   warpScheduler.io.headInstrType := instrIss.io.headInstrType
   warpScheduler.io.wbStall := io.wbStall
 
+  // Signals to warp table
+  warpTable.io.pcCtrl.set := instrF.io.tempPcCtrl.set
+  warpTable.io.pcCtrl.idx := instrF.io.tempPcCtrl.idx
+  warpTable.io.pcCtrl.data := instrF.io.tempPcCtrl.data
+  warpTable.io.doneCtrl.set := instrF.io.instrF.setThreadDone
+  warpTable.io.doneCtrl.idx := instrF.io.instrF.setThreadDoneID
+  warpTable.io.reset := warpScheduler.io.scheduler.reset
+  warpTable.io.validCtrl.set := warpScheduler.io.scheduler.setValid
+  warpTable.io.validCtrl.data := warpScheduler.io.scheduler.setValidWarps
+  warpTable.io.setPendingCtrl.set := instrIss.io.setPending
+  warpTable.io.setPendingCtrl.idx := warpScheduler.io.scheduler.warp
+  warpTable.io.activeCtrl.set := io.wbCtrl.setInactive
+  warpTable.io.activeCtrl.idx := io.wbCtrl.warp
+  warpTable.io.setNotPendingCtrl.set := io.memCtrl.setNotPending
+  warpTable.io.setNotPendingCtrl.idx := io.memCtrl.warp
+
   // Control signals to and from the instruction fetch stage
-  instrF.io.setPending := instrIss.io.setPending
   instrF.io.instrMem <> io.instrMem
-  instrF.io.wbIfCtrl <> io.wbIfCtrl
-  instrF.io.memIfCtrl <> io.memIfCtrl
-  io.ifPredReg <> instrF.io.ifPredReg
+  instrF.io.ifPredReg <> io.ifPredReg
+  instrF.io.warpTable.pc := warpTable.io.pc(warpScheduler.io.scheduler.warp)
+  instrF.io.warpTable.done := warpTable.io.done(warpScheduler.io.scheduler.warp)
+  instrF.io.warpTable.threadMask := warpTable.io.threadMasks(warpScheduler.io.scheduler.warp)
+  instrF.io.scheduler.warp := warpScheduler.io.scheduler.warp
+  instrF.io.scheduler.stall := warpScheduler.io.scheduler.stall
 
   // Pipeline register between IF and ID
   instrD.io.instrF.threadMask := RegNext(instrF.io.instrF.threadMask, 0.U)

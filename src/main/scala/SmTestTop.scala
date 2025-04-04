@@ -6,7 +6,6 @@ class debug extends Bundle {
   val pc = Output(UInt(32.W))
   val warp = Output(UInt(32.W))
   val instr = Output(UInt(32.W))
-  val valid = Output(Bool())
 }
 
 class SmTestTop(
@@ -39,9 +38,7 @@ class SmTestTop(
   io.dbg.pc := DontCare
   io.dbg.warp := DontCare
   io.dbg.instr := DontCare
-  io.dbg.valid := DontCare
-  BoringUtils.bore(smTop.sm.frontend.instrF.currentPcReg, Seq(io.dbg.pc))
+  BoringUtils.bore(smTop.sm.frontend.instrF.instrPcReg, Seq(io.dbg.pc))
   BoringUtils.bore(smTop.sm.frontend.instrF.warpReg, Seq(io.dbg.warp))
   BoringUtils.bore(smTop.sm.frontend.instrF.io.instrF.instr, Seq(io.dbg.instr))
-  BoringUtils.bore(smTop.sm.frontend.instrF.validReg, Seq(io.dbg.valid))
 }
