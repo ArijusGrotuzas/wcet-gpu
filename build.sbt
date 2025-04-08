@@ -15,4 +15,4 @@ libraryDependencies += "edu.berkeley.cs" % "ip-contributions" % "0.5.3"
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
 // Scoverage settings
-coverageEnabled := true
+//coverageEnabled := true
