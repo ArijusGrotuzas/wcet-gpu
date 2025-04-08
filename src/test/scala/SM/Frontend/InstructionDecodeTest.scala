@@ -4,31 +4,16 @@ import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
-// TODO: Load from hex file instead
-private object testKernels {
-  val testKernel1 = Array(
-    "00000000001001000110100000110001", // (LUI, x1, 2330)
-    "00000000000001010000000001001101", // (ADDI, x2, x0, 10): j = 10
-    "00000000000000011001010010100011", // (ADD, x5, x5, x3): b += a
-    "00000000000000101001000011000111", // (SUB, x6, x4, x5)
-    "00000000000000100000110011101011", // (AND, x7, x3, x4)
-    "00000000000000001001000100001111", // (OR, x8, x4, x5)
-    "00000000000000010001000000000110", // (CMP, x4, x2) i < j
-    "00000000000000000000000000000000", // (NOP)
-    "00000000000000000000000000011111" // (RET)
-  )
-}
-
 class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
-  def testKernel(dut: InstructionDecode, kernel: Array[String]): Unit = {
+  def assertKernel(dut: InstructionDecode, kernel: Array[String]): Unit = {
     for (i <- kernel.indices) {
-      testInstruction(dut, kernel(i))
+      assertInstruction(dut, kernel(i))
 
       dut.clock.step(1)
     }
   }
 
-  def testInstruction(dut: InstructionDecode, instruction: String, warp: Int = 0, valid: Boolean = true): Unit = {
+  def assertInstruction(dut: InstructionDecode, instruction: String, warp: Int = 0, valid: Boolean = true): Unit = {
     val opcode = "b" + instruction.slice(27, 32)
     val dest = "b" + instruction.slice(22, 27)
     val rs1 = "b" + instruction.slice(17, 22)
@@ -64,6 +49,19 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
 
   "InstructionDecode" should "decode correct bitfields" in {
     test(new InstructionDecode(2, 4)).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      // TODO: Load from hex file instead
+      val kernel = Array(
+        "00000000001001000110100000110001", // (LUI, x1, 2330)
+        "00000000000001010000000001001101", // (ADDI, x2, x0, 10): j = 10
+        "00000000000000011001010010100011", // (ADD, x5, x5, x3): b += a
+        "00000000000000101001000011000111", // (SUB, x6, x4, x5)
+        "00000000000000100000110011101011", // (AND, x7, x3, x4)
+        "00000000000000001001000100001111", // (OR, x8, x4, x5)
+        "00000000000000010001000000000110", // (CMP, x4, x2) i < j
+        "00000000000000000000000000000000", // (NOP)
+        "00000000000000000000000000011111" // (RET)
+      )
+
       // Default assignments
       dut.io.instrF.valid.poke(false.B)
       dut.io.instrF.warp.poke(0.U)
@@ -71,7 +69,7 @@ class InstructionDecodeTest extends AnyFlatSpec with ChiselScalatestTester {
 
       dut.clock.step(1)
 
-      testKernel(dut, testKernels.testKernel1)
+      assertKernel(dut, kernel)
 
       dut.clock.step(1)
     }

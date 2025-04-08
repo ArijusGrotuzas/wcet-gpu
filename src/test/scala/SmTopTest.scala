@@ -3,7 +3,7 @@ import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
 class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
-  def testProgram(dut: SmTestTop, blockConfig: String, memDepth: Int, dumpMem: Boolean = false): Unit = {
+  def testProgram(testName: String, dut: SmTestTop, blockConfig: String, memDepth: Int, dumpMem: Boolean = false): Unit = {
     // Default DUT assignments
     dut.io.valid.poke(false.B)
     dut.io.data.poke(0.U)
@@ -23,26 +23,26 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.data.poke(0.U)
     dut.io.ready.expect(false.B, "The SM did not start processing.\n")
 
-    val maxCycles = 1500
     var run = true
+    val maxCycles = 2000
     var executionCycles = 0
 
-    while (run && executionCycles < maxCycles) {
-      val pc = dut.io.dbg.pc.peekInt()
-      val warp = dut.io.dbg.warp.peekInt()
-      val instr = dut.io.dbg.instr.peekInt()
-//      Predef.printf("warp: %d, pc: 0x%08x, instr: 0x%08x, valid: %b\n", warp, pc, instr, valid)
+    while (run) {
+      // val pc = dut.io.dbg.pc.peekInt()
+      // val warp = dut.io.dbg.warp.peekInt()
+      // val instr = dut.io.dbg.instr.peekInt()
+      // Predef.printf("warp: %d, pc: 0x%08x, instr: 0x%08x, valid: %b\n", warp, pc, instr, valid)
 
       dut.clock.step(1)
 
       executionCycles += 1
       run = dut.io.ready.peekInt() == 0
 
-      assert(maxCycles > 0, "Ran out of cycles")
+      assert(executionCycles < maxCycles, "Ran out of execution cycles")
     }
 
     if (dumpMem) {
-      Predef.printf("Dumping data memory contents:\n")
+      Predef.printf("Dumping data memory contents for %s:\n", testName)
 
       for (i <- 0 until memDepth) {
         dut.io.memDump.dumpAddr.poke(i.U)
@@ -52,10 +52,10 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       }
     }
 
-    Predef.printf("Execution cycles: %d\n", executionCycles - 1)
+    Predef.printf("Execution cycles for %s: %d\n", testName, executionCycles - 1)
 
     // Expect the SM to be done
-    dut.io.ready.expect(true.B, "SM did not finish in time.\n")
+    dut.io.ready.expect(true.B, "SM is not ready for new execution.\n")
   }
 
   "Sm" should "execute program 1" in {
@@ -68,7 +68,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel1.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 
@@ -82,7 +82,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel2.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 
@@ -96,7 +96,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel3.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b100110", dataMemDepth)
+      testProgram(getTestName, dut, "b100110", dataMemDepth)
     }
   }
 
@@ -110,7 +110,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel4.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b111111", dataMemDepth)
+      testProgram(getTestName, dut, "b111111", dataMemDepth)
     }
   }
 
@@ -124,7 +124,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel5.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 
@@ -138,7 +138,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/kernel6.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 
@@ -153,7 +153,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       instructionFile = "hex/instructions/kernel7.hex",
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 
@@ -168,7 +168,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       instructionFile = "hex/instructions/axpy.hex",
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth, dumpMem = true)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 
@@ -183,7 +183,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       instructionFile = "hex/instructions/hamming.hex",
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth, dumpMem = true)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 
@@ -197,7 +197,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataMemDepth = dataMemDepth,
       instructionFile = "hex/instructions/fibonacci.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
-      testProgram(dut, "b001111", dataMemDepth, dumpMem = true)
+      testProgram(getTestName, dut, "b001111", dataMemDepth)
     }
   }
 }

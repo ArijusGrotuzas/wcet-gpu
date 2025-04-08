@@ -2,7 +2,6 @@ package SM.Frontend
 
 import chisel3._
 import chisel3.util._
-import math.pow
 
 /**
  * Warp table contains entries for each warp, where each entry holds the following information:
@@ -25,13 +24,7 @@ class WarpTable(warpCount: Int, warpSize: Int) extends Module {
       val set = Input(Bool())
       val data = Input(UInt(warpCount.W)) 
     }
-    
-    val pcCtrl = new Bundle {
-      val set = Input(Bool())
-      val idx = Input(UInt(addrLen.W))
-      val data = Input(UInt(32.W))
-    }
-    
+
     val activeCtrl = new Bundle {
       val set = Input(Bool())
       val idx = Input(UInt(addrLen.W))
@@ -56,16 +49,12 @@ class WarpTable(warpCount: Int, warpSize: Int) extends Module {
     val active = Output(UInt(warpCount.W))
     val pending = Output(UInt(warpCount.W))
     val valid = Output(UInt(warpCount.W))
-    val pc = Output(Vec(warpCount, UInt(32.W)))
-    val threadMasks = Output(Vec(warpCount, UInt(warpSize.W)))
   })
 
   val doneReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val activeReg = RegInit(VecInit(Seq.fill(warpCount)(true.B)))
   val pendingReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
   val validReg = RegInit(VecInit(Seq.fill(warpCount)(false.B)))
-  val pcReg = RegInit(VecInit(Seq.fill(warpCount)(0.U(32.W))))
-  val threadMasks = RegInit(VecInit(Seq.fill(warpCount)((pow(2, warpSize).toLong - 1).U(warpSize.W))))
 
   when(io.validCtrl.set) {
     for (i <- 0 until warpCount) {
@@ -92,14 +81,9 @@ class WarpTable(warpCount: Int, warpSize: Int) extends Module {
   when (io.activeCtrl.set) {
     activeReg(io.activeCtrl.idx) := false.B
   }
-  
-  when(io.pcCtrl.set) {
-    pcReg(io.pcCtrl.idx) := io.pcCtrl.data
-  }
 
   // Rest the table entries
   when(io.reset) {
-    pcReg := VecInit(Seq.fill(warpCount)(0.U))
     doneReg := VecInit(Seq.fill(warpCount)(false.B))
     activeReg := VecInit(Seq.fill(warpCount)(true.B))
     pendingReg := VecInit(Seq.fill(warpCount)(false.B))
@@ -110,6 +94,4 @@ class WarpTable(warpCount: Int, warpSize: Int) extends Module {
   io.active := activeReg.asUInt
   io.pending := pendingReg.asUInt
   io.valid := validReg.asUInt
-  io.pc := pcReg
-  io.threadMasks := threadMasks
 }

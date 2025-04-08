@@ -6,7 +6,7 @@ import java.io.{File, PrintWriter}
 import scala.io._
 
 /**
- *
+ * Compiles the assembly code into machine code for the SM ISA.
  */
 object Assembler {
   private val symbols = collection.mutable.Map[String, Int]()
@@ -14,13 +14,6 @@ object Assembler {
   def assembleProgram(file: String): Array[Int] = {
     findSymbols(file)
     assemble(file)
-  }
-
-  def convertToInt(value: Any): Int = {
-    value match {
-      case i: Int => i
-      case _ => 0
-    }
   }
 
   private def findSymbols(file: String): Unit = {
@@ -147,6 +140,13 @@ object Assembler {
 
     0
   }
+
+  private def convertToInt(value: Any): Int = {
+    value match {
+      case i: Int => i
+      case _ => 0
+    }
+  }
 }
 
 // TODO: Add checking if any instruction attempts to read two or more operands from the same bank
@@ -162,7 +162,7 @@ object Main extends App {
 
   // Assemble all the programs contained in the asm directory
   for (file <- files) {
-    val program = Assembler.assembleProgram(file).map(i => f"${i & 0xFFFFFFFF}%08X").mkString("\n")
+    val program = (Assembler.assembleProgram(file) :+ 0).map(i => f"${i & 0xFFFFFFFF}%08X").mkString("\n")
 
     println(file + ":")
     println(program)

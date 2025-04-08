@@ -4,6 +4,7 @@ import chisel3._
 import chiseltest._
 import org.scalatest.flatspec.AnyFlatSpec
 
+// TODO: Rewrite test
 class InstructionFetchTest extends AnyFlatSpec with ChiselScalatestTester {
   "InstructionFetch" should "fetch the instructions in correct order" in {
     test(new InstructionFetch(4, 4)).withAnnotations(Seq( WriteVcdAnnotation )) { dut =>

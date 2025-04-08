@@ -73,9 +73,6 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   warpScheduler.io.wbStall := io.wbStall
 
   // Signals to warp table
-  warpTable.io.pcCtrl.set := instrF.io.tempPcCtrl.set
-  warpTable.io.pcCtrl.idx := instrF.io.tempPcCtrl.idx
-  warpTable.io.pcCtrl.data := instrF.io.tempPcCtrl.data
   warpTable.io.doneCtrl.set := instrF.io.instrF.setThreadDone
   warpTable.io.doneCtrl.idx := instrF.io.instrF.setThreadDoneID
   warpTable.io.reset := warpScheduler.io.scheduler.reset
@@ -91,9 +88,7 @@ class Front(blockCount: Int, warpCount: Int, warpSize: Int) extends Module {
   // Control signals to and from the instruction fetch stage
   instrF.io.instrMem <> io.instrMem
   instrF.io.ifPredReg <> io.ifPredReg
-  instrF.io.warpTable.pc := warpTable.io.pc(warpScheduler.io.scheduler.warp)
   instrF.io.warpTable.done := warpTable.io.done(warpScheduler.io.scheduler.warp)
-  instrF.io.warpTable.threadMask := warpTable.io.threadMasks(warpScheduler.io.scheduler.warp)
   instrF.io.scheduler.warp := warpScheduler.io.scheduler.warp
   instrF.io.scheduler.stall := warpScheduler.io.scheduler.stall
 

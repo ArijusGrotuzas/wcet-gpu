@@ -30,12 +30,16 @@ class MemControl(warpSize: Int) extends Module {
   // FSM
   switch(stateReg) {
     is(sIdle) {
-      when(io.valid && io.threadMask.orR) {
-        memStall := true.B
-        when(io.opcode === Opcodes.LD.asUInt(5.W)) {
-          stateReg := sLoad
-        }.elsewhen(io.opcode === Opcodes.ST.asUInt(5.W)) {
-          stateReg := sStore
+      when(io.valid) {
+        when(io.threadMask.orR) {
+          memStall := true.B
+          when(io.opcode === Opcodes.LD.asUInt(5.W)) {
+            stateReg := sLoad
+          }.elsewhen(io.opcode === Opcodes.ST.asUInt(5.W)) {
+            stateReg := sStore
+          }
+        } .otherwise {
+          stateReg := sDone
         }
       }
     }
