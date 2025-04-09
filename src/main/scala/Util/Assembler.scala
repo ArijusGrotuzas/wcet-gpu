@@ -9,20 +9,20 @@ import scala.io._
  * Compiles the assembly code into machine code for the SM ISA.
  */
 object Assembler {
-  private val symbols = collection.mutable.Map[String, Int]()
+  private val labels = collection.mutable.Map[String, Int]()
 
   def assembleProgram(file: String): Array[Int] = {
-    findSymbols(file)
+    findLabels(file)
     assemble(file)
   }
 
-  private def findSymbols(file: String): Unit = {
+  private def findLabels(file: String): Unit = {
     val source = Source.fromFile(file)
     var pc = 0
 
     for (line <- source.getLines()) {
       val tokens = line.trim.split("[,\\s]+")
-      val instr = assembleInstruction(tokens, pc, file, getSymbols = true)
+      val instr = getLabel(tokens, pc)
 
       instr match {
         case _: Int =>
@@ -32,6 +32,21 @@ object Assembler {
     }
   }
 
+  private def getLabel(tokens: Array[String], pc: Int): Any = {
+    val Pattern = "(.*:)".r
+
+    val label = tokens(0) match {
+      case Pattern(t) => labels += (t.substring(0, t.length - 1) -> pc)
+      case t if Opcodes.getOpcodes.keys.toArray contains t => 0
+      case t if t.startsWith("@") => 0
+      case "//" => //
+      case "" => //
+      case _ => //
+    }
+
+    label
+  }
+
   private def assemble(file: String): Array[Int] = {
     val source = Source.fromFile(file)
     var program = List[Int]()
@@ -39,7 +54,7 @@ object Assembler {
 
     for (line <- source.getLines()) {
       val tokens = line.trim.split("[,\\s]+")
-      val instr = assembleInstruction(tokens, pc, file, getSymbols = false)
+      val instr = assembleInstruction(tokens, pc, file)
 
       instr match {
         case a: Int =>
@@ -52,11 +67,10 @@ object Assembler {
     program.reverse.toArray
   }
 
-  private def assembleInstruction(tokens: Array[String], pc: Int, file: String, getSymbols: Boolean): Any = {
+  private def assembleInstruction(tokens: Array[String], pc: Int, fileName: String): Any = {
     val Pattern = "(.*:)".r
 
     val instr = tokens(0) match {
-      case Pattern(l) => if (getSymbols) symbols += (l.substring(0, l.length - 1) -> pc)
       case "nop" => Opcodes.NOP
       case "ret" => Opcodes.RET
       case "ld" => (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.LD
@@ -72,12 +86,15 @@ object Assembler {
       case "mul" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.MUL
       case "mad" => (getVecRegNum(tokens(4), pc) << 20) + (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getVecRegNum(tokens(1), pc) << 5) + Opcodes.MAD
       case "br" => ((getBrnOff(tokens(1), pc) << 5) & 0x3FFFFFFF) + Opcodes.BR
+      case "prepare" => ((getBrnOff(tokens(1), pc) << 5) & 0x3FFFFFFF) + Opcodes.PREPARE
+      case "split" => ((getBrnOff(tokens(1), pc) << 5) & 0x3FFFFFFF) + Opcodes.SPLIT
+      case "join" => Opcodes.JOIN
       case "cmp" => (getVecRegNum(tokens(3), pc) << 15) + (getVecRegNum(tokens(2), pc) << 10) + (getNZP(tokens(1)) << 5) + Opcodes.CMP
-      case s if s.startsWith("@") => (getPredicateReg(tokens(0)) << 30) + convertToInt(assembleInstruction(tokens.drop(1), pc, file, getSymbols)) // Predicate
+      case t if t.startsWith("@") => (getPredicateReg(tokens(0)) << 30) + convertToInt(assembleInstruction(tokens.drop(1), pc, fileName)) // Predicate
+      case Pattern(t) => //
       case "//" => // Comment
       case "" => // Empty line
-      case t: String => throw new Exception("Unexpected instruction: " + t + " in file: " + file + ", at line: " + pc)
-      case _ => throw new Exception("Unhandled case in file: " + file + ", at line: " + pc)
+      case t: String => throw new Exception("Unexpected instruction: " + t + " in file: " + fileName + ", at line: " + pc)
     }
 
     instr
@@ -87,9 +104,9 @@ object Assembler {
     if (s.startsWith("0x")) {
       Integer.parseInt(s.substring(2), 16) & 0xff
     } else if (s.startsWith("<")) {
-      symbols(s.drop(1)) & 0xff
+      labels(s.drop(1)) & 0xff
     } else if (s.startsWith(">")) {
-      symbols(s.drop(1)) >> 8
+      labels(s.drop(1)) >> 8
     } else {
       Integer.parseInt(s) & 0xffff
     }
@@ -126,10 +143,11 @@ object Assembler {
   }
 
   private def getBrnOff(s: String, pc: Int): Int = {
-    val brnOff = symbols(s) - pc
+    val brnOff = labels(s) - pc
     brnOff
   }
 
+  // TODO: Add checking if any instruction attempts to read two or more operands from the same bank
   private def vrfBankConflicts(registers: List[Int], pc: Int): Int = {
     val banks = registers.map(i => i % 4).distinct
     val noConflict = banks.diff(banks.distinct).distinct.isEmpty
@@ -149,7 +167,6 @@ object Assembler {
   }
 }
 
-// TODO: Add checking if any instruction attempts to read two or more operands from the same bank
 object Main extends App {
   val files = getListOfFiles("asm")
 

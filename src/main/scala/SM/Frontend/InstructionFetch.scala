@@ -6,8 +6,6 @@ import SM.Frontend.Ipdom.WarpStacks
 import chisel3._
 import chisel3.util._
 
-import scala.math.pow
-
 // TODO: Add IPDOM stack
 class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   val warpAddrLen = log2Up(warpCount)
@@ -42,48 +40,59 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
     }
   })
 
-  val warpStacks = Module(new WarpStacks(warpCount, warpSize))
+  val warpStacks = Module(new WarpStacks(warpCount, warpSize, 16))
   val brnCtrl = Module(new BranchCtrlUnit(warpSize))
 
   // Registers to hold values while the instruction is being fetched from the instruction memory
   val instrPcReg = RegInit(0.U(32.W))
-  val warpReg = RegInit(0.U(warpAddrLen.W))
-  val fetchReg = RegInit(false.B)
-  val threadMaskReg = RegInit(0.U(warpSize.W))
-
-  warpStacks.io.warp := io.scheduler.warp
+  val instrWarpReg = RegInit(0.U(warpAddrLen.W))
+  val instrFetchReg = RegInit(false.B)
+  val warpMaskReg = RegInit(0.U(warpSize.W))
 
   val isRetInstr = WireDefault(false.B)
-  val shouldFetchNextInstr = io.warpTable.done === 0.U && !io.scheduler.stall && !(isRetInstr && warpReg === io.scheduler.warp)
+  val shouldFetchNextInstr = !brnCtrl.io.prepare &&
+    !brnCtrl.io.split &&
+    !brnCtrl.io.join &&
+    io.warpTable.done === 0.U &&
+    !io.scheduler.stall //&&
+//    !(isRetInstr && instrWarpReg === io.scheduler.warp)
   val memFetchPc = Mux(brnCtrl.io.jump, brnCtrl.io.jumpAddr, warpStacks.io.tosPc)
 
+  warpStacks.io.warp := io.scheduler.warp
   warpStacks.io.updateTosPc := shouldFetchNextInstr
   warpStacks.io.newTosPc := memFetchPc + 1.U
+  warpStacks.io.prepare := brnCtrl.io.prepare
+  warpStacks.io.prepareAddr := brnCtrl.io.prepareAddr
+  warpStacks.io.split := brnCtrl.io.split
+  warpStacks.io.splitAddr := brnCtrl.io.splitAddr
+  warpStacks.io.splitMask := brnCtrl.io.splitMask
+  warpStacks.io.join := brnCtrl.io.join
 
   // Get the instruction from the instruction memory
   io.instrMem.addr := memFetchPc
+  val instr = io.instrMem.data
+
+  isRetInstr := instr(4, 0) === Opcodes.RET.asUInt(5.W)
 
   // Update the registers
   instrPcReg := memFetchPc
-  warpReg := io.scheduler.warp
-  fetchReg := shouldFetchNextInstr
-  threadMaskReg := warpStacks.io.tosMask
+  instrWarpReg := io.scheduler.warp
+  instrFetchReg := shouldFetchNextInstr
+  warpMaskReg := warpStacks.io.tosMask
 
-  val instr = io.instrMem.data
-  isRetInstr := instr(4, 0) === Opcodes.RET.asUInt(5.W)
-
-  brnCtrl.io.instr := instr
-  brnCtrl.io.pcCurr := instrPcReg
-  brnCtrl.io.nzpPred := io.ifPredReg.dataR
   // Read address for the predicate register file
   io.ifPredReg.addrR := io.scheduler.warp ## instr(31, 30)
 
+  brnCtrl.io.instr := instr
+  brnCtrl.io.pc := instrPcReg
+  brnCtrl.io.pred := io.ifPredReg.dataR
+
   // Outputs of the instruction fetch stage
   io.instrF.pc := instrPcReg
-  io.instrF.warp := warpReg
-  io.instrF.valid := fetchReg
-  io.instrF.instr := Mux(fetchReg, instr, 0.U)
-  io.instrF.threadMask := threadMaskReg
-  io.instrF.setThreadDone := Mux(fetchReg, isRetInstr, false.B)
-  io.instrF.setThreadDoneID := warpReg
+  io.instrF.warp := instrWarpReg
+  io.instrF.valid := instrFetchReg
+  io.instrF.instr := Mux(instrFetchReg, instr, 0.U)
+  io.instrF.threadMask := warpMaskReg
+  io.instrF.setThreadDone := Mux(instrFetchReg, isRetInstr, false.B)
+  io.instrF.setThreadDoneID := instrWarpReg
 }

@@ -24,7 +24,7 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
     dut.io.ready.expect(false.B, "The SM did not start processing.\n")
 
     var run = true
-    val maxCycles = 2000
+    val maxCycles = 1400
     var executionCycles = 0
 
     while (run) {
@@ -41,6 +41,8 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       assert(executionCycles < maxCycles, "Ran out of execution cycles")
     }
 
+    Predef.printf("Execution cycles for %s: %d\n", testName, executionCycles - 1)
+
     if (dumpMem) {
       Predef.printf("Dumping data memory contents for %s:\n", testName)
 
@@ -51,8 +53,6 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
         Predef.printf("%d: 0x%08x\n", i, dut.io.memDump.dumpData.peekInt())
       }
     }
-
-    Predef.printf("Execution cycles for %s: %d\n", testName, executionCycles - 1)
 
     // Expect the SM to be done
     dut.io.ready.expect(true.B, "SM is not ready for new execution.\n")
@@ -154,6 +154,20 @@ class SmTopTest extends AnyFlatSpec with ChiselScalatestTester {
       dataFile = "hex/data/sequential.hex"
     )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
       testProgram(getTestName, dut, "b001111", dataMemDepth)
+    }
+  }
+
+  "Sm" should "execute program 8" in {
+    val dataMemDepth = 64
+    test(new SmTestTop(
+      blockCount = 4,
+      warpCount = 4,
+      warpSize = 16,
+      instrMemDepth = 64,
+      dataMemDepth = dataMemDepth,
+      instructionFile = "hex/instructions/kernel8.hex",
+    )).withAnnotations(Seq(WriteVcdAnnotation)) { dut =>
+      testProgram(getTestName, dut, "b000011", dataMemDepth)
     }
   }
 

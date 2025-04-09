@@ -39,6 +39,6 @@ class SmTestTop(
   io.dbg.warp := DontCare
   io.dbg.instr := DontCare
   BoringUtils.bore(smTop.sm.frontend.instrF.instrPcReg, Seq(io.dbg.pc))
-  BoringUtils.bore(smTop.sm.frontend.instrF.warpReg, Seq(io.dbg.warp))
+  BoringUtils.bore(smTop.sm.frontend.instrF.instrWarpReg, Seq(io.dbg.warp))
   BoringUtils.bore(smTop.sm.frontend.instrF.io.instrF.instr, Seq(io.dbg.instr))
 }

@@ -31,8 +31,8 @@ class MemControl(warpSize: Int) extends Module {
   switch(stateReg) {
     is(sIdle) {
       when(io.valid) {
+        memStall := true.B
         when(io.threadMask.orR) {
-          memStall := true.B
           when(io.opcode === Opcodes.LD.asUInt(5.W)) {
             stateReg := sLoad
           }.elsewhen(io.opcode === Opcodes.ST.asUInt(5.W)) {

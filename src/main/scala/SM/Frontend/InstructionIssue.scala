@@ -102,6 +102,7 @@ class InstructionIssue(warpCount: Int, warpSize: Int) extends Module {
   io.iss.imm := immCurr
   io.iss.pred := predCurr
 
+  // TODO: Is it necessary to set the pending when last instruction encountered
   // If variable latency instruction set the warp as pending, or the last instruction of the wrap has been issued
   io.setPending := (opcodeCurr === Opcodes.LD.asUInt(5.W) || opcodeCurr === Opcodes.ST.asUInt(5.W) || opcodeCurr === Opcodes.RET.asUInt(5.W))
   io.headInstrType := headInstrType.asUInt
