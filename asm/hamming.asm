@@ -37,6 +37,6 @@ LOOP:
     @p1 br LOOP
 
 // -------- A2 --------
-st x13, x11                 // store count to global memory
+st x4, x11                 // store count to global memory
 
 ret

@@ -29,5 +29,6 @@ class VrfBank(depth: Int, warpSize: Int) extends Module {
     mem.write(io.writeAddr, io.writeData, io.writeMask)
   }
 
+  // TODO: Keep in mind that if we have a write with a mask the forwarding might not work
   io.readData := Mux(forwardSelReg, writeDataReg, readData)
 }

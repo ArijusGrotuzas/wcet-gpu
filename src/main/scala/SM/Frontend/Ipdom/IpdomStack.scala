@@ -29,19 +29,19 @@ class IpdomStack(warpSize: Int, stackDepth: Int) extends Module {
   val tos = RegInit(0.U(stackAddrLen.W))
 
   val full = tos.andR
-  val empty = tos.orR
+  val empty = !tos.orR
 
   when(io.prepare && !io.split && !io.join && !io.full) {
     val nextTos = tos + 1.U
     pcStack(tos) := io.prepareAddr
-    pcStack(nextTos) := pcStack(tos) + 1.U
+    pcStack(nextTos) := pcStack(tos) //+ 1.U
     maskStack(nextTos) := maskStack(tos)
     tos := nextTos
   }.elsewhen(!io.prepare && io.split && !io.join && !io.full) {
     val nextTos = tos + 1.U
     pcStack(tos) := io.splitAddr
     maskStack(tos) := ~io.splitMask
-    pcStack(nextTos) := pcStack(tos) + 1.U
+    pcStack(nextTos) := pcStack(tos) // + 1.U
     maskStack(nextTos) := io.splitMask
     tos := nextTos
   }.elsewhen(!io.prepare && !io.split && io.join && !io.empty) {

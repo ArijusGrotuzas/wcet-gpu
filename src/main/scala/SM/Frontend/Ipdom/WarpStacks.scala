@@ -29,12 +29,12 @@ class WarpStacks(warpCount: Int, warpSize: Int, stacksDepth: Int) extends Module
   val outTosMasks = VecInit(stacks.toSeq.map(_.io.tosMask))
 
   for (i <- 0 until warpCount) {
-    stacks(i).io.prepare := io.prepare
+    stacks(i).io.prepare := io.prepare && (io.warp === i.U)
     stacks(i).io.prepareAddr := io.prepareAddr
-    stacks(i).io.split := io.split
+    stacks(i).io.split := io.split && (io.warp === i.U)
     stacks(i).io.splitAddr := io.splitAddr
     stacks(i).io.splitMask := io.splitMask
-    stacks(i).io.join := io.join
+    stacks(i).io.join := io.join && (io.warp === i.U)
     stacks(i).io.updateTosPc := (i.U === io.warp) & io.updateTosPc
     stacks(i).io.newTosPc := io.newTosPc
   }

@@ -86,6 +86,7 @@ class InstructionFetch(warpCount: Int, warpSize: Int) extends Module {
   brnCtrl.io.instr := instr
   brnCtrl.io.pc := instrPcReg
   brnCtrl.io.pred := io.ifPredReg.dataR
+  brnCtrl.io.valid := instrFetchReg
 
   // Outputs of the instruction fetch stage
   io.instrF.pc := instrPcReg
